@@ -1,29 +1,44 @@
 window.onload = function () {
 
-    // Initialize canvas and context
+    // Initialize canvas
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+
+    // Set width and height of the canvas to cover the entire page
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
 
+    // Scale
     scale = 50;
 
+    // Translation
     const pixelOffset = {
         x: 0,
-        y: 01
+        y: 0
     };
 
+    // Text offset of the ticks text from the axis
     const textOffset = {
         x: 5,
         y: 5
     }
 
+    // Get a reference to the button element
+    var button = document.getElementById("home");
+
+    // Add a click event listener to the button to reset the view
+    button.addEventListener("click", function() {
+        pixelOffset.x = 0;
+        pixelOffset.y = 0;
+        scale = 50;
+    });
+
+    // Set the font
     ctx.font = "14px Roboto";
 
     // Function to draw the canvas content
     function drawScreen() {
 
-        // Clear the screen and set the styling
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = backgroundColor;
         ctx.strokeStyle = backgroundColor;

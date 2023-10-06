@@ -2,12 +2,32 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Your App</title>
-    <link rel="stylesheet" type="text/css" href="styles/style.css">
+    <title>Robot Simulator</title>
+    <link rel="stylesheet" type="text/css" href="styles/canvas.css">
+    <link rel="stylesheet" type="text/css" href="styles/menu.css">
 </head>
 <body>
-	<canvas id="canvas"></canvas>
+
+    <canvas id="canvas"></canvas>
+
+    <input type="checkbox" id="check">
+    <label for="check">
+      <i class="fas fa-bars" id="btn"></i>
+      <i class="fas fa-times" id="cancel"></i>
+    </label>
+
+    <input type="checkbox" id="home">
+    <label for="home">
+      <i class="fas fa-home" id="home_btn"></i>
+    </label>
+
+    <div class="sidebar">
+    <!-- Add here side menu content -->
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
     <script src="scripts/colors.js"></script>
+    <script src="scripts/main.js"></script>
     <script src="scripts/main.js"></script>
 </body>
 </html>
