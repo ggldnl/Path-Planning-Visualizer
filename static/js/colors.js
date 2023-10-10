@@ -1,6 +1,6 @@
 
 /*
- * colors
+ * Colors
  */
 const white = "#FFFFFF";
 const black = "#000000";
@@ -9,12 +9,16 @@ const lightgray = "#696969";
 const red = "#FF0000";
 
 /*
- * fonts
+ * Fonts
  */
 const roboto = "14px Roboto";
 
+/*
+ * Specs
+ */
 const backgroundColor = white;
-const fontColor = black;
-const font = roboto;
 const axisColor = gray;
 const gridColor = lightgray;
+const textColor = black;
+const font = roboto;
+
