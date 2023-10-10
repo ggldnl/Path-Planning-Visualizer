@@ -54,8 +54,19 @@ export function drawCircle(ctx, x, y, radius, color, filled) {
  * @param {string} backgroundColor - The background color of the canvas.
  * @param {string} axisColor - The color of the horizontal and vertical axes.
  * @param {string} gridColor - The color of the grid lines.
+ * @param {string} textColor - The color of the text.
  */
-export function drawScreen(ctx, pixelOffset, pixelScale, screenSize, textOffset, backgroundColor, axisColor, gridColor) {
+export function drawGrid(
+        ctx,
+        pixelOffset,
+        pixelScale,
+        screenSize,
+        textOffset,
+        backgroundColor,
+        axisColor,
+        gridColor,
+        textClor
+    ) {
 
     ctx.clearRect(0, 0, screenSize.width, screenSize.height);
     ctx.fillStyle = backgroundColor;
@@ -75,29 +86,30 @@ export function drawScreen(ctx, pixelOffset, pixelScale, screenSize, textOffset,
     var leftEdge = Math.floor(-(screenSize.width / 2 - pixelOffset.x) / pixelScale);
     var rightEdge = Math.ceil((screenSize.width / 2 + pixelOffset.x) / pixelScale);
     for (var x = leftEdge; x <= rightEdge; x++) {
-        var px = pixelOrigin.x + pixelScale * x;
+        var px = originX + pixelScale * x;
         drawLine(ctx, px, 0, px, screenSize.height, gridColor, 0.25);
         
         // Draw a numeric reference
         if (x !== 0 && x % 5 === 0) {
+            ctx.fillStyle = textColor
             ctx.fillText(
                 x.toString(),
                 px + textOffset.x,
-                pixelOrigin.y - textOffset.y
+                originY - textOffset.y
             );
         }
     }
     var topEdge = Math.floor(-(screenSize.height / 2 - pixelOffset.y) / pixelScale);
     var bottomEdge = Math.ceil((screenSize.height / 2 + pixelOffset.y) / pixelScale);
     for (var y = topEdge; y <= bottomEdge; y++) {
-        var py = pixelOrigin.y + pixelScale * y;
+        var py = originY + pixelScale * y;
         drawLine(ctx, 0, py, screenSize.width, py, gridColor, 0.25);
 
         // Draw a numeric reference
         if (y !== 0 && y % 5 === 0) {
             ctx.fillText(
                 (-y).toString(),
-                pixelOrigin.x + textOffset.x,
+                originX + textOffset.x,
                 py - textOffset.y
             );
         }
@@ -110,15 +122,18 @@ export function drawScreen(ctx, pixelOffset, pixelScale, screenSize, textOffset,
  * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw the polygon.
  * @param {Array} points - An array of objects representing the points of the polygon, each having x and y coordinates.
  * @param {string} color - The color of the polygon's outline or fill (e.g., 'green', '#FFA500', 'rgba(255, 0, 0, 0.8)').
+ * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
  * @param {boolean} filled - A boolean value indicating whether the polygon should be filled or only outlined.
  */
-export function drawPolygon(ctx, points, color, filled) {
+export function drawPolygon(ctx, points, color, lineJoin, filled) {
     if (points.length > 0) {
+        ctx.lineJoin = lineJoin;
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) {
             ctx.lineTo(points[i].x, points[i].y);
         }
+        ctx.closePath();
         if (filled) {
             ctx.fillStyle = color;
             ctx.fill();
@@ -126,6 +141,36 @@ export function drawPolygon(ctx, points, color, filled) {
             ctx.strokeStyle = color;
             ctx.stroke();
         }
-        ctx.closePath();
+    }
+}
+
+/**
+ * Draws a polygon inscribed into the specified circumference on the canvas.
+ *
+ * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw the polygon.
+ * @param {number} x - The x-coordinate of the center of the polygon.
+ * @param {number} y - The y-coordinate of the center of the polygon.
+ * @param {number} radius - The radius of the circumscribed circle of the polygon.
+ * @param {number} sides - The number of sides of the polygon (e.g., 3 for a triangle, 5 for a pentagon, etc.).
+ * @param {string} color - The color of the polygon's outline or fill (e.g., 'green', '#FFA500', 'rgba(255, 0, 0, 0.8)').
+ * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
+ * @param {boolean} filled - A boolean value indicating whether the polygon should be filled (`true`) or only outlined (`false`).
+ */
+export function drawCircumscribedPolygon(ctx, x, y, radius, sides, color, lineJoin, filled) {
+    ctx.lineJoin = lineJoin;
+    ctx.beginPath();
+    const angleStep = (2 * Math.PI) / sides;
+    ctx.moveTo(x + radius * Math.cos(0), y + radius * Math.sin(0));
+    for (let i = 1; i <= sides; i++) {
+        const angle = i * angleStep;
+        ctx.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
+    }
+    ctx.closePath();
+    if (filled) {
+        ctx.fillStyle = color;
+        ctx.fill();
+    } else {
+        ctx.strokeStyle = color;
+        ctx.stroke();
     }
 }
