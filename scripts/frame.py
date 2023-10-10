@@ -54,3 +54,12 @@ class Frame:
 
     def to_json(self):
         return json.dumps(self.draw_list)
+
+
+if __name__ == '__main__':
+
+    frame = Frame()
+    frame.add_circle((0, 0), 10, 'red')
+    frame.add_circle((30, 30), 10, 'orange')
+    json_string = frame.to_json()
+    print(json_string)
