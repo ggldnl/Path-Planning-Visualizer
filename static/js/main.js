@@ -1,5 +1,5 @@
 import { drawGrid, drawLine, drawPolygon, drawCircumscribedPolygon, drawCircle } from './canvas.js';
-
+import { Frame } from './frame.js';
 
 window.onload = function () {
 
@@ -53,22 +53,24 @@ window.onload = function () {
             ctx,
             screenSize.width / 2 - pixelOffset.x + circlePosition.x,
             screenSize.height / 2 - pixelOffset.y + circlePosition.y,
-            20,
+            2 * scale,
             'orange',
             true
         );
 
         // Draw a polygon
+        /*
         drawCircumscribedPolygon(
             ctx,
             screenSize.width / 2 - pixelOffset.x + circlePosition.x + 100,
             screenSize.height / 2 - pixelOffset.y + circlePosition.y + 100,
-            20,
+            2 * scale,
             5,
             'red',
             'round',
             true
         );
+        */
 
         requestAnimationFrame(drawScreen);
     }
@@ -121,8 +123,23 @@ window.onload = function () {
         const y = data.y;
         console.log("( " + x + ", " + y + ")");
 
-        circlePosition.x = x;
-        circlePosition.y = y;
+        /*
+        const data = JSON.parse(event.data);
+        for (shape in data) {
+            const type = shape['type'];
+            if (type == 'polygon')
+                frame.add_polygon_from_dict(shape)
+            elif (type == 'circle')
+                frame.add_circle_from_dict(shape)
+            elif (type == 'line')
+                frame.add_line_from_dict(shape)
+        }
+        */
+
+        // circlePosition.x = x;
+        // circlePosition.y = y;
+        circlePosition.x = 0;
+        circlePosition.y = 0;
     }
 
     // Mouse interaction (dragging)
