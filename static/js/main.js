@@ -1,5 +1,8 @@
 window.onload = function () {
 
+    // Declare the event source
+    const source = new EventSource("/data");
+
     // Initialize canvas
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -7,6 +10,9 @@ window.onload = function () {
     // Set width and height of the canvas to cover the entire page
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
+
+    // Set the font
+    ctx.font = "14px Roboto";
 
     // Scale
     scale = 50;
@@ -23,18 +29,25 @@ window.onload = function () {
         y: 5
     }
 
-    // Get a reference to the button element
-    var button = document.getElementById("home");
+    const circlePosition = {
+        x: 0,
+        y: 0
+    }
 
     // Add a click event listener to the button to reset the view
+    var button = document.getElementById("home");
     button.addEventListener("click", function() {
         pixelOffset.x = 0;
         pixelOffset.y = 0;
         scale = 50;
     });
 
-    // Set the font
-    ctx.font = "14px Roboto";
+    // Add a slider event listener to the obstacle speed control slider
+    var obstacles_speed_slider = document.getElementById("obstacles_speed_slider");
+    obstacles_speed_slider.addEventListener("input", function() {
+        const obstacles_speed = obstacles_speed_slider.value;
+        console.log("Updated obstacles speed value to: ", obstacles_speed);
+    });
 
     // Function to draw the canvas content
     function drawScreen() {
@@ -55,6 +68,29 @@ window.onload = function () {
             ctx.lineTo(width, pixelOrigin.y);
             ctx.strokeStyle = axisColor;
             ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        function drawCircle(radius, x, y, color, filled) {
+            ctx.beginPath();
+            ctx.moveTo(pixelOrigin.x + x, pixelOrigin.y + y);
+            ctx.arc(pixelOrigin.x + x, pixelOrigin.y + y, 20, 0, 2 * Math.PI);
+            if (filled) {
+                ctx.fillStyle = color;
+                ctx.fill();
+            } else {
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            }
+        }
+
+        function drawTestLine() {
+            // Draw a line on the screen
+            ctx.strokeStyle = 'red';
+            ctx.beginPath();
+            ctx.moveTo(pixelOrigin.x, pixelOrigin.y);
+            ctx.lineTo(150, 150);
+            ctx.lineWidth = 0.25;
             ctx.stroke();
         }
 
@@ -133,6 +169,18 @@ window.onload = function () {
             pixelOffset.y = beforeOffsetY;
         }
     };
+
+    // Event handling
+    source.onmessage = function (event) {
+
+        // Get the data
+        const data = JSON.parse(event.data);
+        const x = data.x;
+        const y = data.y;
+        console.log("( " + x + ", " + y + ")");
+
+        drawCircle(20, x, y, 'orange', false);
+    }
 
     // Mouse interaction (dragging)
     let drag = false;

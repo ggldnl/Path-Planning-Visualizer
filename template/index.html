@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Robot Simulator</title>
-    <link rel="stylesheet" type="text/css" href="styles/canvas.css">
-    <link rel="stylesheet" type="text/css" href="styles/menu.css">
+    <link rel="stylesheet" type="text/css" href="static/styles/canvas.css">
+    <link rel="stylesheet" type="text/css" href="static/styles/menu.css">
 </head>
 <body>
 
@@ -22,12 +22,20 @@
     </label>
 
     <div class="sidebar">
-    <!-- Add here side menu content -->
+
+        <!-- Obstacles control -->
+        <label for="slider">Obstacles speed</label>
+        <input type="range" id="obstacles_speed_slider" min="0" max="100" value="50" step="1">
+
+        <label for="checkbox">Obstacles bouncing back when hitting walls:</label>
+        <input type="checkbox" id="checkbox">
+
+
+
     </div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <script src="scripts/colors.js"></script>
-    <script src="scripts/main.js"></script>
-    <script src="scripts/main.js"></script>
+    <script src="static/js/colors.js"></script>
+    <script src="static/js/main.js"></script>
 </body>
 </html>
