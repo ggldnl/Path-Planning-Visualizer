@@ -39,6 +39,18 @@ class Ball:
         self.vx = randint(50, 100)
         self.vy = randint(50, 100)
 
+    def update_bounding_box(self,
+                            bounding_box_start_x,
+                            bounding_box_end_x,
+                            bounding_box_start_y,
+                            bounding_box_end_y
+                            ):
+
+        self.bounding_box_start_x = bounding_box_start_x
+        self.bounding_box_end_x = bounding_box_end_x
+        self.bounding_box_start_y = bounding_box_start_y
+        self.bounding_box_end_y = bounding_box_end_y
+
     def step(self, dt):
 
         if self.x - self.radius < self.bounding_box_start_x or self.x + self.radius >= self.bounding_box_end_x:
