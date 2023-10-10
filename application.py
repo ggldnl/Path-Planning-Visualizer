@@ -8,6 +8,7 @@ from typing import Iterator
 from flask import Flask, Response, render_template, request, stream_with_context
 
 from model.test.ball import Ball
+from scripts.frame import Frame
 
 
 # Configure the logger
@@ -24,18 +25,6 @@ application = Flask(__name__, template_folder='template')
 # 20 Hz = 20 times a second: 1/20 = 0.05 update interval
 REFRESH_RATE = 20  # Hz
 UPDATE_FREQUENCY = 1/REFRESH_RATE
-
-# Create an object to move on the screen
-ball_radius = 20
-bounding_box_start_x, bounding_box_end_x = -250, 250
-bounding_box_start_y, bounding_box_end_y = -250, 250
-ball = Ball(
-    ball_radius,
-    bounding_box_start_x,
-    bounding_box_end_x,
-    bounding_box_start_y,
-    bounding_box_end_y
-)
 
 
 @application.route("/")
@@ -70,10 +59,35 @@ def generate_data() -> Iterator[str]:
 
         logger.info("Client %s connected", client_ip)
 
+        # Initialize what we will use in the control loop
+
+        # Buffer all the geometries that will be drawn on screen
+        # frame = Frame()
+
+        # Create an object to move on the screen
+        ball_radius = 20
+        bounding_box_start_x, bounding_box_end_x = -250, 250
+        bounding_box_start_y, bounding_box_end_y = -250, 250
+        ball = Ball(
+            ball_radius,
+            bounding_box_start_x,
+            bounding_box_end_x,
+            bounding_box_start_y,
+            bounding_box_end_y
+        )
+
         # Main loop
         while True:
 
+            # Clear the frame
+            # frame.clear()
+
+            # Step the simulation
             ball.step(UPDATE_FREQUENCY)
+            # world.step(UPDATE_FREQUENCY)
+
+            # Add stuff to the frame
+            # frame.add_polygons(world.robots, 'orange')
 
             # Dump the data
             json_data = json.dumps(
@@ -83,6 +97,8 @@ def generate_data() -> Iterator[str]:
                     "y": ball.y
                 }
             )
+            # json_data = frame.to_json()
+
             yield f"data:{json_data}\n\n"
             time.sleep(UPDATE_FREQUENCY)
     except GeneratorExit:
