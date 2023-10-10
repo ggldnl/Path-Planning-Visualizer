@@ -2,7 +2,7 @@
 
 2D online Robot Simulator platform for testing state of the art path planning algorithms in environments with dynamic obstacles.
 
-## Readmap
+## Roadmap
 
 - [ ] pass the points of the polygon directly from the backend 
     to test the drawing capability for custom shapes
