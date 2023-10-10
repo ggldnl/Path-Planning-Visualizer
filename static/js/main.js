@@ -1,3 +1,6 @@
+import { drawGrid, drawLine, drawPolygon, drawCircumscribedPolygon, drawCircle } from './canvas.js';
+
+
 window.onload = function () {
 
     // Declare the event source
@@ -15,7 +18,7 @@ window.onload = function () {
     ctx.font = "14px Roboto";
 
     // Scale
-    scale = 50;
+    let scale = 50;
 
     // Translation
     const pixelOffset = {
@@ -34,6 +37,42 @@ window.onload = function () {
         y: 0
     }
 
+    const screenSize = {
+        width: width,
+        height: height
+    };
+
+    // Function to draw the canvas content
+    function drawScreen() {
+
+        // Draw the grid
+        drawGrid(ctx, pixelOffset, scale, screenSize, textOffset, backgroundColor, axisColor, gridColor, textColor);
+
+        // Draw the robot
+        drawCircle(
+            ctx,
+            screenSize.width / 2 - pixelOffset.x + circlePosition.x,
+            screenSize.height / 2 - pixelOffset.y + circlePosition.y,
+            20,
+            'orange',
+            true
+        );
+
+        // Draw a polygon
+        drawCircumscribedPolygon(
+            ctx,
+            screenSize.width / 2 - pixelOffset.x + circlePosition.x + 100,
+            screenSize.height / 2 - pixelOffset.y + circlePosition.y + 100,
+            20,
+            5,
+            'red',
+            'round',
+            true
+        );
+
+        requestAnimationFrame(drawScreen);
+    }
+
     // Add a click event listener to the button to reset the view
     var button = document.getElementById("home");
     button.addEventListener("click", function() {
@@ -42,6 +81,7 @@ window.onload = function () {
         scale = 50;
     });
 
+
     // Add a slider event listener to the obstacle speed control slider
     var obstacles_speed_slider = document.getElementById("obstacles_speed_slider");
     obstacles_speed_slider.addEventListener("input", function() {
@@ -49,100 +89,6 @@ window.onload = function () {
         console.log("Updated obstacles speed value to: ", obstacles_speed);
     });
 
-    // Function to draw the canvas content
-    function drawScreen() {
-
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = backgroundColor;
-        ctx.strokeStyle = backgroundColor;
-        ctx.fillRect(0, 0, width, height);
-
-        var pixelOrigin = {
-            x: width / 2 - pixelOffset.x,
-            y: height / 2 - pixelOffset.y
-        };
-
-        function drawHorizontalAxis() {
-            ctx.beginPath();
-            ctx.moveTo(0, pixelOrigin.y);
-            ctx.lineTo(width, pixelOrigin.y);
-            ctx.strokeStyle = axisColor;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-
-        function drawCircle() {
-            ctx.beginPath();
-            ctx.arc(pixelOrigin.x + circlePosition.x, pixelOrigin.y + circlePosition.y, 20, 0, 2 * Math.PI);
-            ctx.fillStyle = 'orange';
-            ctx.fill();
-            ctx.closePath();
-        }
-
-        function drawTestLine() {
-            // Draw a line on the screen
-            ctx.strokeStyle = 'red';
-            ctx.beginPath();
-            ctx.moveTo(pixelOrigin.x, pixelOrigin.y);
-            ctx.lineTo(150, 150);
-            ctx.lineWidth = 0.25;
-            ctx.stroke();
-        }
-
-        function drawVerticalAxis() {
-            ctx.beginPath();
-            ctx.moveTo(pixelOrigin.x, 0);
-            ctx.lineTo(pixelOrigin.x, height);
-            ctx.strokeStyle = axisColor;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-
-        function drawGrid() {
-            ctx.strokeStyle = gridColor;
-            ctx.fillStyle = fontColor;
-            var leftEdge = Math.floor(-(width / 2 - pixelOffset.x) / scale);
-            var rightEdge = Math.ceil((width / 2 + pixelOffset.x) / scale);
-            for (var x = leftEdge; x <= rightEdge; x++) {
-                var px = pixelOrigin.x + scale * x;
-                ctx.beginPath();
-                ctx.moveTo(px, 0);
-                ctx.lineTo(px, height);
-                ctx.lineWidth = 0.25;
-                ctx.stroke();
-                if (x !== 0 && x % 5 === 0) {
-                    ctx.fillText(
-                        x.toString(),
-                        px + textOffset.x,
-                        pixelOrigin.y - textOffset.y
-                    );
-                }
-            }
-            var topEdge = Math.floor(-(height / 2 - pixelOffset.y) / scale);
-            var bottomEdge = Math.ceil((height / 2 + pixelOffset.y) / scale);
-            for (var y = topEdge; y <= bottomEdge; y++) {
-                var py = pixelOrigin.y + scale * y;
-                ctx.beginPath();
-                ctx.moveTo(0, py);
-                ctx.lineTo(width, py);
-                ctx.lineWidth = 0.25;
-                ctx.stroke();
-                if (y !== 0 && y % 5 === 0) {
-                    ctx.fillText(
-                        (-y).toString(),
-                        pixelOrigin.x + textOffset.x,
-                        py - textOffset.y
-                    );
-                }
-            }
-        }
-
-        drawHorizontalAxis();
-        drawVerticalAxis();
-        drawGrid();
-        drawCircle();
-        requestAnimationFrame(drawScreen);
-    }
 
     // Resize canvas when the window is resized
     window.onresize = function () {
