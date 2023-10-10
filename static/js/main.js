@@ -71,17 +71,12 @@ window.onload = function () {
             ctx.stroke();
         }
 
-        function drawCircle(radius, x, y, color, filled) {
+        function drawCircle() {
             ctx.beginPath();
-            ctx.moveTo(pixelOrigin.x + x, pixelOrigin.y + y);
-            ctx.arc(pixelOrigin.x + x, pixelOrigin.y + y, 20, 0, 2 * Math.PI);
-            if (filled) {
-                ctx.fillStyle = color;
-                ctx.fill();
-            } else {
-                ctx.strokeStyle = color;
-                ctx.stroke();
-            }
+            ctx.arc(pixelOrigin.x + circlePosition.x, pixelOrigin.y + circlePosition.y, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = 'orange';
+            ctx.fill();
+            ctx.closePath();
         }
 
         function drawTestLine() {
@@ -145,6 +140,7 @@ window.onload = function () {
         drawHorizontalAxis();
         drawVerticalAxis();
         drawGrid();
+        drawCircle();
         requestAnimationFrame(drawScreen);
     }
 
@@ -179,7 +175,8 @@ window.onload = function () {
         const y = data.y;
         console.log("( " + x + ", " + y + ")");
 
-        drawCircle(20, x, y, 'orange', false);
+        circlePosition.x = x;
+        circlePosition.y = y;
     }
 
     // Mouse interaction (dragging)
