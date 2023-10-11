@@ -81,6 +81,14 @@ export function drawGrid(
     var originX = screenSize.width / 2 - pixelOffset.x;
     var originY = screenSize.height / 2 - pixelOffset.y;
 
+    // Add mark on the origin
+    ctx.fillStyle = textColor
+    ctx.fillText(
+        '0',
+        originX + textOffset.x,
+        originY - textOffset.y
+    );
+
     // Draw horizontal axis
     drawLine(ctx, 0, originY, screenSize.width, originY, axisColor, 1);
 
