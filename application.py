@@ -12,6 +12,7 @@ from scripts.frame import Frame
 from model.test.ball import Ball
 from model.geometry.point import Point
 from model.geometry.polygon import Polygon
+from model.world.world import World
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -65,35 +66,21 @@ def generate_data() -> Iterator[str]:
 
         # Buffer all the geometries that will be drawn on screen
         frame = Frame()
-        frame.add_circle((10, 10), 1, 'red')
-        frame.add_circle((0, 10), 1, 'orange')
-        frame.add_polygon(
-            Polygon(
-                [
-                    Point(0, 0),
-                    Point(-1, 3),
-                    Point(2, 5),
-                    Point(4, 2),
-                    Point(3, 0)
-                ]
-            ),
-            'green'
-        )
 
         # Create an object to move on the screen
-        # world = World()
+        world = World()
 
         # Main loop
         while True:
-
-            # Clear the frame
-            # frame.clear()
 
             # Step the simulation
             # world.step(UPDATE_FREQUENCY)
 
             # Add stuff to the frame
-            # frame.add_polygons(world.robots, 'orange')
+            frame.add_polygons(world.robots, 'orange')
+
+            # Clear the frame
+            frame.clear()
 
             # Dump the data
             json_data = frame.to_json()
