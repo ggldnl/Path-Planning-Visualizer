@@ -8,7 +8,7 @@ export class Frame {
     this.drawList = [];
   }
 
-  add_circle(pos, radius, color, alpha = null) {
+  addCircle(pos, radius, color, alpha = null) {
     this.drawList.push({
       type: "circle",
       pos: pos,
@@ -18,8 +18,8 @@ export class Frame {
     });
   }
 
-  add_circle_from_dict(dict) {
-    add_circle(
+  addCircleFromDict(dict) {
+    this.addCircle(
         dict['pos'],
         dict['radius'],
         dict['color'],
@@ -27,7 +27,7 @@ export class Frame {
     )
   }
 
-  add_polygon(polygon, color, alpha = null) {
+  addPolygon(polygon, color, alpha = null) {
     this.drawList.push({
       type: "polygon",
       polygons: polygon,
@@ -36,7 +36,15 @@ export class Frame {
     });
   }
 
-  add_line(line, lineWidth, color, alpha = null) {
+  addPolygonFromDict(dict) {
+    this.add_polygon(
+        dict['polygon'],
+        dict['color'],
+        dict['alpha']
+    )
+  }
+
+  addLine(line, lineWidth, color, alpha = null) {
     this.drawList.push({
       type: "line",
       lines: line,
@@ -44,5 +52,14 @@ export class Frame {
       color: color,
       alpha: alpha,
     });
+  }
+
+  addLineFromDict(dict) {
+    this.addLine(
+        dict['line'],
+        dict['lineWidth'],
+        dict['color'],
+        dict['alpha']
+    )
   }
 }
