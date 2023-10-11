@@ -11,3 +11,5 @@
 - [x] find a way to buffer the shapes (frame) and send them 
     all at the same time to the frontend
 - [ ] define the control loop
+- [ ] move from current, complex, translation and scale logic to
+    translate() and scale() on the canvas object
