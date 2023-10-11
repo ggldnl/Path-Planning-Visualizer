@@ -6,16 +6,18 @@ window.onload = function () {
     // Declare the event source
     const source = new EventSource("/data");
 
-    // Initialize canvas
+    // Initialize canvas and drawing stuff
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+
+    const frame = new Frame();
+
+    // Set the font
+    ctx.font = "14px Roboto";
 
     // Set width and height of the canvas to cover the entire page
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
-
-    // Set the font
-    ctx.font = "14px Roboto";
 
     // Scale
     let scale = 50;
@@ -32,45 +34,34 @@ window.onload = function () {
         y: 5
     }
 
-    const circlePosition = {
-        x: 0,
-        y: 0
-    }
-
     const screenSize = {
         width: width,
         height: height
-    };
+    }
 
     // Function to draw the canvas content
     function drawScreen() {
 
+        const pixelOrigin = {
+            x: width / 2 - pixelOffset.x,
+            y: height / 2 - pixelOffset.y
+        }
+
         // Draw the grid
         drawGrid(ctx, pixelOffset, scale, screenSize, textOffset, backgroundColor, axisColor, gridColor, textColor);
 
-        // Draw the robot
-        drawCircle(
-            ctx,
-            screenSize.width / 2 - pixelOffset.x + circlePosition.x,
-            screenSize.height / 2 - pixelOffset.y + circlePosition.y,
-            2 * scale,
-            'orange',
-            true
-        );
+        drawCircle(ctx, [0, 0], pixelOrigin, scale, 1, 'blue', true);
 
-        // Draw a polygon
-        /*
-        drawCircumscribedPolygon(
-            ctx,
-            screenSize.width / 2 - pixelOffset.x + circlePosition.x + 100,
-            screenSize.height / 2 - pixelOffset.y + circlePosition.y + 100,
-            2 * scale,
-            5,
-            'red',
-            'round',
-            true
-        );
-        */
+        // Draw the contents of the frame
+        for (const shape of frame.drawList) {
+            const type = shape['type'];
+            if (type == 'polygon')
+                drawPolygon(ctx, shape['points'], pixelOrigin, scale, shape['color'], 'round', true);
+            else if (type == 'circle')
+                drawCircle(ctx, shape['pos'], pixelOrigin, scale, shape['radius'], shape['color'], true);
+            else if (type == 'line')
+                console.log('drawing line');
+        }
 
         requestAnimationFrame(drawScreen);
     }
@@ -119,27 +110,16 @@ window.onload = function () {
 
         // Get the data
         const data = JSON.parse(event.data);
-        const x = data.x;
-        const y = data.y;
-        console.log("( " + x + ", " + y + ")");
 
-        /*
-        const data = JSON.parse(event.data);
-        for (shape in data) {
-            const type = shape['type'];
+        for (const item of data) {
+            const type = item['type'];
             if (type == 'polygon')
-                frame.add_polygon_from_dict(shape)
-            elif (type == 'circle')
-                frame.add_circle_from_dict(shape)
-            elif (type == 'line')
-                frame.add_line_from_dict(shape)
+                frame.addPolygonFromDict(item)
+            else if (type == 'circle')
+                frame.addCircleFromDict(item)
+            else if (type == 'line')
+                frame.addLineFromDict(item)
         }
-        */
-
-        // circlePosition.x = x;
-        // circlePosition.y = y;
-        circlePosition.x = 0;
-        circlePosition.y = 0;
     }
 
     // Mouse interaction (dragging)

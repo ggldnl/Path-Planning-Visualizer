@@ -2,14 +2,16 @@ import json
 import logging
 import sys
 import time
-from datetime import datetime
 from typing import Iterator
 
 from flask import Flask, Response, render_template, request, stream_with_context
 
-from model.test.ball import Ball
 from scripts.frame import Frame
 
+# Import stuff from the model
+from model.test.ball import Ball
+from model.geometry.point import Point
+from model.geometry.polygon import Polygon
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -62,19 +64,24 @@ def generate_data() -> Iterator[str]:
         # Initialize what we will use in the control loop
 
         # Buffer all the geometries that will be drawn on screen
-        # frame = Frame()
+        frame = Frame()
+        frame.add_circle((10, 10), 1, 'red')
+        frame.add_circle((0, 10), 1, 'orange')
+        frame.add_polygon(
+            Polygon(
+                [
+                    Point(0, 0),
+                    Point(-1, 3),
+                    Point(2, 5),
+                    Point(4, 2),
+                    Point(3, 0)
+                ]
+            ),
+            'green'
+        )
 
         # Create an object to move on the screen
-        ball_radius = 20
-        bounding_box_start_x, bounding_box_end_x = -250, 250
-        bounding_box_start_y, bounding_box_end_y = -250, 250
-        ball = Ball(
-            ball_radius,
-            bounding_box_start_x,
-            bounding_box_end_x,
-            bounding_box_start_y,
-            bounding_box_end_y
-        )
+        # world = World()
 
         # Main loop
         while True:
@@ -83,21 +90,13 @@ def generate_data() -> Iterator[str]:
             # frame.clear()
 
             # Step the simulation
-            ball.step(UPDATE_FREQUENCY)
             # world.step(UPDATE_FREQUENCY)
 
             # Add stuff to the frame
             # frame.add_polygons(world.robots, 'orange')
 
             # Dump the data
-            json_data = json.dumps(
-                {
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "x": ball.x,
-                    "y": ball.y
-                }
-            )
-            # json_data = frame.to_json()
+            json_data = frame.to_json()
 
             yield f"data:{json_data}\n\n"
             time.sleep(UPDATE_FREQUENCY)

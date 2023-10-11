@@ -27,7 +27,7 @@ class Frame:
         self.draw_list.append(
             {
                 "type": "polygon",
-                "polygons": polygon,
+                "points": polygon.get_point_array(),
                 "color": color,
                 "alpha": alpha
             }
@@ -41,7 +41,7 @@ class Frame:
         self.draw_list.append(
             {
                 "type": "line",
-                "lines": line,
+                "points": line,  # TODO uniform with polygon
                 "line_width": line_width,
                 "color": color,
                 "alpha": alpha,

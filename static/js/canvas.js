@@ -30,9 +30,14 @@ export function drawLine(ctx, x1, y1, x2, y2, color, width) {
  * @param {string} color - The color of the circle's outline or fill (e.g., 'blue', '#FFA500', 'rgba(0, 0, 255, 0.8)').
  * @param {boolean} filled - A boolean value indicating whether the circle should be filled (`true`) or only outlined (`false`).
  */
-export function drawCircle(ctx, x, y, radius, color, filled) {
+export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, color, filled) {
+
+    // Position of the circle in the new coordinate frame
+    var x = pixelOrigin.x + relativePos[0] * pixelScale;
+    var y = pixelOrigin.y - relativePos[1] * pixelScale;
+
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius * pixelScale, 0, 2 * Math.PI);
     if (filled) {
         ctx.fillStyle = color;
         ctx.fill();
@@ -125,14 +130,23 @@ export function drawGrid(
  * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
  * @param {boolean} filled - A boolean value indicating whether the polygon should be filled or only outlined.
  */
-export function drawPolygon(ctx, points, color, lineJoin, filled) {
+export function drawPolygon(ctx, points, pixelOrigin, pixelScale, color, lineJoin, filled) {
     if (points.length > 0) {
         ctx.lineJoin = lineJoin;
         ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
+
+        // First point
+        var x = pixelOrigin.x + points[0][0] * pixelScale;
+        var y = pixelOrigin.y - points[0][1] * pixelScale;
+
+        ctx.moveTo(x, y);
+
         for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
+            x = pixelOrigin.x + points[i][0] * pixelScale;
+            y = pixelOrigin.y - points[i][1] * pixelScale;
+            ctx.lineTo(x, y);
         }
+
         ctx.closePath();
         if (filled) {
             ctx.fillStyle = color;

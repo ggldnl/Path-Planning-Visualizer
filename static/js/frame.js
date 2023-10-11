@@ -27,18 +27,18 @@ export class Frame {
     )
   }
 
-  addPolygon(polygon, color, alpha = null) {
+  addPolygon(points, color, alpha = null) {
     this.drawList.push({
       type: "polygon",
-      polygons: polygon,
+      points: points,
       color: color,
       alpha: alpha,
     });
   }
 
   addPolygonFromDict(dict) {
-    this.add_polygon(
-        dict['polygon'],
+    this.addPolygon(
+        dict['points'],
         dict['color'],
         dict['alpha']
     )
