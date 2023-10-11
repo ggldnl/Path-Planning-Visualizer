@@ -50,8 +50,6 @@ window.onload = function () {
         // Draw the grid
         drawGrid(ctx, pixelOffset, scale, screenSize, textOffset, backgroundColor, axisColor, gridColor, textColor);
 
-        drawCircle(ctx, [0, 0], pixelOrigin, scale, 1, 'blue', true);
-
         // Draw the contents of the frame
         for (const shape of frame.drawList) {
             const type = shape['type'];
