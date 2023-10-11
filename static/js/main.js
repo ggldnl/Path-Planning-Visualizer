@@ -61,6 +61,9 @@ window.onload = function () {
                 console.log('drawing line');
         }
 
+        // Clear the frame
+        frame.clear();
+
         requestAnimationFrame(drawScreen);
     }
 
