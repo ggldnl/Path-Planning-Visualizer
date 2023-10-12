@@ -61,9 +61,6 @@ window.onload = function () {
                 console.log('drawing line');
         }
 
-        // Clear the frame
-        frame.clear();
-
         requestAnimationFrame(drawScreen);
     }
 
@@ -111,6 +108,9 @@ window.onload = function () {
 
         // Get the data
         const data = JSON.parse(event.data);
+
+        // Clear the frame
+        frame.clear();
 
         for (const item of data) {
             const type = item['type'];

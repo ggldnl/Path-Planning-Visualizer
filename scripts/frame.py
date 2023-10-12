@@ -27,7 +27,7 @@ class Frame:
         self.draw_list.append(
             {
                 "type": "polygon",
-                "points": polygon.get_point_array(),
+                "points": polygon.to_point_array(),
                 "color": color,
                 "alpha": alpha
             }

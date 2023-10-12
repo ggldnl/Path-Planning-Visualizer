@@ -1,4 +1,3 @@
-import json
 import logging
 import sys
 import time
@@ -9,10 +8,9 @@ from flask import Flask, Response, render_template, request, stream_with_context
 from scripts.frame import Frame
 
 # Import stuff from the model
-from model.test.ball import Ball
-from model.geometry.point import Point
 from model.geometry.polygon import Polygon
 from model.world.world import World
+from model.world.obstacles.obstacle import Obstacle
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -68,22 +66,26 @@ def generate_data() -> Iterator[str]:
         frame = Frame()
 
         # Create an object to move on the screen
-        world = World()
+        world = World(UPDATE_FREQUENCY)
+        p = Polygon.generate_random_polygon(5, 2)
+        o = Obstacle(p, (0, 0, 0))
+        world.add_obstacle(o)
 
         # Main loop
         while True:
 
             # Step the simulation
-            # world.step(UPDATE_FREQUENCY)
+            world.step()
 
             # Add stuff to the frame
             frame.add_polygons(world.robots, 'orange')
-
-            # Clear the frame
-            frame.clear()
+            frame.add_polygons([obstacle.polygon for obstacle in world.obstacles], 'red')
 
             # Dump the data
             json_data = frame.to_json()
+
+            # Clear the frame
+            frame.clear()
 
             yield f"data:{json_data}\n\n"
             time.sleep(UPDATE_FREQUENCY)
