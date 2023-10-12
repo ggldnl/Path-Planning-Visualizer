@@ -1,6 +1,7 @@
 import logging
 import sys
 import time
+import random
 from typing import Iterator
 
 from flask import Flask, Response, render_template, request, stream_with_context
@@ -67,9 +68,10 @@ def generate_data() -> Iterator[str]:
 
         # Create an object to move on the screen
         world = World(UPDATE_FREQUENCY)
-        p = Polygon.generate_random_polygon(5, 2)
-        o = Obstacle(p, (0, 0, 0))
-        world.add_obstacle(o)
+        for _ in range(random.randint(10, 20)):
+            p = Polygon.generate_random_polygon(5, 2)
+            o = Obstacle(p, (0, 0, 0))
+            world.add_obstacle(o)
 
         # Main loop
         while True:
