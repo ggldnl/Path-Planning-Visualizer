@@ -2,6 +2,7 @@ import logging
 import sys
 import time
 import random
+import math
 from typing import Iterator
 
 from flask import Flask, Response, render_template, request, stream_with_context
@@ -10,6 +11,7 @@ from scripts.frame import Frame
 
 # Import stuff from the model
 from model.geometry.polygon import Polygon
+from model.geometry.point import Point
 from model.world.world import World
 from model.world.obstacles.obstacle import Obstacle
 
@@ -66,11 +68,26 @@ def generate_data() -> Iterator[str]:
         # Buffer all the geometries that will be drawn on screen
         frame = Frame()
 
-        # Create an object to move on the screen
+        # Create the world
         world = World(UPDATE_FREQUENCY)
+
+        # Compute the goal point with respect to the origin
+        distance = random.randint(0, 50)
+        angle = random.uniform(0, 2 * math.pi)
+        goal_x = distance * math.cos(angle)
+        goal_y = distance * math.sin(angle)
+
+        # Set start and goal
+        world.start = Point(0, 0)
+        world.goal = Point(goal_x, goal_y)
+
         for _ in range(random.randint(10, 20)):
-            p = Polygon.generate_random_polygon(5, 2)
-            o = Obstacle(p, (0, 0, 0))
+
+            polygon = Polygon.generate_random_polygon(5, 2)
+            pose = (random.randint(-distance, distance), random.randint(-distance, distance), 0)
+            vel = None
+
+            o = Obstacle(polygon, pose, vel)
             world.add_obstacle(o)
 
         # Main loop
@@ -79,9 +96,13 @@ def generate_data() -> Iterator[str]:
             # Step the simulation
             world.step()
 
-            # Add stuff to the frame
+            # Add robots and obstacles to the frame
             frame.add_polygons(world.robots, 'orange')
             frame.add_polygons([obstacle.polygon for obstacle in world.obstacles], 'red')
+
+            # Add the start and the goal points to the frame
+            frame.add_circle([world.start.x, world.start.y], 0.2, 'green')
+            frame.add_circle([world.goal.x, world.goal.y], 0.2, 'blue')
 
             # Dump the data
             json_data = frame.to_json()

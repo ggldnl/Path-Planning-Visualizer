@@ -180,6 +180,13 @@ class Polygon:
         self.translate(pose[0], pose[1])
         self.rotate(pose[2])
 
+    def transform_to(self, pose):
+        """
+        Rotate and translate the polygon. Pose is a 3 element tuple (x, y, theta)
+        """
+        self.translate_to(pose[0], pose[1])
+        self.rotate(pose[2])
+
     def get_edges(self):
         """
         Get a list of this polygon's edges as Point pairs
