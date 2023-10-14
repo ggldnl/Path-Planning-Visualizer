@@ -52,6 +52,7 @@ window.onload = function () {
 
         // Draw the contents of the frame
         for (const shape of frame.drawList) {
+            console.log(shape)
             const type = shape['type'];
             if (type == 'polygon')
                 drawPolygon(ctx, shape['points'], pixelOrigin, scale, shape['color'], 'round', true);

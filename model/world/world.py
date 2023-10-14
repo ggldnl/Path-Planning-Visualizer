@@ -1,3 +1,6 @@
+from model.world.map.map import Map
+
+
 class World:
 
     def __init__(self, dt):
@@ -8,16 +11,18 @@ class World:
 
         # Initialize lists of world objects
         self.robots = []
-        self.obstacles = []
+
+        # Initialize the map
+        self.map = Map()
+
+        # TODO provide load map capabilities
+        self.map.random_map(self.robots)
 
     def set_period(self, dt):
         self.dt = dt
 
     def add_robot(self, robot):
         self.robots.append(robot)
-
-    def add_obstacle(self, obstacle):
-        self.obstacles.append(obstacle)
 
     def step(self):
         """
@@ -31,7 +36,7 @@ class World:
             robot.step_motion(dt)
 
         # Step all the obstacles
-        for obstacle in self.obstacles:
+        for obstacle in self.map.obstacles:
             obstacle.step_motion(dt)
 
         # Apply physics interactions

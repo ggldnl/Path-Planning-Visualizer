@@ -10,11 +10,8 @@ from flask import Flask, Response, render_template, request, stream_with_context
 from scripts.frame import Frame
 
 # Import stuff from the model
-from model.geometry.polygon import Polygon
-from model.geometry.point import Point
 from model.world.world import World
-from model.world.obstacles.obstacle import Obstacle
-from model.world.obstacles.rectangular_obstacle import RectangularObstacle
+
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -72,37 +69,6 @@ def generate_data() -> Iterator[str]:
         # Create the world
         world = World(UPDATE_FREQUENCY)
 
-        # Compute the goal point with respect to the origin
-        distance = random.randint(0, 50)
-        angle = random.uniform(0, 2 * math.pi)
-        goal_x = distance * math.cos(angle)
-        goal_y = distance * math.sin(angle)
-
-        # Set start and goal
-        world.start = Point(0, 0)
-        world.goal = Point(goal_x, goal_y)
-
-        for _ in range(random.randint(10, 20)):
-
-            # Define position, orientation and speed vector
-            pose = (random.randint(-distance, distance), random.randint(-distance, distance), 0)
-            vel = None
-
-            prob = random.uniform(0, 1)
-            if prob > 0.5:
-
-                # Create a polygon obstacle
-                polygon = Polygon.generate_random_polygon(5, 2)
-                o = Obstacle(polygon, pose, vel)
-                world.add_obstacle(o)
-            else:
-
-                # Create a rectangular obstacle
-                width = random.randint(10, 50)
-                height = random.randint(10, 50)
-                o = RectangularObstacle(width, height, pose, vel)
-                world.add_obstacle(o)
-
         # Main loop
         while True:
 
@@ -111,11 +77,11 @@ def generate_data() -> Iterator[str]:
 
             # Add robots and obstacles to the frame
             frame.add_polygons(world.robots, 'orange')
-            frame.add_polygons([obstacle.polygon for obstacle in world.obstacles], '#8B000066')
+            frame.add_polygons([obstacle.polygon for obstacle in world.map.current_obstacles], '#8B000066')
 
             # Add the start and the goal points to the frame
-            frame.add_circle([world.start.x, world.start.y], 0.1, 'green')
-            frame.add_circle([world.goal.x, world.goal.y], 0.1, 'blue')
+            frame.add_circle([0, 0], 0.1, 'green')
+            frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.1, 'blue')
 
             # Dump the data
             json_data = frame.to_json()

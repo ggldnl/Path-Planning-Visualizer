@@ -4,6 +4,7 @@ import math
 def no_motion(pose, vel, dt):
     return pose[0], pose[1], pose[2]
 
+
 def simple_translation_motion(pose, vel, dt):
     """
     Describe the simplest motion: a plain translation using a velocity vector with no rotational component
@@ -37,3 +38,23 @@ def spiral_motion(pose, vel, dt):
     y = r * math.sin(theta)
 
     return x, y, pose[2]
+
+
+def bounded_window_motion(pose, vel, dt, width=50, height=50):
+
+    x = pose[0]
+    y = pose[1]
+    theta = pose[2]
+
+    vx = vel[0]
+    vy = vel[1]
+
+    if x <= -width / 2 or x >= width / 2:
+        print('inverted speed on x')
+        vx *= -1
+
+    if y <= -height / 2 or y >= height / 2:
+        print('inverted speed on x')
+        vy *= -1
+
+    return x + vx * dt, y + vy * dt, theta

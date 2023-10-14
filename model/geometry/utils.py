@@ -1,4 +1,4 @@
-import linalg
+import model.geometry.linalg as linalg
 
 
 def check_nearness(polygon1, polygon2):
@@ -25,7 +25,7 @@ def convex_polygon_intersect_test(polygon1, polygon2):
     # Perform Separating Axis Test
     intersect = True
     edge_index = 0
-    edges = polygon_a.edges() + polygon_b.edges()
+    edges = polygon_a.get_edges() + polygon_b.get_edges()
 
     # Loop through the edges of polygonA searching for a separating axis
     while intersect and edge_index < len(edges):

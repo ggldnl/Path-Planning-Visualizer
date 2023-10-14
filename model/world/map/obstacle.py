@@ -1,4 +1,4 @@
-import model.world.obstacles.motion_laws as motion_laws
+import model.world.map.motion_laws as motion_laws
 
 import random
 
@@ -15,7 +15,7 @@ class Obstacle:
         else:
             self.vel = vel
 
-        self._motion_law_function = motion_laws.translation_and_rotation_motion
+        self._motion_law_function = motion_laws.bounded_window_motion
 
     def step_motion(self, dt):
         """

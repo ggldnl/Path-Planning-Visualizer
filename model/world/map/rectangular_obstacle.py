@@ -1,4 +1,4 @@
-from model.world.obstacles.obstacle import Obstacle
+from model.world.map.obstacle import Obstacle
 from model.geometry.polygon import Polygon
 from model.geometry.point import Point
 
