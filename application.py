@@ -14,6 +14,7 @@ from model.geometry.polygon import Polygon
 from model.geometry.point import Point
 from model.world.world import World
 from model.world.obstacles.obstacle import Obstacle
+from model.world.obstacles.rectangular_obstacle import RectangularObstacle
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -83,12 +84,24 @@ def generate_data() -> Iterator[str]:
 
         for _ in range(random.randint(10, 20)):
 
-            polygon = Polygon.generate_random_polygon(5, 2)
+            # Define position, orientation and speed vector
             pose = (random.randint(-distance, distance), random.randint(-distance, distance), 0)
             vel = None
 
-            o = Obstacle(polygon, pose, vel)
-            world.add_obstacle(o)
+            prob = random.uniform(0, 1)
+            if prob > 0.5:
+
+                # Create a polygon obstacle
+                polygon = Polygon.generate_random_polygon(5, 2)
+                o = Obstacle(polygon, pose, vel)
+                world.add_obstacle(o)
+            else:
+
+                # Create a rectangular obstacle
+                width = random.randint(10, 50)
+                height = random.randint(10, 50)
+                o = RectangularObstacle(width, height, pose, vel)
+                world.add_obstacle(o)
 
         # Main loop
         while True:
@@ -98,11 +111,11 @@ def generate_data() -> Iterator[str]:
 
             # Add robots and obstacles to the frame
             frame.add_polygons(world.robots, 'orange')
-            frame.add_polygons([obstacle.polygon for obstacle in world.obstacles], 'red')
+            frame.add_polygons([obstacle.polygon for obstacle in world.obstacles], '#8B000066')
 
             # Add the start and the goal points to the frame
-            frame.add_circle([world.start.x, world.start.y], 0.2, 'green')
-            frame.add_circle([world.goal.x, world.goal.y], 0.2, 'blue')
+            frame.add_circle([world.start.x, world.start.y], 0.1, 'green')
+            frame.add_circle([world.goal.x, world.goal.y], 0.1, 'blue')
 
             # Dump the data
             json_data = frame.to_json()
