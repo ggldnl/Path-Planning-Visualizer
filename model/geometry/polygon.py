@@ -24,6 +24,9 @@ class Polygon:
             else:
                 raise ValueError(f'Invalid object {point}')
 
+        # Initialize internal angle to 0 degrees
+        self.angle = 0
+
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
 
@@ -91,15 +94,25 @@ class Polygon:
             point.x += offset_x
             point.y += offset_y
 
-    def rotate(self, theta):
-        # theta = math.radians(theta)
-        cos_theta = math.cos(theta)
-        sin_theta = math.sin(theta)
+    def rotate(self, angle_degrees):
 
+        center_x, center_y = self.find_center()
+        angle_radians = np.deg2rad(angle_degrees)
+        self.angle += angle_degrees
+
+        # Apply rotation to each point
         for point in self.points:
-            x, y = point.x, point.y
-            point.x = x * cos_theta - y * sin_theta
-            point.y = x * sin_theta + y * cos_theta
+            # Translate the point to the origin (center) of rotation
+            translated_x = point.x - center_x
+            translated_y = point.y - center_y
+
+            # Perform the rotation
+            new_x = translated_x * np.cos(angle_radians) - translated_y * np.sin(angle_radians)
+            new_y = translated_x * np.sin(angle_radians) + translated_y * np.cos(angle_radians)
+
+            # Translate the point back to its original position
+            point.x = new_x + center_x
+            point.y = new_y + center_y
 
     def transform(self, pose):
         x, y, alpha = pose
@@ -112,9 +125,14 @@ class Polygon:
         offset_y = y - center_y
         self.translate(offset_x, offset_y)
 
+    def rotate_to(self, target_angle):
+        # Compute the angle difference
+        angle_diff = target_angle - self.angle
+        self.rotate(angle_diff)
+
     def transform_to(self, pose):
         self.translate_to(pose[0], pose[1])
-        self.rotate(pose[2])
+        self.rotate_to(pose[2])
 
     def find_center(self):
         total_x = sum(point.x for point in self.points)

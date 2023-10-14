@@ -19,11 +19,15 @@ OBS_MIN_HEIGHT = 5
 OBS_MAX_HEIGHT = OBS_MIN_HEIGHT + 5
 OBS_MIN_COUNT = 10
 OBS_MAX_COUNT = 50
-OBS_MIN_DIST = 20.0  # meters
-OBS_MAX_DIST = 50.0  # meters
-GOAL_MIN_DIST = 10.0  # meters
-GOAL_MAX_DIST = 50.0  # meters
-MIN_GOAL_CLEARANCE = 0.2  # meters
+OBS_MIN_DIST = 20.0
+OBS_MAX_DIST = 50.0
+OBS_MIN_LIN_SPEED = -10
+OBS_MAX_LIN_SPEED = 10
+OBS_MIN_ANG_SPEED = -90
+OBS_MAX_ANG_SPEED = 90
+GOAL_MIN_DIST = 10.0
+GOAL_MAX_DIST = 50.0
+MIN_GOAL_CLEARANCE = 0.2
 
 
 class Map:
@@ -49,6 +53,12 @@ class Map:
         obs_max_width = OBS_MAX_WIDTH
         obs_min_height = OBS_MIN_HEIGHT
         obs_max_height = OBS_MAX_HEIGHT
+
+        # Speed
+        obs_min_lin_speed = OBS_MIN_LIN_SPEED
+        obs_max_lin_speed = OBS_MAX_LIN_SPEED
+        obs_min_ang_speed = OBS_MIN_ANG_SPEED
+        obs_max_ang_speed = OBS_MAX_ANG_SPEED
 
         # Goal parameters
         goal_min_dist = GOAL_MIN_DIST
@@ -115,9 +125,11 @@ class Map:
 
             # The polygon is good: add the velocity vector and create an obstacle
             if not intersects:
-                # Speed = 0.5 (from 0 to 1) in a random direction
-                vel = (random.randint(0, 2) - 1 * 0.5, random.randint(0, 2) - 1 * 0.5, random.randint(0, 2) - 1 * 0.5)
-
+                vel = (
+                    random.uniform(obs_min_lin_speed, obs_max_lin_speed),
+                    random.uniform(obs_min_lin_speed, obs_max_lin_speed),
+                    random.uniform(obs_min_ang_speed, obs_max_ang_speed)
+                )
                 obstacle = Obstacle(polygon, pose, vel)
                 obstacles.append(obstacle)
 

@@ -15,7 +15,7 @@ class Obstacle:
         else:
             self.vel = vel
 
-        self._motion_law_function = motion_laws.translation_and_rotation_motion
+        self._motion_law_function = motion_laws.bounded_window_motion
 
     def step_motion(self, dt):
         """
@@ -31,5 +31,5 @@ class Obstacle:
         self.update_geometry()
 
     def update_geometry(self):
-        self.polygon.translate_to(self.pose[0], self.pose[1])
-
+        # self.polygon.translate_to(self.pose[0], self.pose[1])
+        self.polygon.transform_to(self.pose)
