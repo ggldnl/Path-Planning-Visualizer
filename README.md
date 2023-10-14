@@ -2,7 +2,7 @@
 
 2D online Robot Simulator platform for testing state-of-the-art path planning algorithms in environments with dynamic obstacles.
 
-## Roadmap
+## TODO
 
 - [ ] define the control loop
 - [ ] move from current, complex, translation and scale logic to
@@ -10,3 +10,6 @@
     that handles these things
 - [ ] implement antialiasing (it is normally controlled by the
     browser but there is some way)
+- [ ] comment better each function and the overall structure
+- [ ] add typing
+- [ ] add input checking
