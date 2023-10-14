@@ -24,10 +24,6 @@ class Polygon:
             else:
                 raise ValueError(f'Invalid object {point}')
 
-        # Compute centroid and radius of the circumference
-        self._compute_centroid()
-        self._compute_radius()
-
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
 
@@ -57,20 +53,14 @@ class Polygon:
 
         return cls(points)
 
-    def add(self, point):
-        """
-        Add a point to the polygon
-        """
-
-        self.points.append(point)
-        self._compute_centroid()
-        self._compute_radius()
-
     def to_point_array(self):
         return [[point.x, point.y] for point in self.points]
 
     def to_dict(self):
         return {'points': [point.to_dict() for point in self.points]}
+
+    def add(self, point):
+        self.points.append(point)
 
     def get_bounding_box(self):
         """
@@ -96,135 +86,81 @@ class Polygon:
             Point(max_x, min_y)
         ])
 
-    def get_bounding_circle(self):
-        """
-        Get the center point and radius for a circle that completely contains this polygon.
-
-        NOTE: this method is meant to give a quick bounding circle
-                the circle calculated may not be the minimum bounding circle.
-        """
-
-        return self.centroid, self.bounding_circle_radius
-
-    def scale(self, scale_x, scale_y):
-        """
-        Scale the polygon by a factor on the bounding box width and height
-        preserving the bounding box center (self.centroid).
-        """
-
-        # Translate to the origin
-        for point in self.points:
-            point -= self.centroid
-
-        # Scale the points
-        for point in self.points:
-            point.x *= scale_x
-            point.y *= scale_y
-
-        # Translate back to original position
-        for point in self.points:
-            point += self.centroid
-
-        # Update bounding circle size, centroid stays the same
-        self._compute_radius()
-
     def translate(self, offset_x, offset_y):
-        """
-        Translates all the points of the polygon by an offset in x and y direction.
-        """
-
         for point in self.points:
-            point.x = point.x + offset_x
-            point.y = point.y + offset_y
-
-        # update center and bounding box size
-        self._compute_centroid()
-
-    def translate_to(self, x, y):
-        """
-        Translates all the points in the polygon such that the center of
-        the bounding box falls on (x, y).
-        """
-
-        offset_x = x - self.centroid.x
-        offset_y = y - self.centroid.y
-
-        self.translate(offset_x, offset_y)
-
-    def get_transformation(self, pose):
-        """
-        Return a copy of this polygon transformed to the given pose.
-        The pose is a (x, y, theta) tuple
-        """
-        x, y, theta = pose
-        return Polygon(
-            linalg.rotate_and_translate_vectors(self.points, Point(x, y), theta)
-        )
+            point.x += offset_x
+            point.y += offset_y
 
     def rotate(self, theta):
-        """
-        Rotate the polygon by the angle theta (radians)
-        """
-
-        sin_theta = math.sin(theta)
+        # theta = math.radians(theta)
         cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
 
         for point in self.points:
-            point.x = point.x * cos_theta - point.y * sin_theta
-            point.y = point.x * sin_theta + point.y * cos_theta
+            x, y = point.x, point.y
+            point.x = x * cos_theta - y * sin_theta
+            point.y = x * sin_theta + y * cos_theta
 
     def transform(self, pose):
-        """
-        Rotate and translate the polygon. Pose is a 3 element tuple (x, y, theta)
-        """
-        self.translate(pose[0], pose[1])
-        self.rotate(pose[2])
+        x, y, alpha = pose
+        self.translate(x, y)
+        self.rotate(alpha)
+
+    def translate_to(self, x, y):
+        center_x, center_y = self.find_center()
+        offset_x = x - center_x
+        offset_y = y - center_y
+        self.translate(offset_x, offset_y)
 
     def transform_to(self, pose):
-        """
-        Rotate and translate the polygon. Pose is a 3 element tuple (x, y, theta)
-        """
         self.translate_to(pose[0], pose[1])
         self.rotate(pose[2])
 
+    def find_center(self):
+        total_x = sum(point.x for point in self.points)
+        total_y = sum(point.y for point in self.points)
+        num_points = len(self.points)
+        center_x = total_x / num_points
+        center_y = total_y / num_points
+        return center_x, center_y
+
     def get_edges(self):
-        """
-        Get a list of this polygon's edges as Point pairs
-        """
-
-        n = len(self.points)
+        # Get the edges of the polygon
         edges = []
-
-        for i in range(n):
-            edges.append([self.points[i], self.points[(i + 1) % n]])
-
+        for i in range(len(self.points)):
+            edge = (self.points[i], self.points[(i + 1) % len(self.points)])
+            edges.append(edge)
         return edges
 
-    def _compute_centroid(self):
-        """
-        Approximate the centroid of this polygon.
+    @classmethod
+    def _normal(cls, edge):
+        # Calculate the normal vector of an edge
+        p1, p2 = edge
+        return Point(-(p2.y - p1.y), p2.x - p1.x)
 
-        NOTE: this method is meant to give a quick and dirty approximation of center
-                of the polygon. It returns the average of the vertices; the actual
-                centroid may not be equivalent.
-        """
-
-        # Compute the centroid
-        self.centroid = Point(0, 0)
+    def _project(self, axis):
+        # Project the polygon onto an axis and return the min and max values
+        min_proj = float('inf')
+        max_proj = float('-inf')
         for point in self.points:
-            self.centroid += point  # add it to the centroid
-        self.centroid /= len(self.points)
+            projection = point.x * axis.x + point.y * axis.y
+            if projection < min_proj:
+                min_proj = projection
+            if projection > max_proj:
+                max_proj = projection
+        return min_proj, max_proj
 
-    def _compute_radius(self):
-        """
-        Compute the radius of a circle that completely contains the polygon
-        """
+    def intersects(self, other_polygon):
+        for edge in self.get_edges() + other_polygon.get_edges():
+            axis = self._normal(edge)
+            min1, max1 = self._project(axis)
+            min2, max2 = other_polygon._project(axis)
 
-        # Find the radius of the bounding circle
-        self.bounding_circle_radius = self.centroid.distance(self.points[0])
-        for i in range(1, len(self.points)):
-            distance = self.centroid.distance(self.points[i])
-            self.bounding_circle_radius = max(self.bounding_circle_radius, distance)
+            if max1 < min2 or max2 < min1:
+                # If there is a gap along this axis, the polygons do not intersect
+                return False
+
+        return True
 
     def copy(self):
         """
