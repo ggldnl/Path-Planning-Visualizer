@@ -3,47 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>Robot Simulator</title>
-    <link rel="stylesheet" type="text/css" href="static/styles/menu.css">
-    <link rel="stylesheet" type="text/css" href="static/styles/canvas.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css" href="static/styles/body.css">
     <link rel="stylesheet" type="text/css" href="static/styles/buttons.css">
+    <link rel="stylesheet" type="text/css" href="static/styles/sidebar.css">
+    <link rel="stylesheet" type="text/css" href="static/styles/canvas.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 </head>
 <body>
 
     <canvas id="canvas"></canvas>
 
-    <input type="checkbox" id="check">
-    <label for="check">
-      <i class="fas fa-bars" id="btn"></i>
-      <i class="fas fa-times" id="cancel"></i>
+    <input type="checkbox" id="sidebar-checkbox">
+    <label for="sidebar-checkbox">
+        <i class="fas fa-bars" id="open-sidebar-btn"></i>
+        <i class="fas fa-times" id="close-sidebar-btn"></i>
     </label>
+    <button id="home_btn">
+        <i class="fas fa-home" id=></i>
+    </button>
 
-    <input type="checkbox" id="home">
-    <label for="home">
-      <i class="fas fa-home" id="home_btn"></i>
-    </label>
-
-    <div id="button-container">
+    <div id="control-button-container">
         <button class="button" id="playButton">Play</button>
         <button class="button" id="stopButton">Stop</button>
         <button class="button" id="stepButton">Step</button>
     </div>
-
-    <!--
-    <input type="button" id="play">
-    <label for="play">
-      <i class="fas fa-play" id="play_btn"></i>
-    </label>
-
-    <input type="button" id="stop">
-    <label for="stop">
-      <i class="fas fa-stop" id="stop_btn"></i>
-    </label>
-
-    <input type="button" id="step">
-    <label for="step">
-      <i class="fas fa-forward-step" id="step_btn"></i>
-    </label>
-    -->
 
     <div class="sidebar">
 
@@ -56,7 +46,6 @@
 
     </div>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
     <script src="static/js/colors.js"></script>
     <script type="module" src="static/js/main.js"></script>
     <script type="module" src="static/js/frame.js"></script>

@@ -1,0 +1,90 @@
+*{
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
+/* Sidebar style
+ */
+.sidebar{
+    position: fixed;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background: #1e1e1e;
+    text-align: center; /* Center the content horizontally */
+    line-height: 25px;
+    overflow: auto; /* Add overflow property to enable scrolling */
+    transition: all .5s ease;
+}
+
+/* Label style
+ */
+.sidebar label{
+    color: #ffffff;
+}
+
+/* Slider style
+ */
+.slider{
+    color: white;
+    width: 80%; /* Full-width */
+    height: 25px; /* Specified height */
+}
+
+#sidebar-checkbox {
+    display: none;
+}
+
+label #open-sidebar-btn, label #close-sidebar-btn{
+    position: absolute;
+    cursor:pointer;
+    background: #262626;
+    height: 48px;
+    width: 48px;
+    text-align: center;
+    line-height: 50px;
+    vertical-align: middle;
+    color: white;
+    font-size: 18px;
+    border: 1px solid #262626;
+    border-radius: 5px;
+
+    padding: 0;
+    margin: 0;
+    left: 20px;
+    top: 20px;
+
+    transition: all .5s ease;
+}
+
+label #close-sidebar-btn {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* The open sidebar button is pressed */
+
+/* The sidebar is extended
+ */
+ #sidebar-checkbox:checked ~ .sidebar{
+    left: 0;
+}
+
+/* The open button icon is moved to the end of the sidebar
+ * and made invisible
+ */
+#sidebar-checkbox:checked ~ label #open-sidebar-btn{
+    margin-left: 250px;
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* The close button icon is moved to the end of the sidebar
+ * and made visible
+ */
+#sidebar-checkbox:checked ~ label #close-sidebar-btn{
+    margin-left: 250px;
+    opacity: 1;
+    visibility: visible;
+}

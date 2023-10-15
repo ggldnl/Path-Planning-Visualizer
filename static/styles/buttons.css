@@ -1,12 +1,29 @@
-#button-container {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
+button {
+	margin: 0 10px;
+	padding: 10px 20px;
+	height: 50px;
+	background: #262626;
+	color: white;
+	font-size: 18px;
+	text-align: center;
+    vertical-align: middle;
+	border: 1px solid #262626;
+	border-radius: 5px;
+	cursor: pointer;
 }
 
-.button {
-    margin: 0 10px;
-    padding: 10px 20px;
-    font-size: 16px;
+#home_btn {
+    position: absolute;
+	width: 50px;
+    padding: 0;
+    margin: 0;
+    left: 90px;
+    top: 20px;
+    transition: all .5s ease;
+}
+
+/* The home button is moved to the end of the sidebar
+ */
+ #sidebar-checkbox:checked ~ #home_btn{
+    left: 340px;
 }

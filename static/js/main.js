@@ -65,7 +65,7 @@ window.onload = function () {
     }
 
     // Add a click event listener to the button to reset the view
-    var button = document.getElementById("home");
+    var button = document.getElementById("home_btn");
     button.addEventListener("click", function() {
         pixelOffset.x = 0;
         pixelOffset.y = 0;
