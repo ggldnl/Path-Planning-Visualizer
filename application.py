@@ -1,11 +1,9 @@
 import logging
 import sys
 import time
-import random
-import math
 from typing import Iterator
 
-from flask import Flask, Response, render_template, request, stream_with_context
+from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
 from scripts.frame import Frame
 
@@ -27,6 +25,14 @@ application = Flask(__name__, template_folder='template')
 # 20 Hz = 20 times a second: 1/20 = 0.05 update interval
 REFRESH_RATE = 20  # Hz
 UPDATE_FREQUENCY = 1/REFRESH_RATE
+
+# running == True when the play button is pressed
+# running == False when the stop button is pressed
+running = False
+
+# stepping == True when the step button is pressed and then
+# it is set to False after one iteration
+stepping = True
 
 
 @application.route("/")
@@ -70,7 +76,8 @@ def generate_data() -> Iterator[str]:
         world = World(UPDATE_FREQUENCY)
 
         # Main loop
-        while True:
+        global running, stepping
+        while running or stepping:
 
             # Step the simulation
             world.step()
@@ -85,6 +92,9 @@ def generate_data() -> Iterator[str]:
 
             # Dump the data
             json_data = frame.to_json()
+
+            if stepping:
+                stepping = False
 
             # Clear the frame
             frame.clear()
@@ -101,6 +111,27 @@ def chart_data() -> Response:
     response.headers["Cache-Control"] = "no-cache"
     response.headers["X-Accel-Buffering"] = "no"
     return response
+
+
+@application.route('/play_pressed', methods=['POST'])
+def play_pressed():
+    global running
+    running = True
+    return jsonify({'status': 'success'})
+
+
+@application.route('/stop_pressed', methods=['POST'])
+def stop_pressed():
+    global running
+    running = False
+    return jsonify({'status': 'success'})
+
+
+@application.route('/step_pressed', methods=['POST'])
+def step_pressed():
+    global stepping
+    stepping = True
+    return jsonify({'status': 'success'})
 
 
 if __name__ == "__main__":

@@ -49,5 +49,36 @@
     <script src="static/js/colors.js"></script>
     <script type="module" src="static/js/main.js"></script>
     <script type="module" src="static/js/frame.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#playButton").click(function() {
+                // Make an AJAX request to update the variable
+                $.ajax({
+                    type: "POST",
+                    url: '/play_pressed',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ running: 'True'}),
+                });
+            });
+            $("#stopButton").click(function() {
+                $.ajax({
+                    type: "POST",
+                    url: '/stop_pressed',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ running: 'False' }),
+                });
+            });
+            $("#stepButton").click(function() {
+                $.ajax({
+                    type: "POST",
+                    url: '/step_pressed',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ stepping: 'True' }),
+                });
+            });
+        });
+    </script>
 </body>
 </html>
