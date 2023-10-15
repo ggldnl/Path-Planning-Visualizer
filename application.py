@@ -1,8 +1,6 @@
 import logging
 import sys
 import time
-import random
-import math
 from typing import Iterator
 
 from flask import Flask, Response, render_template, request, stream_with_context
@@ -28,6 +26,13 @@ application = Flask(__name__, template_folder='template')
 REFRESH_RATE = 20  # Hz
 UPDATE_FREQUENCY = 1/REFRESH_RATE
 
+# running is true when we press play
+# running is false when we press stop
+running = False
+
+# step is true when we hit press and then it is set to false
+# after one iteration
+stepping = False
 
 @application.route("/")
 def index() -> str:
@@ -70,6 +75,7 @@ def generate_data() -> Iterator[str]:
         world = World(UPDATE_FREQUENCY)
 
         # Main loop
+        # global running, stepping
         while True:
 
             # Step the simulation
@@ -88,6 +94,9 @@ def generate_data() -> Iterator[str]:
 
             # Clear the frame
             frame.clear()
+
+            if stepping:
+                stepping = False
 
             yield f"data:{json_data}\n\n"
             time.sleep(UPDATE_FREQUENCY)

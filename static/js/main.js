@@ -65,13 +65,12 @@ window.onload = function () {
     }
 
     // Add a click event listener to the button to reset the view
-    var button = document.getElementById("home_btn");
-    button.addEventListener("click", function() {
+    var home_btn = document.getElementById("home_btn");
+    home_btn.addEventListener("click", function() {
         pixelOffset.x = 0;
         pixelOffset.y = 0;
         scale = 50;
     });
-
 
     // Add a slider event listener to the obstacle speed control slider
     var obstacles_speed_slider = document.getElementById("obstacles_speed_slider");
@@ -79,7 +78,6 @@ window.onload = function () {
         const obstacles_speed = obstacles_speed_slider.value;
         console.log("Updated obstacles speed value to: ", obstacles_speed);
     });
-
 
     // Resize canvas when the window is resized
     window.onresize = function () {
