@@ -8,6 +8,8 @@ class World:
         self.world_time = 0.0  # seconds
         self.dt = dt  # seconds
 
+        self.robots = []
+
         # Initialize lists of world objects
         self.controllers = []
 
