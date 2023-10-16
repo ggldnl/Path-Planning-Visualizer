@@ -9,23 +9,9 @@ import numpy as np
 NUM_CIRC_POINTS = 8
 
 
-def calculate_transformation_matrix(translation, rotation):
-    translation_matrix = np.array([[1, 0, 0, translation[0]],
-                                   [0, 1, 0, translation[1]],
-                                   [0, 0, 1, translation[2]],
-                                   [0, 0, 0, 1]])
-
-    roll, pitch, yaw = rotation
-    rotation_matrix = np.array([[np.cos(yaw)*np.cos(pitch), -np.sin(yaw)*np.cos(roll) + np.cos(yaw)*np.sin(pitch)*np.sin(roll), np.sin(yaw)*np.sin(roll) + np.cos(yaw)*np.sin(pitch)*np.cos(roll), 0],
-                                [np.sin(yaw)*np.cos(pitch), np.cos(yaw)*np.cos(roll) + np.sin(yaw)*np.sin(pitch)*np.sin(roll), -np.cos(yaw)*np.sin(roll) + np.sin(yaw)*np.sin(pitch)*np.cos(roll), 0],
-                                [-np.sin(pitch), np.cos(pitch)*np.sin(roll), np.cos(pitch)*np.cos(roll), 0],
-                                [0, 0, 0, 1]])
-
-    transformation_matrix = np.dot(translation_matrix, rotation_matrix)
-    return transformation_matrix
-
-
 def apply_joint_transformations(link_dict, joint_dict):
+
+    polygons = []
     for joint_name, joint_info in joint_dict.items():
         parent_link = joint_info["parent_link"]
         child_link = joint_info["child_link"]
@@ -35,9 +21,12 @@ def apply_joint_transformations(link_dict, joint_dict):
         # Retrieve the transformation matrix for the joint's origin
         translation = [float(joint_origin.get("xyz", "0 0 0").split()), ]
         rotation = [float(joint_origin.get("rpy", "0 0 0").split()), ]
-        transformation_matrix = calculate_transformation_matrix(translation, rotation)
 
-        
+        # Get parent and child polygons
+
+        # Get the projections
+
+    return polygons
 
 
 def parse_urdf(urdf_file):
@@ -136,7 +125,7 @@ def parse_links(links, joints):
 
 
 def main():
-    urdf_file = "/home/daniel/Git/Robot-Simulator/model/world/robot/robot.urdf"
+    urdf_file = "/model/world/robot/robot.urdf"
 
     links, joints = parse_urdf(urdf_file)
     polygons = parse_links(links, joints)
