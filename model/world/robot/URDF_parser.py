@@ -9,6 +9,37 @@ import numpy as np
 NUM_CIRC_POINTS = 8
 
 
+def calculate_transformation_matrix(translation, rotation):
+    translation_matrix = np.array([[1, 0, 0, translation[0]],
+                                   [0, 1, 0, translation[1]],
+                                   [0, 0, 1, translation[2]],
+                                   [0, 0, 0, 1]])
+
+    roll, pitch, yaw = rotation
+    rotation_matrix = np.array([[np.cos(yaw)*np.cos(pitch), -np.sin(yaw)*np.cos(roll) + np.cos(yaw)*np.sin(pitch)*np.sin(roll), np.sin(yaw)*np.sin(roll) + np.cos(yaw)*np.sin(pitch)*np.cos(roll), 0],
+                                [np.sin(yaw)*np.cos(pitch), np.cos(yaw)*np.cos(roll) + np.sin(yaw)*np.sin(pitch)*np.sin(roll), -np.cos(yaw)*np.sin(roll) + np.sin(yaw)*np.sin(pitch)*np.cos(roll), 0],
+                                [-np.sin(pitch), np.cos(pitch)*np.sin(roll), np.cos(pitch)*np.cos(roll), 0],
+                                [0, 0, 0, 1]])
+
+    transformation_matrix = np.dot(translation_matrix, rotation_matrix)
+    return transformation_matrix
+
+
+def apply_joint_transformations(link_dict, joint_dict):
+    for joint_name, joint_info in joint_dict.items():
+        parent_link = joint_info["parent_link"]
+        child_link = joint_info["child_link"]
+        joint_type = joint_info["type"]
+        joint_origin = joint_info["origin"]
+
+        # Retrieve the transformation matrix for the joint's origin
+        translation = [float(joint_origin.get("xyz", "0 0 0").split()), ]
+        rotation = [float(joint_origin.get("rpy", "0 0 0").split()), ]
+        transformation_matrix = calculate_transformation_matrix(translation, rotation)
+
+        
+
+
 def parse_urdf(urdf_file):
     tree = ET.parse(urdf_file)
     root = tree.getroot()
@@ -35,10 +66,25 @@ def parse_urdf(urdf_file):
                 links[link_name] = {"type": "sphere", "radius": radius}
             break  # Only consider the first visual element
 
-    return links
+    joints = {}
+    for joint in root.findall(".//joint"):
+
+        joint_name = joint.get("name")
+        parent_link = joint.find(".//parent").get("link")
+        child_link = joint.find(".//child").get("link")
+
+        # Store joint information in joint_dict
+        joints[joint_name] = {
+            "type": joint.get("type"),
+            "parent_link": parent_link,
+            "child_link": child_link,
+            "origin": joint.find(".//origin").attrib,  # Store rotation and translation
+        }
+
+    return links, joints
 
 
-def parse_links(links):
+def parse_links(links, joints):
 
     """
     example:
@@ -92,8 +138,8 @@ def parse_links(links):
 def main():
     urdf_file = "/home/daniel/Git/Robot-Simulator/model/world/robot/robot.urdf"
 
-    links = parse_urdf(urdf_file)
-    polygons = parse_links(links)
+    links, joints = parse_urdf(urdf_file)
+    polygons = parse_links(links, joints)
 
     # Plot the top view polygon
     plt.figure()
