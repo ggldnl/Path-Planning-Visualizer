@@ -28,11 +28,11 @@ UPDATE_FREQUENCY = 1/REFRESH_RATE
 
 # running == True when the play button is pressed
 # running == False when the stop button is pressed
-running = False
+running = True
 
 # stepping == True when the step button is pressed and then
 # it is set to False after one iteration
-stepping = True
+stepping = False
 
 
 @application.route("/")
@@ -111,27 +111,6 @@ def chart_data() -> Response:
     response.headers["Cache-Control"] = "no-cache"
     response.headers["X-Accel-Buffering"] = "no"
     return response
-
-
-@application.route('/play_pressed', methods=['POST'])
-def play_pressed():
-    global running
-    running = True
-    return jsonify({'status': 'success'})
-
-
-@application.route('/stop_pressed', methods=['POST'])
-def stop_pressed():
-    global running
-    running = False
-    return jsonify({'status': 'success'})
-
-
-@application.route('/step_pressed', methods=['POST'])
-def step_pressed():
-    global stepping
-    stepping = True
-    return jsonify({'status': 'success'})
 
 
 if __name__ == "__main__":
