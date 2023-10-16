@@ -1,6 +1,8 @@
 import logging
 import sys
 import time
+import random
+import math
 from typing import Iterator
 
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
@@ -93,11 +95,11 @@ def generate_data() -> Iterator[str]:
             # Dump the data
             json_data = frame.to_json()
 
-            if stepping:
-                stepping = False
-
             # Clear the frame
             frame.clear()
+
+            if stepping:
+                stepping = False
 
             yield f"data:{json_data}\n\n"
             time.sleep(UPDATE_FREQUENCY)
