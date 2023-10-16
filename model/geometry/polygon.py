@@ -42,6 +42,7 @@ class Polygon:
 
             # Perturb the angle with Gaussian noise
             angle += np.random.normal(0, noise)
+            angle = angle % (2 * np.pi)
 
             # Calculate the coordinates for the random point
             x = radius * np.cos(angle)
