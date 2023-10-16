@@ -30,9 +30,15 @@
     </button>
 
     <div id="control-button-container">
+        <input type="button" id="playButton" value="Play" onclick="sendValue('play');" />
+        <input type="button" id="stopButton" value="Stop" onclick="sendValue('stop');" />
+        <input type="button" id="stepButton" value="Step" onclick="sendValue('step');" />
+
+        <!--
         <button class="button" id="playButton">Play</button>
         <button class="button" id="stopButton">Stop</button>
         <button class="button" id="stepButton">Step</button>
+        -->
     </div>
 
     <div class="sidebar">
@@ -50,38 +56,20 @@
     <script type="module" src="static/js/main.js"></script>
     <script type="module" src="static/js/frame.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!--
     <script>
-        $(document).ready(function() {
-            $("#playButton").click(function() {
-                // Make an AJAX request to update the variable
-                $.ajax({
-                    type: "POST",
-                    url: '/play_pressed',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ running: 'True'}),
-                });
-            });
-            $("#stopButton").click(function() {
-                $.ajax({
-                    type: "POST",
-                    url: '/stop_pressed',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ running: 'False' }),
-                });
-            });
-            $("#stepButton").click(function() {
-                $.ajax({
-                    type: "POST",
-                    url: '/step_pressed',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ stepping: 'True' }),
-                });
-            });
-        });
+
+    function sendValue(status) {
+      var oReq = new XMLHttpRequest();
+
+      // Updated to send data to the "/simulation_control" endpoint.
+      oReq.open("POST", "/simulation_control", true);
+      oReq.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+      // Send the "True" value as JSON
+      var value = JSON.stringify({ status: status });
+      oReq.send(value);
+    };
     </script>
-    -->
+
 </body>
 </html>
