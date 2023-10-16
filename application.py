@@ -80,6 +80,8 @@ def generate_data() -> Iterator[str]:
 
         # Main loop
         global running, stepping
+        running = False
+        stepping = True
         while True:
 
             if running or stepping:
