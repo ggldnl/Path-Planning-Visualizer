@@ -1,8 +1,6 @@
 import logging
 import sys
 import time
-import random
-import math
 from typing import Iterator
 
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
@@ -30,11 +28,11 @@ UPDATE_FREQUENCY = 1/REFRESH_RATE
 
 # running == True when the play button is pressed
 # running == False when the stop button is pressed
-running = True
+running = False
 
 # stepping == True when the step button is pressed and then
 # it is set to False after one iteration
-stepping = False
+stepping = True
 
 
 @application.route("/")
@@ -77,29 +75,34 @@ def generate_data() -> Iterator[str]:
         # Create the world
         world = World(UPDATE_FREQUENCY)
 
+        # Dictionary containing the data to dump
+        json_data = {}
+
         # Main loop
         global running, stepping
-        while running or stepping:
+        while True:
 
-            # Step the simulation
-            world.step()
+            if running or stepping:
 
-            # Add robots and obstacles to the frame
-            frame.add_polygons(world.robots, 'orange')
-            frame.add_polygons([obstacle.polygon for obstacle in world.map.current_obstacles], '#8B000066')
+                # Clear the frame
+                frame.clear()
 
-            # Add the start and the goal points to the frame
-            frame.add_circle([0, 0], 0.1, 'green')
-            frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.1, 'blue')
+                # Step the simulation
+                world.step()
 
-            # Dump the data
-            json_data = frame.to_json()
+                # Add robots and obstacles to the frame
+                frame.add_polygons(world.robots, 'orange')
+                frame.add_polygons([obstacle.polygon for obstacle in world.map.current_obstacles], '#8B000066')
 
-            # Clear the frame
-            frame.clear()
+                # Add the start and the goal points to the frame
+                frame.add_circle([0, 0], 0.1, 'green')
+                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.1, 'blue')
 
-            if stepping:
-                stepping = False
+                # Dump the data
+                json_data = frame.to_json()
+
+                if stepping:
+                    stepping = False
 
             yield f"data:{json_data}\n\n"
             time.sleep(UPDATE_FREQUENCY)
@@ -115,5 +118,30 @@ def chart_data() -> Response:
     return response
 
 
+@application.route('/simulation_control', methods=['POST'])
+def simulation_control():
+    data = request.get_json()  # Receive the JSON data sent from the client
+    print(data)
+
+    global running, stepping
+    if data and 'status' in data:
+        if data['status'] == 'play':
+            running = True
+            response = {'status': 'Running'}
+        elif data['status'] == 'stop':
+            running = False
+            response = {'status': 'Stopped'}
+        elif data['status'] == 'step':
+            stepping = True
+            response = {'status': 'stepping'}
+        else:
+            response = {'status': 'invalid'}
+
+        return jsonify(response)
+    else:
+        return jsonify({'status': 'Invalid data or value received.'}), 400
+
+
 if __name__ == "__main__":
     application.run(host="0.0.0.0", threaded=True)
+
