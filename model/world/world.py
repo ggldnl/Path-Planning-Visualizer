@@ -1,6 +1,5 @@
 from model.world.map.map import Map
 
-
 class World:
 
     def __init__(self, dt):
@@ -10,7 +9,7 @@ class World:
         self.dt = dt  # seconds
 
         # Initialize lists of world objects
-        self.robots = []
+        self.controllers = []
 
         # Initialize the map
         self.map = Map()
@@ -21,8 +20,8 @@ class World:
     def set_period(self, dt):
         self.dt = dt
 
-    def add_robot(self, robot):
-        self.robots.append(robot)
+    def add_robot_controller(self, controller, robot):
+        self.controllers.append(controller(robot))
 
     def step(self):
         """
@@ -31,9 +30,9 @@ class World:
 
         dt = self.dt
 
-        # Step all the robots
-        for robot in self.robots:
-            robot.step_motion(dt)
+        for controller in self.controllers:
+            controller.step_motion(self.map)
+
 
         # Step all the obstacles
         for obstacle in self.map.obstacles:
@@ -45,9 +44,11 @@ class World:
         # Increment world time
         self.world_time += dt
 
+
     def _apply_physics(self):
         self._detect_collisions()
-        # TODO: add _update_proximity_sensors()
+
+
 
     def _detect_collisions(self):
         """

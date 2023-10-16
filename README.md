@@ -13,3 +13,4 @@
 - [ ] comment better each function and the overall structure
 - [ ] add typing
 - [ ] add input checking
+- [ ] add radar in gui to see sensors read from the robot
