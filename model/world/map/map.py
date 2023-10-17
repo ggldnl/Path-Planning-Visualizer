@@ -21,6 +21,8 @@ OBS_MIN_COUNT = 10
 OBS_MAX_COUNT = 50
 OBS_MIN_DIST = 20.0
 OBS_MAX_DIST = 50.0
+OBS_STEADY_MIN_COUNT = 10
+OBS_STEADY_MAX_COUNT = 20
 OBS_MIN_LIN_SPEED = -10
 OBS_MAX_LIN_SPEED = 10
 OBS_MIN_ANG_SPEED = -90
@@ -53,6 +55,8 @@ class Map:
         obs_max_width = OBS_MAX_WIDTH
         obs_min_height = OBS_MIN_HEIGHT
         obs_max_height = OBS_MAX_HEIGHT
+        obs_steady_min_count = OBS_STEADY_MIN_COUNT
+        obs_steady_max_count = OBS_STEADY_MAX_COUNT
 
         # Speed
         obs_min_lin_speed = OBS_MIN_LIN_SPEED
@@ -94,6 +98,10 @@ class Map:
             goal_test_geometry
         ]
 
+        # How many steady obstacles?
+        target_steady_obstacles = random.randrange(obs_steady_min_count, obs_steady_max_count + 1)
+        num_steady_obstacles = 0
+
         while len(obstacles) < num_obstacles:
 
             # Generate dimensions
@@ -125,11 +133,20 @@ class Map:
 
             # The polygon is good: add the velocity vector and create an obstacle
             if not intersects:
-                vel = (
-                    random.uniform(obs_min_lin_speed, obs_max_lin_speed),
-                    random.uniform(obs_min_lin_speed, obs_max_lin_speed),
-                    random.uniform(obs_min_ang_speed, obs_max_ang_speed)
-                )
+
+                # If we still need to add a steady obstacle, set the velocity vector to (0, 0, 0)
+                if num_steady_obstacles < target_steady_obstacles:
+                    vel = (0, 0, 0)
+                    num_steady_obstacles += 1
+
+                # If we already added all the steady obstacles, only the moving ones are left
+                else:
+                    vel = (
+                        random.uniform(obs_min_lin_speed, obs_max_lin_speed),
+                        random.uniform(obs_min_lin_speed, obs_max_lin_speed),
+                        random.uniform(obs_min_ang_speed, obs_max_ang_speed)
+                    )
+
                 obstacle = Obstacle(polygon, pose, vel)
                 obstacles.append(obstacle)
 

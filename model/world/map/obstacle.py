@@ -5,7 +5,7 @@ import random
 
 class Obstacle:
 
-    def __init__(self, polygon, pose, vel=None):
+    def __init__(self, polygon, pose, vel=None, motion_law=None):
 
         self.polygon = polygon
         self.pose = pose
@@ -15,7 +15,10 @@ class Obstacle:
         else:
             self.vel = vel
 
-        self._motion_law_function = motion_laws.translation_and_rotation_motion
+        if motion_law is None:
+            self._motion_law_function = motion_laws.translation_and_rotation_motion
+        else:
+            self._motion_law_function = motion_law
 
     def step_motion(self, dt):
         """

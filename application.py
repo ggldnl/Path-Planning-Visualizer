@@ -92,9 +92,18 @@ def generate_data() -> Iterator[str]:
                 # Step the simulation
                 world.step()
 
-                # Add robots and obstacles to the frame
+                # Add the robots to the frame
                 frame.add_polygons(world.robots, 'orange')
-                frame.add_polygons([obstacle.polygon for obstacle in world.map.current_obstacles], '#8B000066')
+
+                # Add the obstacles to the frame
+                steady_obstacles = [
+                    obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
+                ]
+                moving_obstacles = [
+                    obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
+                ]
+                frame.add_polygons(steady_obstacles, '#8B000066')
+                frame.add_polygons(moving_obstacles, '#b4570266')
 
                 # Add the start and the goal points to the frame
                 frame.add_circle([0, 0], 0.5, '#00640066')
