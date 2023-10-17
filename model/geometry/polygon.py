@@ -21,6 +21,8 @@ class Polygon:
                 self.points.append(Point(point.x, point.y))  # copy it
             elif isinstance(point, tuple):
                 self.points.append(Point(point[0], point[1]))
+            elif isinstance(point, list):
+                self.points.append(Point(point[0], point[1]))
             else:
                 raise ValueError(f'Invalid object {point}')
 
