@@ -30,7 +30,7 @@ export function drawLine(ctx, x1, y1, x2, y2, color, width) {
  * @param {string} color - The color of the circle's outline or fill (e.g., 'blue', '#FFA500', 'rgba(0, 0, 255, 0.8)').
  * @param {boolean} filled - A boolean value indicating whether the circle should be filled (`true`) or only outlined (`false`).
  */
-export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, color, filled) {
+export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, fillColor, borderColor=null) {
 
     // Position of the circle in the new coordinate frame
     var x = pixelOrigin.x + relativePos[0] * pixelScale;
@@ -38,13 +38,18 @@ export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, co
 
     ctx.beginPath();
     ctx.arc(x, y, radius * pixelScale, 0, 2 * Math.PI);
-    if (filled) {
-        ctx.fillStyle = color;
-        ctx.fill();
+
+    // Draw and fill the circle
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+
+    if (fillColor === null) {
+        ctx.strokeStyle = borderColor;
     } else {
-        ctx.strokeStyle = color;
-        ctx.stroke();
+        ctx.strokeStyle = fillColor;
     }
+    ctx.stroke();
+
     ctx.closePath();
 }
 
@@ -138,7 +143,7 @@ export function drawGrid(
  * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
  * @param {boolean} filled - A boolean value indicating whether the polygon should be filled or only outlined.
  */
-export function drawPolygon(ctx, points, pixelOrigin, pixelScale, color, lineJoin, filled) {
+export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, borderColor=null, lineJoin='round') {
     if (points.length > 0) {
         ctx.lineJoin = lineJoin;
         ctx.beginPath();
@@ -155,14 +160,17 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, color, lineJoi
             ctx.lineTo(x, y);
         }
 
-        ctx.closePath();
-        if (filled) {
-            ctx.fillStyle = color;
-            ctx.fill();
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+
+        if (fillColor === null) {
+            ctx.strokeStyle = borderColor;
         } else {
-            ctx.strokeStyle = color;
-            ctx.stroke();
+            ctx.strokeStyle = fillColor;
         }
+        ctx.stroke();
+
+        ctx.closePath();
     }
 }
 
@@ -178,7 +186,7 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, color, lineJoi
  * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
  * @param {boolean} filled - A boolean value indicating whether the polygon should be filled (`true`) or only outlined (`false`).
  */
-export function drawCircumscribedPolygon(ctx, x, y, radius, sides, color, lineJoin, filled) {
+export function drawCircumscribedPolygon(ctx, x, y, radius, sides, filLColor, borderColor=null, lineJoin='round') {
     ctx.lineJoin = lineJoin;
     ctx.beginPath();
     const angleStep = (2 * Math.PI) / sides;
@@ -187,12 +195,16 @@ export function drawCircumscribedPolygon(ctx, x, y, radius, sides, color, lineJo
         const angle = i * angleStep;
         ctx.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
     }
-    ctx.closePath();
-    if (filled) {
-        ctx.fillStyle = color;
-        ctx.fill();
+
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+
+    if (fillColor === null) {
+        ctx.strokeStyle = borderColor;
     } else {
-        ctx.strokeStyle = color;
-        ctx.stroke();
+        ctx.strokeStyle = fillColor;
     }
+    ctx.stroke();
+
+    ctx.closePath();
 }

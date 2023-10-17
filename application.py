@@ -97,8 +97,8 @@ def generate_data() -> Iterator[str]:
                 frame.add_polygons([obstacle.polygon for obstacle in world.map.current_obstacles], '#8B000066')
 
                 # Add the start and the goal points to the frame
-                frame.add_circle([0, 0], 0.1, 'green')
-                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.1, 'blue')
+                frame.add_circle([0, 0], 0.5, '#00640066')
+                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.5, '#00008B66')
 
                 # Dump the data
                 json_data = frame.to_json()

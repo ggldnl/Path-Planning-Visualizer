@@ -8,49 +8,49 @@ class Frame:
     def clear(self):
         self.draw_list = []
 
-    def add_circle(self, pos, radius, color, alpha=None):
+    def add_circle(self, pos, radius, fill_color, border_color=None):
         self.draw_list.append(
             {
                 "type": "circle",
                 "pos": pos,
                 "radius": radius,
-                "color": color,
-                "alpha": alpha,
+                "fill_color": fill_color,
+                "border_color": fill_color if border_color is None else border_color
             }
         )
 
-    def add_circles(self, pos, radius, color, alpha=None):
+    def add_circles(self, pos, radius, fill_color, border_color=None):
         for p, r in zip(pos, radius):
-            self.add_circle(p, r, color, alpha)
+            self.add_circle(p, r, fill_color, border_color)
 
-    def add_polygon(self, polygon, color, alpha=None):
+    def add_polygon(self, polygon, fill_color, border_color=None):
         self.draw_list.append(
             {
                 "type": "polygon",
                 "points": polygon.to_point_array(),
-                "color": color,
-                "alpha": alpha
+                "fill_color": fill_color,
+                "border_color": fill_color if border_color is None else border_color
             }
         )
 
-    def add_polygons(self, polygons, color, alpha=None):
+    def add_polygons(self, polygons, fill_color, border_color=None):
         for polygon in polygons:
-            self.add_polygon(polygon, color, alpha)
+            self.add_polygon(polygon, fill_color, border_color)
 
-    def add_line(self, line, line_width, color, alpha=None):
+    def add_line(self, line, line_width, fill_color, border_color=None):
         self.draw_list.append(
             {
                 "type": "line",
                 "points": line,  # TODO uniform with polygon
                 "line_width": line_width,
-                "color": color,
-                "alpha": alpha,
+                "fill_color": fill_color,
+                "border_color": border_color,
             }
         )
 
-    def add_lines(self, lines, line_widths, color, alpha=None):
+    def add_lines(self, lines, line_widths, fill_color, border_color=None):
         for line, line_width in zip(lines, line_widths):
-            self.add_line(line, line_width, color, alpha)
+            self.add_line(line, line_width, fill_color, border_color)
 
     def to_json(self):
         return json.dumps(self.draw_list)
