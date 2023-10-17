@@ -9,6 +9,9 @@ from scripts.frame import Frame
 
 # Import stuff from the model
 from model.world.world import World
+from model.world.robots.URDF_parser import URDFParser
+
+from model.geometry.polygon import Polygon
 
 
 # Configure the logger
@@ -75,6 +78,10 @@ def generate_data() -> Iterator[str]:
         # Create the world
         world = World(UPDATE_FREQUENCY)
 
+        # Create the robot
+        # TODO: add sensors and motors, use a configuration file
+        robot_polygons = URDFParser.parse('/home/daniel/Git/Robot-Simulator/model/world/URDF_parser/robot.urdf')
+
         # Dictionary containing the data to dump
         json_data = {}
 
@@ -94,8 +101,9 @@ def generate_data() -> Iterator[str]:
 
                 # Add the robots to the frame
                 frame.add_polygons(world.robots, 'orange')
+                frame.add_polygons(robot_polygons, '#0047AB66', '#0047ABFF')
 
-                # Add the obstacles to the frame
+                # Add the obstacles to the frame (we can change color for moving and steady obstacles)
                 steady_obstacles = [
                     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
                 ]
@@ -103,10 +111,11 @@ def generate_data() -> Iterator[str]:
                     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
                 ]
                 frame.add_polygons(steady_obstacles, '#8B000066')
-                frame.add_polygons(moving_obstacles, '#b4570266')
+                # frame.add_polygons(moving_obstacles, '#b4570266')
+                frame.add_polygons(moving_obstacles, '#8B000066')
 
                 # Add the start and the goal points to the frame
-                frame.add_circle([0, 0], 0.5, '#00640066')
+                # frame.add_circle([0, 0], 0.5, '#00640066')
                 frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.5, '#00008B66')
 
                 # Dump the data
@@ -132,7 +141,6 @@ def chart_data() -> Response:
 @application.route('/simulation_control', methods=['POST'])
 def simulation_control():
     data = request.get_json()  # Receive the JSON data sent from the client
-    print(data)
 
     global running, stepping
     if data and 'status' in data:
