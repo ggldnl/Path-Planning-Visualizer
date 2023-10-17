@@ -78,7 +78,7 @@ def generate_data() -> Iterator[str]:
 
         # Create the robot
         # TODO: add sensors and motors, use a configuration file
-        robot_polygons = URDFParser.parse('./model/world/robots/robot.urdf')
+        robot_polygons = URDFParser.parse('./model/world/robots/URDFs/robot.urdf')
 
         # Dictionary containing the data to dump
         json_data = {}

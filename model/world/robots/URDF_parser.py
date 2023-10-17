@@ -35,24 +35,35 @@ class URDFParser:
 
     @classmethod
     def parse_xyz(cls, xyz_str):
-        xyz = list(map(float, xyz_str.split()))
-        return np.array(xyz)
+        seq = list(map(float, xyz_str.split()))
+        return seq[0], seq[1], seq[2]
 
     @classmethod
-    def create_transformation_matrix(cls, origin_xyz, axis_xyz):
-        origin = URDFParser.parse_xyz(origin_xyz)
-        axis = URDFParser.parse_xyz(axis_xyz)
-        x, y, z = axis
-        c = np.cos(np.arctan2(y, x))
-        s = np.sin(np.arctan2(y, x))
-        t = np.arctan2(np.sqrt(x ** 2 + y ** 2), z)
+    def create_transformation_matrix(cls, origin_xyz, origin_rpy):
 
-        transformation_matrix = np.array([
-            [c, -s * c, s * s * t, origin[0]],
-            [s, c * c, -s * c * t, origin[1]],
-            [0, s * t, c, origin[2]],
+        x, y, z = URDFParser.parse_xyz(origin_xyz)
+        roll, pitch, yaw = URDFParser.parse_xyz(origin_rpy)
+
+        # Create the translation matrix
+        translation_matrix = np.array([
+            [1, 0, 0, x],
+            [0, 1, 0, y],
+            [0, 0, 1, z],
             [0, 0, 0, 1]
         ])
+
+        # Create the rotation matrix using RPY angles
+        rotation_matrix = np.array([
+            [np.cos(yaw) * np.cos(pitch), np.cos(yaw) * np.sin(pitch) * np.sin(roll) - np.sin(yaw) * np.cos(roll),
+             np.cos(yaw) * np.sin(pitch) * np.cos(roll) + np.sin(yaw) * np.sin(roll), 0],
+            [np.sin(yaw) * np.cos(pitch), np.sin(yaw) * np.sin(pitch) * np.sin(roll) + np.cos(yaw) * np.cos(roll),
+             np.sin(yaw) * np.sin(pitch) * np.cos(roll) - np.cos(yaw) * np.sin(roll), 0],
+            [-np.sin(pitch), np.cos(pitch) * np.sin(roll), np.cos(pitch) * np.cos(roll), 0],
+            [0, 0, 0, 1]
+        ])
+
+        # Combine translation and rotation to get the transformation matrix
+        transformation_matrix = np.dot(translation_matrix, rotation_matrix)
 
         return transformation_matrix
 
@@ -92,22 +103,31 @@ class URDFParser:
             joint_type = joint.get("type")
             parent_link = joint.find(".//parent").get("link")
             child_link = joint.find(".//child").get("link")
-            joint_origin = joint.find(".//origin").attrib
 
-            # Sometimes there is no rotation
-            joint_axis = joint.find(".//axis")
-            if joint_axis is None:
-                joint_axis = {'xyz': '0 0 0'}
-            else:
-                joint_axis = joint_axis.attrib
+            # The origin element is used to define the position and orientation of a
+            # particular element within the robot model. It specifies a reference frame
+            # for that element and allows you to position and orient the element
+            # relative to that reference frame.
+            # Its attributes are xyz and rpy
+            joint_origin = joint.find(".//origin").attrib
+            joint_origin_xyz = joint_origin['xyz']
+            joint_origin_rpy = joint_origin['rpy']
+
+            # The axis element is used to define the orientation of an axis of rotation
+            # for a joint. It is typically used within joint descriptions to specify
+            # the axis of rotation for that joint. The axis element has attributes for
+            # specifying the orientation of the axis, that is xyz.
+            # If the axis were {'xyz': '0 0 1'} it would have meant that the joint has
+            # a rotation axis along the Z-axis of its reference frame.
+            # joint_axis = joint.find(".//axis")
 
             # Store joint information in joint_dict
             joints[joint_name] = {
                 "type": joint_type,
                 "parent_link": parent_link,
                 "child_link": child_link,
-                "origin": joint_origin,
-                "axis": joint_axis
+                "origin_xyz": joint_origin_xyz,
+                "origin_rpy": joint_origin_rpy
             }
 
         return links, joints
@@ -156,10 +176,10 @@ class URDFParser:
                     # Update its transformation matrix
 
                     child_link_name = joint['child_link']
-                    origin_xyz = joint['origin']['xyz']
-                    axis_xyz = joint['axis']['xyz']
+                    origin_xyz = joint['origin_xyz']
+                    origin_rpy = joint['origin_rpy']
 
-                    child_transformation_matrix = URDFParser.create_transformation_matrix(origin_xyz, axis_xyz)
+                    child_transformation_matrix = URDFParser.create_transformation_matrix(origin_xyz, origin_rpy)
                     updated_transformation_matrix = np.dot(transformation_matrix, child_transformation_matrix)
                     links_dict[child_link_name]['transformation_matrix'] = updated_transformation_matrix
 
@@ -227,7 +247,6 @@ class URDFParser:
 
             # Decompose the transformation matrix
             transformation_matrix = link_properties['transformation_matrix']
-            angles, translation_vector = URDFParser._decompose_transformation_matrix(transformation_matrix)
 
             # Get rotation matrix and translation vector
             rotation_matrix = transformation_matrix[:3, :3]
@@ -287,7 +306,7 @@ class URDFParser:
 if __name__ == '__main__':
 
     # Test urdf file in local folder
-    urdf_path = "robot.urdf"
+    urdf_path = "URDFs/robot.urdf"
     polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points
