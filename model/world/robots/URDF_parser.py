@@ -87,17 +87,27 @@ class URDFParser:
 
         joints = {}
         for joint in root.findall(".//joint"):
+
             joint_name = joint.get("name")
+            joint_type = joint.get("type")
             parent_link = joint.find(".//parent").get("link")
             child_link = joint.find(".//child").get("link")
+            joint_origin = joint.find(".//origin").attrib
+
+            # Sometimes there is no rotation
+            joint_axis = joint.find(".//axis")
+            if joint_axis is None:
+                joint_axis = {'xyz': '0 0 0'}
+            else:
+                joint_axis = joint_axis.attrib
 
             # Store joint information in joint_dict
             joints[joint_name] = {
-                "type": joint.get("type"),
+                "type": joint_type,
                 "parent_link": parent_link,
                 "child_link": child_link,
-                "origin": joint.find(".//origin").attrib,  # Store rotation
-                "axis": joint.find(".//axis").attrib,  # Store translation
+                "origin": joint_origin,
+                "axis": joint_axis
             }
 
         return links, joints
@@ -276,7 +286,8 @@ class URDFParser:
 
 if __name__ == '__main__':
 
-    urdf_path = "/home/daniel/Git/Robot-Simulator/model/world/URDF_parser/robot.urdf"
+    # Test urdf file in local folder
+    urdf_path = "robot.urdf"
     polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points

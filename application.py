@@ -11,8 +11,6 @@ from scripts.frame import Frame
 from model.world.world import World
 from model.world.robots.URDF_parser import URDFParser
 
-from model.geometry.polygon import Polygon
-
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -80,7 +78,7 @@ def generate_data() -> Iterator[str]:
 
         # Create the robot
         # TODO: add sensors and motors, use a configuration file
-        robot_polygons = URDFParser.parse('/home/daniel/Git/Robot-Simulator/model/world/URDF_parser/robot.urdf')
+        robot_polygons = URDFParser.parse('./model/world/robots/robot.urdf')
 
         # Dictionary containing the data to dump
         json_data = {}
