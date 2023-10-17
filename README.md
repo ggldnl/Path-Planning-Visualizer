@@ -4,12 +4,8 @@
 
 ## TODO
 
-- [ ] define the control loop
 - [ ] move from current, complex, translation and scale logic to
-    translate() and scale() on sort of a contextManager object,
-    that handles these things
-- [ ] implement antialiasing (it is normally controlled by the
-    browser but there is some way)
+    translate() and scale() on sort of a contextManager object in javascript
 - [ ] comment better each function and the overall structure
 - [ ] add typing
 - [ ] add input checking
