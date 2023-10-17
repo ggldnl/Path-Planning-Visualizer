@@ -43,10 +43,10 @@ export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, fi
     ctx.fillStyle = fillColor;
     ctx.fill();
 
-    if (fillColor === null) {
-        ctx.strokeStyle = borderColor;
-    } else {
+    if (borderColor === null) {
         ctx.strokeStyle = fillColor;
+    } else {
+        ctx.strokeStyle = borderColor;
     }
     ctx.stroke();
 
@@ -143,9 +143,10 @@ export function drawGrid(
  * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
  * @param {boolean} filled - A boolean value indicating whether the polygon should be filled or only outlined.
  */
-export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, borderColor=null, lineJoin='round') {
+export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, borderColor=null) {
+
     if (points.length > 0) {
-        ctx.lineJoin = lineJoin;
+        ctx.lineJoin = 'round';
         ctx.beginPath();
 
         // First point
@@ -163,10 +164,10 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, bor
         ctx.fillStyle = fillColor;
         ctx.fill();
 
-        if (fillColor === null) {
-            ctx.strokeStyle = borderColor;
-        } else {
+        if (borderColor === null) {
             ctx.strokeStyle = fillColor;
+        } else {
+            ctx.strokeStyle = borderColor;
         }
         ctx.stroke();
 
@@ -186,8 +187,8 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, bor
  * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
  * @param {boolean} filled - A boolean value indicating whether the polygon should be filled (`true`) or only outlined (`false`).
  */
-export function drawCircumscribedPolygon(ctx, x, y, radius, sides, filLColor, borderColor=null, lineJoin='round') {
-    ctx.lineJoin = lineJoin;
+export function drawCircumscribedPolygon(ctx, x, y, radius, sides, filLColor, borderColor=null) {
+    ctx.lineJoin = 'round';
     ctx.beginPath();
     const angleStep = (2 * Math.PI) / sides;
     ctx.moveTo(x + radius * Math.cos(0), y + radius * Math.sin(0));

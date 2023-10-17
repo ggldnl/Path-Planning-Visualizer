@@ -54,9 +54,9 @@ window.onload = function () {
         for (const shape of frame.drawList) {
             const type = shape['type'];
             if (type == 'polygon')
-                drawPolygon(ctx, shape['points'], pixelOrigin, scale, shape['fillColor']);
+                drawPolygon(ctx, shape['points'], pixelOrigin, scale, shape['fillColor'], shape['borderColor']);
             else if (type == 'circle')
-                drawCircle(ctx, shape['pos'], pixelOrigin, scale, shape['radius'], shape['fillColor']);
+                drawCircle(ctx, shape['pos'], pixelOrigin, scale, shape['radius'], shape['fillColor'], shape['borderColor']);
             else if (type == 'line')
                 console.log('drawing line');
         }
