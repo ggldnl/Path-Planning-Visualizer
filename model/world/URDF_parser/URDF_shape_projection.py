@@ -55,22 +55,22 @@ class Sphere:
 
 class Box:
 
-    def __init__(self, width, length, depth):
+    def __init__(self, width, height, depth):
         self.width = width
-        self.length = length
+        self.height = height
         self.depth = depth
 
     def get_projection(self, angles, offsets):
         # Define the points
         points = np.array([
-            [self.length / 2, self.width / 2, -self.depth / 2],
-            [-self.length / 2, self.width / 2, -self.depth / 2],
-            [-self.length / 2, -self.width / 2, -self.depth / 2],
-            [self.length / 2, -self.width / 2, -self.depth / 2],
-            [self.length / 2, self.width / 2, self.depth / 2],
-            [-self.length / 2, self.width / 2, self.depth / 2],
-            [-self.length / 2, -self.width / 2, self.depth / 2],
-            [self.length / 2, -self.width / 2, self.depth / 2]
+            [-self.width / 2, -self.height / 2, -self.depth / 2],
+            [self.width / 2, -self.height / 2, -self.depth / 2],
+            [-self.width / 2, self.height / 2, -self.depth / 2],
+            [self.width / 2, self.height / 2, -self.depth / 2],
+            [-self.width / 2, -self.height / 2, self.depth / 2],
+            [self.width / 2, -self.height / 2, self.depth / 2],
+            [-self.width / 2, self.height / 2, self.depth / 2],
+            [self.width / 2, self.height / 2, self.depth / 2]
         ])
 
         # Define the rotation angles (in radians) along each axis

@@ -132,7 +132,7 @@ def parse_urdf(urdf_file):
     return links, joints
 
 
-def parse_links(links, joints):
+def parse_transformed_links(links):
 
     polygons = []
     for link_name, link_properties in links.items():
@@ -148,8 +148,8 @@ def parse_links(links, joints):
 
             # Build the box
             dimensions = link_properties['dimensions'].split()
-            width, length, depth = float(dimensions[0]), float(dimensions[1]), float(dimensions[2])
-            box = Box(width, length, depth)
+            width, height, depth = float(dimensions[0]), float(dimensions[1]), float(dimensions[2])
+            box = Box(width, height, depth)
 
             # Get the transform
             box_transform = link_properties['transformation_matrix']
@@ -176,7 +176,7 @@ def parse_links(links, joints):
             # Build the cylinder
             radius = float(link_properties['radius'])
             length = float(link_properties['length'])
-            cylinder = Cylinder(radius, length)
+            cylinder = Cylinder(radius, length, discretization_points=20)
 
             # Get the transform
             cylinder_transform = link_properties['transformation_matrix']
@@ -186,6 +186,8 @@ def parse_links(links, joints):
             polygons.append(cylinder_polygon)
 
     return polygons
+
+
 
 
 def main():
@@ -206,7 +208,7 @@ def main():
         print("\n")
 
     # Get the projection of each link on the XY plane
-    polygons = parse_links(links, joints)
+    polygons = parse_transformed_links(links)
 
     # Plot the top view polygon
     plt.figure()
