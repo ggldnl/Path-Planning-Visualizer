@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<robot name="my_robot">
+
+  <!-- Define the base of the robot as a box -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.002"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.5 0.5 0.1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Define the left wheel -->
+  <link name="left_wheel_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.021" length="0.01"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.021" length="0.01"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="caster_wheel_link">
+      <visual>
+        <geometry>
+          <sphere radius="0.005"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <sphere radius="0.005"/>
+        </geometry>
+      </collision>
+    </link>
+
+  <!-- Define the right wheel -->
+  <link name="right_wheel_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.021" length="0.01"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.021" length="0.01"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Define the joints that connect the wheels to the base -->
+  <joint name="left_wheel_joint" type="revolute">
+    <origin xyz="0.04 0 0.004" rpy="0 1.5708 0"/>
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <joint name="right_wheel_joint" type="revolute">
+    <origin xyz="-0.04 0 0.004" rpy="0 1.5708 0"/>
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <joint name="caster_wheel_joint" type="fixed">
+    <origin xyz="0 -0.04 -0.012" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="caster_wheel_link"/>
+  </joint>
+
+</robot>

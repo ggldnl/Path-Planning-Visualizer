@@ -73,7 +73,7 @@ frame = Frame()
 
 # Create the robot
 # TODO: add sensors and motors, use a configuration file
-robot_polygons = URDFParser.parse('./model/world/robots/URDFs/robot.urdf')
+robot_polygons = URDFParser.parse('./model/world/robots/URDFs/cobalt.urdf')
 
 
 # ------------------------------ generation loop ----------------------------- #

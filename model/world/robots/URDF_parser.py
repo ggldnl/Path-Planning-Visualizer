@@ -79,7 +79,7 @@ class URDFParser:
 
             boxes = link.findall(".//visual/geometry/box")
             cylinders = link.findall(".//visual/geometry/cylinder")
-            spheres = link.findall(".//visual/geometry/spgere")
+            spheres = link.findall(".//visual/geometry/sphere")
             visuals = boxes + cylinders + spheres
 
             for visual in visuals:
@@ -254,7 +254,8 @@ class URDFParser:
 
             # In case of the sphere, we can sum the translation and return
             if link_geometry_type == 'sphere':
-                return points + translation_vector
+                polygons.append(Polygon((points + translation_vector[:2]).tolist()))
+                continue
 
             # In the other two cases, we need to go on with the algorithm
 
@@ -306,7 +307,7 @@ class URDFParser:
 if __name__ == '__main__':
 
     # Test urdf file in local folder
-    urdf_path = "URDFs/robot.urdf"
+    urdf_path = "URDFs/cobalt.urdf"
     polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points
