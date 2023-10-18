@@ -1,5 +1,6 @@
 import model.world.map.motion_laws as motion_laws
-
+from model.geometry.polygon import Polygon
+from model.geometry.point import Point
 import random
 
 
@@ -36,3 +37,23 @@ class Obstacle:
     def update_geometry(self):
         # self.polygon.translate_to(self.pose[0], self.pose[1])
         self.polygon.transform_to(self.pose)
+
+
+class RectangularObstacle(Obstacle):
+
+    def __init__(self, width, height, pose, vel=None):
+
+        if width <= 0:
+            raise ValueError(f'Invalid width: {width}')
+
+        if height <= 0:
+            raise ValueError(f'Invalid height: {height}')
+
+        polygon = Polygon([
+            Point(0, 0),
+            Point(0, height),
+            Point(width, height),
+            Point(width, 0)
+        ])
+
+        super().__init__(polygon, pose, vel)
