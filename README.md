@@ -14,3 +14,4 @@
 - [ ] add typing
 - [ ] add input checking
 - [ ] add radar in gui to see sensors read from the robot
+- [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
