@@ -4,13 +4,13 @@
 
 ## TODO
 
-- [ ] write URDF for cobalt
-- [ ] add sensors support to URDF parser
+- [x] write URDF for cobalt
+- [ ] update documentation
 - [ ] define environment
+- [ ] add sensors support to URDF parser
 - [ ] scale the map to match real world measures
 - [ ] move from current, complex, translation and scale logic to
     translate() and scale() on sort of a contextManager object in javascript
-- [ ] comment better each function and the overall structure
 - [ ] add typing
 - [ ] add input checking
 - [ ] add radar in gui to see sensors read from the robot
