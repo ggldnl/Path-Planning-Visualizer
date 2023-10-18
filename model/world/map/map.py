@@ -71,10 +71,10 @@ class Map:
         self.min_goal_clearance = min_goal_clearance
 
         # Initial obstacle position
-        self.obstacles = []
+        self.initial_obstacles = []
 
         # Current obstacle position
-        self.current_obstacles = []
+        self.obstacles = []
 
         self.current_goal = None
 
@@ -163,12 +163,14 @@ class Map:
                 obstacles.append(obstacle)
 
         # Update the obstacles and the goal
-        self.current_obstacles = obstacles
         self.obstacles = obstacles
         self.current_goal = goal
 
+        # Backup the current map so that we can reset it later
+        self.initial_obstacles = [obstacle.copy() for obstacle in obstacles]
+
     def reset_map(self):
-        self.current_obstacles = self.obstacles
+        self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
 
     def save_map(self, filename):
         with open(filename, "wb") as file:

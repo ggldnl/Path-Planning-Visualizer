@@ -38,6 +38,12 @@ class Obstacle:
         # self.polygon.translate_to(self.pose[0], self.pose[1])
         self.polygon.transform_to(self.pose)
 
+    def copy(self):
+        new_polygon = self.polygon.copy()
+        new_pose = (self.pose[0], self.pose[1], self.pose[2])
+        new_vel = (self.vel[0], self.vel[1], self.vel[2])
+        return Obstacle(new_polygon, new_pose, new_vel, self._motion_law_function)
+
 
 class RectangularObstacle(Obstacle):
 

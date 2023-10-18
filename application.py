@@ -1,16 +1,44 @@
+
+#                      ___          ___          ___          ___        ___
+#                     /\  \        /\  \        /\  \        /\  \      /\  \
+#                    /::\  \      /::\  \      /::\  \      /::\  \     \:\  \
+#                   /:/\:\  \    /:/\:\  \    /:/\:\  \    /:/\:\  \     \:\  \
+#                  /::\~\:\  \  /:/  \:\  \  /::\~\:\__\  /:/  \:\  \    /::\  \
+#                 /:/\:\ \:\__\/:/__/ \:\__\/:/\:\ \:|__|/:/__/ \:\__\  /:/\:\__\
+#                 \/_|::\/:/  /\:\  \ /:/  /\:\~\:\/:/  /\:\  \ /:/  / /:/  \/__/
+#                    |:|::/  /  \:\  /:/  /  \:\ \::/  /  \:\  /:/  / /:/  /
+#                    |:|\/__/    \:\/:/  /    \:\/:/  /    \:\/:/  /  \/__/
+#                    |:|  |       \::/  /      \::/  /      \::/  /
+#                     \|__|        \/__/        \/__/        \/__/
+#
+#        ___                     ___          ___          ___   ___       ___          ___          ___
+#       /\  \         ___       /\__\        /\__\        /\__\ /\  \     /\  \        /\  \        /\  \
+#      /::\  \       /\  \     /::|  |      /:/  /       /:/  //::\  \    \:\  \      /::\  \      /::\  \
+#     /:/\ \  \      \:\  \   /:|:|  |     /:/  /       /:/  //:/\:\  \    \:\  \    /:/\:\  \    /:/\:\  \
+#    _\:\~\ \  \     /::\__\ /:/|:|__|__  /:/  /  ___  /:/  //::\~\:\  \   /::\  \  /:/  \:\  \  /::\~\:\  \
+#   /\ \:\ \ \__\ __/:/\/__//:/ |::::\__\/:/__/  /\__\/:/__//:/\:\ \:\__\ /:/\:\__\/:/__/ \:\__\/:/\:\ \:\__\
+#   \:\ \:\ \/__//\/:/  /   \/__/~~/:/  /\:\  \ /:/  /\:\  \\/__\:\/:/  //:/  \/__/\:\  \ /:/  /\/_|::\/:/  /
+#    \:\ \:\__\  \::/__/          /:/  /  \:\  /:/  /  \:\  \    \::/  //:/  /      \:\  /:/  /    |:|::/  /
+#     \:\/:/  /   \:\__\         /:/  /    \:\/:/  /    \:\  \   /:/  / \/__/        \:\/:/  /     |:|\/__/
+#      \::/  /     \/__/        /:/  /      \::/  /      \:\__\ /:/  /                \::/  /      |:|  |
+#       \/__/                   \/__/        \/__/        \/__/ \/__/                  \/__/        \|__|
+
+# ---------------------------------- imports --------------------------------- #
+
 import logging
 import sys
 import time
 from typing import Iterator
 
+# Flask imports
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
+# Import scripts
 from scripts.frame import Frame
 
 # Import stuff from the model
 from model.world.world import World
 from model.world.robots.URDF_parser import URDFParser
-
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -21,6 +49,8 @@ application = Flask(__name__, template_folder='template')
 
 # Initialize a random number generator
 # random.seed()
+
+# ---------------------------- defining some stuff --------------------------- #
 
 # Application refresh rate
 # 20 Hz = 20 times a second: 1/20 = 0.05 update interval
@@ -35,11 +65,18 @@ running = False
 # it is set to False after one iteration
 stepping = True
 
+# Define the world here so we can access it through the routes
+world = World(UPDATE_FREQUENCY)
 
-@application.route("/")
-def index() -> str:
-    return render_template("index.html")
+# Buffer for all the geometries that will be drawn on screen
+frame = Frame()
 
+# Create the robot
+# TODO: add sensors and motors, use a configuration file
+robot_polygons = URDFParser.parse('./model/world/robots/URDFs/robot.urdf')
+
+
+# ------------------------------ generation loop ----------------------------- #
 
 def generate_data() -> Iterator[str]:
 
@@ -68,18 +105,6 @@ def generate_data() -> Iterator[str]:
 
         logger.info("Client %s connected", client_ip)
 
-        # Initialize what we will use in the control loop
-
-        # Buffer all the geometries that will be drawn on screen
-        frame = Frame()
-
-        # Create the world
-        world = World(UPDATE_FREQUENCY)
-
-        # Create the robot
-        # TODO: add sensors and motors, use a configuration file
-        robot_polygons = URDFParser.parse('./model/world/robots/URDFs/robot.urdf')
-
         # Dictionary containing the data to dump
         json_data = {}
 
@@ -99,22 +124,24 @@ def generate_data() -> Iterator[str]:
 
                 # Add the robots to the frame
                 frame.add_polygons(world.robots, 'orange')
-                frame.add_polygons(robot_polygons, '#0047AB66', '#0047ABFF')
+                frame.add_polygons(robot_polygons, '#00640066', '#006400FF')
 
                 # Add the obstacles to the frame (we can change color for moving and steady obstacles)
-                steady_obstacles = [
-                    obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
-                ]
-                moving_obstacles = [
-                    obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
-                ]
-                frame.add_polygons(steady_obstacles, '#8B000066')
-                # frame.add_polygons(moving_obstacles, '#b4570266')
-                frame.add_polygons(moving_obstacles, '#8B000066')
+
+                # steady_obstacles = [
+                #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
+                # ]
+                # moving_obstacles = [
+                #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
+                # ]
+                # frame.add_polygons(steady_obstacles, '#8B000066')
+                # frame.add_polygons(moving_obstacles, '#8B000066')
+
+                frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], '#0047AB66')
 
                 # Add the start and the goal points to the frame
-                # frame.add_circle([0, 0], 0.5, '#00640066')
-                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.5, '#00008B66')
+                # frame.add_circle([0, 0], 0.2, '#00640066')
+                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.2, '#00008B66')
 
                 # Dump the data
                 json_data = frame.to_json()
@@ -126,6 +153,14 @@ def generate_data() -> Iterator[str]:
             time.sleep(UPDATE_FREQUENCY)
     except GeneratorExit:
         logger.info("Client %s disconnected", client_ip)
+
+
+# ------------------------------- flask routes ------------------------------- #
+
+
+@application.route("/")
+def index() -> str:
+    return render_template("index.html")
 
 
 @application.route("/data")
@@ -150,7 +185,12 @@ def simulation_control():
             response = {'status': 'Stopped'}
         elif data['status'] == 'step':
             stepping = True
-            response = {'status': 'stepping'}
+            response = {'status': 'Stepping'}
+        elif data['status'] == 'reset':
+            running = False
+            stepping = True
+            world.map.reset_map()
+            response = {'status': 'Resetting'}
         else:
             response = {'status': 'invalid'}
 

@@ -23,9 +23,6 @@ class Point:
             return self.y
         raise IndexError("Point index out of range")
 
-    def to_dict(self):
-        return {'x': self.x, 'y': self.y}
-
     # Python 3.x uses __truediv__ and __floordiv__. __div__ is 2.x-only.
 
     def __itruediv__(self, other):
@@ -142,3 +139,9 @@ class Point:
         if isinstance(other, Point):
             return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
         raise ValueError('Unsupported distance operation')
+
+    def to_dict(self):
+        return {'x': self.x, 'y': self.y}
+
+    def copy(self):
+        return Point(self.x, self.y)

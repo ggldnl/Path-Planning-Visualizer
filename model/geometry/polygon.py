@@ -187,10 +187,12 @@ class Polygon:
         """
         Returns a deep copy of the polygon
         """
-        points = []
-        for point in self.points:
-            points.append(Point(point.x, point.y))
-        return Polygon(points)
+        # points = []
+        # for point in self.points:
+        #     points.append(Point(point.x, point.y))
+        # return Polygon(points)
+
+        return Polygon([point.copy() for point in self.points])
 
     def __eq__(self, other):
 
