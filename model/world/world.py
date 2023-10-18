@@ -1,4 +1,6 @@
-from model.world.map.map import Map
+from model.world.map.map_builder import MapBuilder
+from random import Random
+
 
 class World:
 
@@ -14,10 +16,10 @@ class World:
         self.controllers = []
 
         # Initialize the map
-        self.map = Map()
+        self.map = MapBuilder().build()
 
         # TODO provide load map capabilities
-        self.map.random_map(self.robots)
+        self.map.get_map(self.robots)
 
     def set_period(self, dt):
         self.dt = dt

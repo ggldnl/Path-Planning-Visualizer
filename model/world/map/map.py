@@ -10,31 +10,65 @@ from model.geometry.point import Point
 
 # Serialization
 import pickle
-import json
 
-# random environment parameters
-OBS_MIN_WIDTH = 5
-OBS_MAX_WIDTH = OBS_MIN_WIDTH + 5
-OBS_MIN_HEIGHT = 5
-OBS_MAX_HEIGHT = OBS_MIN_HEIGHT + 5
-OBS_MIN_COUNT = 10
-OBS_MAX_COUNT = 50
-OBS_MIN_DIST = 20.0
-OBS_MAX_DIST = 50.0
-OBS_STEADY_MIN_COUNT = 10
-OBS_STEADY_MAX_COUNT = 20
-OBS_MIN_LIN_SPEED = -10
-OBS_MAX_LIN_SPEED = 10
-OBS_MIN_ANG_SPEED = -90
-OBS_MAX_ANG_SPEED = 90
-GOAL_MIN_DIST = 10.0
-GOAL_MAX_DIST = 50.0
-MIN_GOAL_CLEARANCE = 0.2
+# TODO implement json serialization
+import json
 
 
 class Map:
+    def __init__(self,
+                 # Obstacle parameters
+                 obs_min_dist,
+                 obs_max_dist,
+                 obs_min_width,
+                 obs_max_width,
+                 obs_min_height,
+                 obs_max_height,
+                 obs_steady_count,
+                 obs_moving_count,
 
-    def __init__(self):
+                 # Speed
+                 obs_min_lin_speed,
+                 obs_max_lin_speed,
+                 obs_min_ang_speed,
+                 obs_max_ang_speed,
+
+                 # Goal parameters
+                 goal_min_dist,
+                 goal_max_dist,
+
+                 min_goal_clearance
+                 ):
+
+        # Set parameters
+
+        # Distance from the center (spawning point)
+        self.obs_min_dist = obs_min_dist
+        self.obs_max_dist = obs_max_dist
+
+        # Dimension of the obstacles
+        self.obs_min_width = obs_min_width
+        self.obs_max_width = obs_max_width
+        self.obs_min_height = obs_min_height
+        self.obs_max_height = obs_max_height
+
+        # Number of steady obstacles
+        self.obs_steady_count = obs_steady_count
+
+        # Number of moving obstacles
+        self.obs_moving_count = obs_moving_count
+
+        # Obstacle speed
+        self.obs_min_lin_speed = obs_min_lin_speed
+        self.obs_max_lin_speed = obs_max_lin_speed
+        self.obs_min_ang_speed = obs_min_ang_speed
+        self.obs_max_ang_speed = obs_max_ang_speed
+
+        # Goal distance from the spawning point
+        self.goal_min_dist = goal_min_dist
+        self.goal_max_dist = goal_max_dist
+
+        self.min_goal_clearance = min_goal_clearance
 
         # Initial obstacle position
         self.obstacles = []
@@ -44,40 +78,18 @@ class Map:
 
         self.current_goal = None
 
-    def random_map(self, robots):
-
-        # Obstacle parameters
-        obs_min_count = OBS_MIN_COUNT
-        obs_max_count = OBS_MAX_COUNT
-        obs_min_dist = OBS_MIN_DIST
-        obs_max_dist = OBS_MAX_DIST
-        obs_min_width = OBS_MIN_WIDTH
-        obs_max_width = OBS_MAX_WIDTH
-        obs_min_height = OBS_MIN_HEIGHT
-        obs_max_height = OBS_MAX_HEIGHT
-        obs_steady_min_count = OBS_STEADY_MIN_COUNT
-        obs_steady_max_count = OBS_STEADY_MAX_COUNT
-
-        # Speed
-        obs_min_lin_speed = OBS_MIN_LIN_SPEED
-        obs_max_lin_speed = OBS_MAX_LIN_SPEED
-        obs_min_ang_speed = OBS_MIN_ANG_SPEED
-        obs_max_ang_speed = OBS_MAX_ANG_SPEED
-
-        # Goal parameters
-        goal_min_dist = GOAL_MIN_DIST
-        goal_max_dist = GOAL_MAX_DIST
+    def get_map(self, robots):
 
         # Generate the goal
-        goal_dist_range = goal_max_dist - goal_min_dist
-        dist = goal_min_dist + (random.random() * goal_dist_range)
+        goal_dist_range = self.goal_max_dist - self.goal_min_dist
+        dist = self.goal_min_dist + (random.random() * goal_dist_range)
         phi = -pi + (random.random() * 2 * pi)
         x = dist * sin(phi)
         y = dist * cos(phi)
         goal = Point(x, y)
 
         # Generate a proximity test geometry for the goal
-        r = MIN_GOAL_CLEARANCE
+        r = self.min_goal_clearance
         n = 6
         goal_test_geometry = []
         for i in range(n):
@@ -86,30 +98,29 @@ class Map:
             )
         goal_test_geometry = Polygon(goal_test_geometry)
 
-        # Generate the obstacles
-        obstacles = []
-        obs_width_range = obs_max_width - obs_min_width
-        obs_height_range = obs_max_height - obs_min_height
-        obs_dist_range = obs_max_dist - obs_min_dist
-        num_obstacles = random.randrange(obs_min_count, obs_max_count + 1)
+        # Obstacles parameters range
+        obs_width_range = self.obs_max_width - self.obs_min_width
+        obs_height_range = self.obs_max_height - self.obs_min_height
+        obs_dist_range = self.obs_max_dist - self.obs_min_dist
 
         # test_geometries contains the robots and the goal
         test_geometries = [r.body for r in robots] + [
             goal_test_geometry
         ]
 
-        # How many steady obstacles?
-        target_steady_obstacles = random.randrange(obs_steady_min_count, obs_steady_max_count + 1)
-        num_steady_obstacles = 0
-
-        while len(obstacles) < num_obstacles:
+        # Generate moving obstacles
+        obstacles = []
+        num_moving_obstacles_generated = 0
+        num_steady_obstacles_generated = 0
+        while (num_moving_obstacles_generated < self.obs_moving_count or
+               num_steady_obstacles_generated < self.obs_steady_count):
 
             # Generate dimensions
-            width = obs_min_width + (random.random() * obs_width_range)
-            height = obs_min_height + (random.random() * obs_height_range)
+            width = self.obs_min_width + (random.random() * obs_width_range)
+            height = self.obs_min_height + (random.random() * obs_height_range)
 
             # Generate position
-            dist = obs_min_dist + (random.random() * obs_dist_range)
+            dist = self.obs_min_dist + (random.random() * obs_dist_range)
             phi = -pi + (random.random() * 2 * pi)
             x = dist * sin(phi)
             y = dist * cos(phi)
@@ -134,18 +145,19 @@ class Map:
             # The polygon is good: add the velocity vector and create an obstacle
             if not intersects:
 
-                # If we still need to add a steady obstacle, set the velocity vector to (0, 0, 0)
-                if num_steady_obstacles < target_steady_obstacles:
-                    vel = (0, 0, 0)
-                    num_steady_obstacles += 1
-
-                # If we already added all the steady obstacles, only the moving ones are left
-                else:
+                # If we need to generate moving obstacles
+                if num_moving_obstacles_generated < self.obs_moving_count:
                     vel = (
-                        random.uniform(obs_min_lin_speed, obs_max_lin_speed),
-                        random.uniform(obs_min_lin_speed, obs_max_lin_speed),
-                        random.uniform(obs_min_ang_speed, obs_max_ang_speed)
+                        random.uniform(self.obs_min_lin_speed, self.obs_max_lin_speed),
+                        random.uniform(self.obs_min_lin_speed, self.obs_max_lin_speed),
+                        random.uniform(self.obs_min_ang_speed, self.obs_max_ang_speed)
                     )
+                    num_moving_obstacles_generated += 1
+
+                # If we are done with the generation of moving obstacles
+                else:
+                    vel = (0, 0, 0)
+                    num_steady_obstacles_generated += 1
 
                 obstacle = Obstacle(polygon, pose, vel)
                 obstacles.append(obstacle)
