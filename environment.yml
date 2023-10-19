@@ -1,0 +1,14 @@
+name: robot_simulator
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - click>=8.0.4
+  - elementpath>=4.1.4
+  - flask>=2.2.2
+  - geos>=3.8.0
+  - matplotlib>=3.7.2
+  - numpy>=1.26.0
+  - scipy>=1.11.3
+  - shapely>=2.0.1
