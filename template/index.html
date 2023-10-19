@@ -5,9 +5,11 @@
     <title>Robot Simulator</title>
 
     <!-- Font Awesome -->
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
 
     <!-- Styles -->
+
     <link rel="stylesheet" type="text/css" href="static/styles/body.css">
     <link rel="stylesheet" type="text/css" href="static/styles/buttons.css">
     <link rel="stylesheet" type="text/css" href="static/styles/sidebar.css">
@@ -18,7 +20,11 @@
 </head>
 <body>
 
+    <!-- Canvas -->
+
     <canvas id="canvas"></canvas>
+
+    <!-- Sliding buttons -->
 
     <input type="checkbox" id="sidebar-checkbox">
     <label for="sidebar-checkbox">
@@ -29,6 +35,8 @@
         <i class="fas fa-home" id=></i>
     </button>
 
+    <!-- Simulation control buttons -->
+
     <div id="control-button-container">
         <input type="button" class="button" id="playButton" value="Play" onclick="sendValue({status:'play'});" />
         <input type="button" class="button" id="stopButton" value="Stop" onclick="sendValue({status:'stop'});" />
@@ -38,23 +46,28 @@
 
     <div class="sidebar">
 
-        <!-- Obstacles control -->
+        <!-- Sidebar - Speed control sliders -->
+
         <label>Obstacles linear speed</label>
         <input type="range" class="custom_slider" id="obstacles_linear_speed_slider" min="-10" max="10" value="1"
                step="0.1" oninput="sendValue({obs_lin_speed:String(this.value)});"/>
 
         <label>Obstacles angular speed</label>
         <input type="range" class="custom_slider" id="obstacles_angular_speed_slider" min="-10" max="10" value="1"
-               step="0.1", oninput="sendValue({obs_ang_speed:String(this.value)});"/>
+               step="0.1" oninput="sendValue({obs_ang_speed:String(this.value)});"/>
 
         <label>Robots speed</label>
         <input type="range" class="custom_slider" id="robots_speed_slider" min="-10" max="10" value="1"
-               step="0.1", oninput="sendValue({robot_speed:String(this.value)});"/>
+               step="0.1" oninput="sendValue({robot_speed:String(this.value)});"/>
+
+        <!-- Sidebar - Map control buttons -->
 
         <label>Map control</label>
         <input type="button" class="button" id="loadButton" value="Load map" onclick="sendValue(map:'load');" />
         <input type="button" class="button" id="saveButton" value="Save map" onclick="sendValue(map:'save');" />
         <input type="button" class="button" id="randomButton" value="Save map" onclick="sendValue(map:'random');" />
+
+        <!-- Sidebar - Invisibles control checkboxes -->
 
         <label>Invisibles</label>
 
@@ -74,6 +87,8 @@
         </div>
 
     </div>
+
+    <!-- Javascript -->
 
     <script src="static/js/colors.js"></script>
     <script type="module" src="static/js/main.js"></script>
