@@ -195,6 +195,27 @@ def simulation_control():
             response = {'status': 'invalid'}
 
         return jsonify(response)
+
+    elif data and 'linear_speed' in data:
+        speed_multiplier = float(data['linear_speed'])
+        for obstacle in world.map.obstacles:
+            current_vel = obstacle.vel
+            obstacle.vel = (
+                current_vel[0] * speed_multiplier,
+                current_vel[1] * speed_multiplier,
+                current_vel[2]
+            )
+
+    elif data and 'angular_speed' in data:
+        speed_multiplier = float(data['angular_speed'])
+        for obstacle in world.map.obstacles:
+            current_vel = obstacle.vel
+            obstacle.vel = (
+                current_vel[0],
+                current_vel[1],
+                current_vel[2] * speed_multiplier
+            )
+
     else:
         return jsonify({'status': 'Invalid data or value received.'}), 400
 

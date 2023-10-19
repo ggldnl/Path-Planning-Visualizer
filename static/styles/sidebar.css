@@ -10,31 +10,56 @@
     position: fixed;
     left: -250px;
     width: 250px;
-    height: 100%;
+    height:100%;
     background: #1e1e1e;
-    text-align: center; /* Center the content horizontally */
+    /* text-align: center; /* Center the content horizontally */
     line-height: 25px;
     overflow: auto; /* Add overflow property to enable scrolling */
     transition: all .5s ease;
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
+
+    /* Rounded floating sidebar */
+    top: 20px;
+    height:85%;
+    width: 240px;
+    margin-left: 10px;
+    padding-top: 10px;
+    border-radius: 10px;
 }
 
 /* Label style
  */
 .sidebar label{
     color: #ffffff;
+    display: block;
+    margin-left: 20px;
 }
 
 /* Slider style
  */
-.slider{
+.custom_slider{
     color: white;
-    width: 80%; /* Full-width */
-    height: 25px; /* Specified height */
+    height: 10px;
 }
 
-#sidebar-checkbox {
-    display: none;
+/* ------- */
+
+.checkbox_container {
+    display: flex;
+    align-items: center;
+    height: 25px;
 }
+
+.sidebar_checkbox {
+    display: flex;
+    margin-right: 10px;
+}
+
+.sidebar_label {
+    margin-left: 40px;
+}
+
 
 label #open-sidebar-btn, label #close-sidebar-btn{
     position: absolute;

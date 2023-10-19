@@ -74,11 +74,12 @@ window.onload = function () {
     });
 
     // Add a slider event listener to the obstacle speed control slider
-    var obstacles_speed_slider = document.getElementById("obstacles_speed_slider");
+    /*
+    var obstacles_speed_slider = document.getElementById("obstacles_liear_speed_slider");
     obstacles_speed_slider.addEventListener("input", function() {
         const obstacles_speed = obstacles_speed_slider.value;
-        console.log("Updated obstacles speed value to: ", obstacles_speed);
     });
+    */
 
     // Resize canvas when the window is resized
     window.onresize = function () {
