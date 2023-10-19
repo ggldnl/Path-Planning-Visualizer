@@ -48,43 +48,60 @@
 
         <!-- Sidebar - Speed control sliders -->
 
-        <label>Obstacles linear speed</label>
+        <label class="sidebar_label">Obstacles linear speed</label>
         <input type="range" class="custom_slider" id="obstacles_linear_speed_slider" min="-10" max="10" value="1"
                step="0.1" oninput="sendValue({obs_lin_speed:String(this.value)});"/>
 
-        <label>Obstacles angular speed</label>
+        <label class="sidebar_label">Obstacles angular speed</label>
         <input type="range" class="custom_slider" id="obstacles_angular_speed_slider" min="-10" max="10" value="1"
                step="0.1" oninput="sendValue({obs_ang_speed:String(this.value)});"/>
 
-        <label>Robots speed</label>
+        <label class="sidebar_label">Robots speed</label>
         <input type="range" class="custom_slider" id="robots_speed_slider" min="-10" max="10" value="1"
                step="0.1" oninput="sendValue({robot_speed:String(this.value)});"/>
 
         <!-- Sidebar - Map control buttons -->
 
-        <label>Map control</label>
-        <input type="button" class="button" id="loadButton" value="Load map" onclick="sendValue({map:'load'});"/>
-        <input type="button" class="button" id="saveButton" value="Save map" onclick="sendValue({map:'save'});" />
-        <input type="button" class="button" id="randomButton" value="Save map" onclick="sendValue({map:'random'});" />
+        <label class="sidebar_label">Map control</label>
+
+        <div id="map-button-container">
+            <button id="load_btn" onclick="sendValue({map:'load'});">
+                <i class="fas fa-upload"></i>
+            </button>
+            <button id="save_btn" onclick="sendValue({map:'save'});">
+                <i class="fas fa-save"></i>
+            </button>
+            <button id="random_btn" onclick="sendValue({map:'random'});">
+                <i class="fas fa-random"></i>
+            </button>
+        </div>
+
+        <!--
+        <input type="button" class="button" id="loadButton" value="Load" onclick="sendValue({map:'load'});"/>
+        <input type="button" class="button" id="saveButton" value="Save" onclick="sendValue({map:'save'});" />
+        <input type="button" class="button" id="randomButton" value="Random" onclick="sendValue({map:'random'});" />
+        -->
 
         <!-- Sidebar - Invisibles control checkboxes -->
 
-        <label>Invisibles</label>
+        <label class="sidebar_label">Invisibles</label>
 
-        <div class="checkbox_container">
-            <label for="trace_checkbox" class="sidebar_label">Show trace</label>
-            <input type="checkbox" class="sidebar_checkbox" id="trace_checkbox">
-        </div>
-
-        <div class="checkbox_container">
-            <label for="sensors_checkbox" class="sidebar_label">Show sensors</label>
-            <input type="checkbox" class="sidebar_checkbox" id="sensors_checkbox">
-        </div>
-
-        <div class="checkbox_container">
-            <label for="forward_checkbox" class="sidebar_label">Show forward</label>
-            <input type="checkbox" class="sidebar_checkbox" id="forward_checkbox">
-        </div>
+        <table>
+            <tbody>
+            <tr>
+                <td><label class="table_label">Show trace</label></td>
+                <td><input type="checkbox" class="sidebar_checkbox"></td>
+                </tr>
+                <tr>
+                <td><label class="table_label">Show sensors</label></td>
+                <td><input type="checkbox" class="sidebar_checkbox"></td>
+                </tr>
+                <tr>
+                <td><label class="table_label">Show forward</label></td>
+                <td><input type="checkbox" class="sidebar_checkbox"></td>
+                </tr>
+            </tbody>
+        </table>
 
     </div>
 

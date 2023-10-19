@@ -1,6 +1,6 @@
 button, input {
-	margin: 0 10px;
-	padding: 10px 20px;
+	margin: 0 2px; /* exterior */
+	padding: 10px 20px; /* interior */
 	height: 50px;
 	background: #262626;
 	color: white;

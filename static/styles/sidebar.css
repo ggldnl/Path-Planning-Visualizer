@@ -7,6 +7,7 @@
 /* Sidebar style
  */
 .sidebar{
+    text-align: center; /* Center inline or inline-block elements */
     position: fixed;
     left: -250px;
     width: 250px;
@@ -26,21 +27,20 @@
     margin-left: 10px;
     padding-top: 10px;
     border-radius: 10px;
+
 }
 
-/* Label style
- */
-.sidebar label{
+/* Label style */
+.sidebar_label{
     color: #ffffff;
     display: block;
-    margin-left: 20px;
+    margin: 10px 20px;
 }
 
-/* Slider style
- */
+/* Slider style */
 .custom_slider{
     color: white;
-    height: 10px;
+    height: 5px;
 }
 
 /* ------- */
@@ -56,10 +56,19 @@
     margin-right: 10px;
 }
 
-.sidebar_label {
-    margin-left: 40px;
+table {
+    border-spacing: 0px;
 }
 
+th, td {
+    text-align: left;
+}
+
+.table_label{
+    color: #ffffff;
+    display: block;
+    margin: 0px 20px;
+}
 
 label #open-sidebar-btn, label #close-sidebar-btn{
     position: absolute;
