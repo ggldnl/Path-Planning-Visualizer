@@ -12,7 +12,7 @@ class Obstacle:
         self.pose = pose
 
         if vel is None:
-            self.vel = (random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(0, 1))
+            self.vel = (random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1))
         else:
             self.vel = vel
 

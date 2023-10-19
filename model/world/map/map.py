@@ -98,6 +98,16 @@ class Map:
             )
         goal_test_geometry = Polygon(goal_test_geometry)
 
+        # Generate a proximity test geometry for the starting point
+        r = self.obs_min_dist
+        n = 6
+        start_test_geometry = []
+        for i in range(n):
+            start_test_geometry.append(
+                Point(x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n))
+            )
+        start_test_geometry = Polygon(start_test_geometry)
+
         # Obstacles parameters range
         obs_width_range = self.obs_max_width - self.obs_min_width
         obs_height_range = self.obs_max_height - self.obs_min_height
@@ -106,6 +116,8 @@ class Map:
         # test_geometries contains the robots and the goal
         test_geometries = [r.body for r in robots] + [
             goal_test_geometry
+        ] + [
+            start_test_geometry
         ]
 
         # Generate moving obstacles
@@ -126,7 +138,7 @@ class Map:
             y = dist * cos(phi)
 
             # Generate orientation
-            theta = -pi + (random.random() * 2 * pi)
+            theta = random.random() * 360
 
             # We have a pose
             pose = (x, y, theta)
@@ -174,10 +186,11 @@ class Map:
 
     def save_map(self, filename):
         with open(filename, "wb") as file:
-            pickle.dump(self.current_obstacles, file)
+            pickle.dump(self.initial_obstacles, file)
             pickle.dump(self.current_goal, file)
 
     def load_map(self, filename):
         with open(filename, "rb") as file:
-            self.current_obstacles = pickle.load(file)
+            self.initial_obstacles = pickle.load(file)
+            self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
             self.current_goal = pickle.load(file)
