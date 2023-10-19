@@ -103,33 +103,54 @@ export function drawGrid(
     // Draw grid
     var leftEdge = Math.floor(-(screenSize.width / 2 - pixelOffset.x) / pixelScale);
     var rightEdge = Math.ceil((screenSize.width / 2 + pixelOffset.x) / pixelScale);
-    for (var x = leftEdge; x <= rightEdge; x++) {
-        var px = originX + pixelScale * x;
+    for (var x = leftEdge * 10; x <= rightEdge * 10; x += 1) {
+        var px = originX + pixelScale * x / 10;
         drawLine(ctx, px, 0, px, screenSize.height, gridColor, 0.25);
-        
+
         // Draw a numeric reference
-        if (x !== 0 && x % 5 === 0) {
-            ctx.fillStyle = textColor
-            ctx.fillText(
-                x.toString(),
-                px + textOffset.x,
-                originY - textOffset.y
-            );
+        if (pixelScale > 100) {
+            if (x !== 0 && x % 5 === 0) {
+                ctx.fillStyle = textColor
+                ctx.fillText(
+                    (x / 10).toString() + 'm',
+                    px + textOffset.x,
+                    originY - textOffset.y
+                );
+            }
+        } else {
+            if (x !== 0 && x % 10 === 0) {
+                ctx.fillStyle = textColor
+                ctx.fillText(
+                    (x / 10).toString() + 'm',
+                    px + textOffset.x,
+                    originY - textOffset.y
+                );
+            }
         }
     }
     var topEdge = Math.floor(-(screenSize.height / 2 - pixelOffset.y) / pixelScale);
     var bottomEdge = Math.ceil((screenSize.height / 2 + pixelOffset.y) / pixelScale);
-    for (var y = topEdge; y <= bottomEdge; y++) {
-        var py = originY + pixelScale * y;
+    for (var y = topEdge * 10; y <= bottomEdge * 10; y += 1) {
+        var py = originY + pixelScale * y / 10;
         drawLine(ctx, 0, py, screenSize.width, py, gridColor, 0.25);
 
         // Draw a numeric reference
-        if (y !== 0 && y % 5 === 0) {
-            ctx.fillText(
-                (-y).toString(),
-                originX + textOffset.x,
-                py - textOffset.y
-            );
+        if (pixelScale > 100) {
+            if (y !== 0 && y % 5 === 0) {
+                ctx.fillText(
+                    (-y / 10).toString() + 'm',
+                    originX + textOffset.x,
+                    py - textOffset.y
+                );
+            }
+        } else {
+            if (y !== 0 && y % 10 === 0) {
+                ctx.fillText(
+                    (-y / 10).toString() + 'm',
+                    originX + textOffset.x,
+                    py - textOffset.y
+                );
+            }
         }
     }
 }

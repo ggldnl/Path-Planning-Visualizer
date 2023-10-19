@@ -141,7 +141,7 @@ def generate_data() -> Iterator[str]:
 
                 # Add the start and the goal points to the frame
                 # frame.add_circle([0, 0], 0.2, '#00640066')
-                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.2, '#00008B66')
+                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, '#00008B66')
 
                 # Dump the data
                 json_data = frame.to_json()

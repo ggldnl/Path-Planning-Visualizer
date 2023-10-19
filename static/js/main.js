@@ -20,7 +20,8 @@ window.onload = function () {
     let height = canvas.height = window.innerHeight;
 
     // Scale
-    let scale = 50;
+    let scale = 500;
+    const initial_scale = scale;
 
     // Translation
     const pixelOffset = {
@@ -69,7 +70,7 @@ window.onload = function () {
     home_btn.addEventListener("click", function() {
         pixelOffset.x = 0;
         pixelOffset.y = 0;
-        scale = 50;
+        scale = initial_scale;
     });
 
     // Add a slider event listener to the obstacle speed control slider
@@ -91,11 +92,16 @@ window.onload = function () {
         const beforeOffsetY = pixelOffset.y;
         const beforeOffsetXCart = pixelOffset.x / scale;
         const beforeOffsetYCart = pixelOffset.y / scale;
-        scale -= event.deltaY * scale / 2500;
+        scale -= event.deltaY * scale / 5000;
         pixelOffset.x = beforeOffsetXCart * scale;
         pixelOffset.y = beforeOffsetYCart * scale;
-        if (scale < 8) {
-            scale = 8;
+        if (scale < 50) {
+            scale = 50;
+            pixelOffset.x = beforeOffsetX;
+            pixelOffset.y = beforeOffsetY;
+        }
+        if (scale > 1000) {
+            scale = 1000;
             pixelOffset.x = beforeOffsetX;
             pixelOffset.y = beforeOffsetY;
         }
