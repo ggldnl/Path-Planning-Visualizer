@@ -30,28 +30,31 @@
     </button>
 
     <div id="control-button-container">
-        <input type="button" class="button" id="playButton" value="Play" onclick="sendValue('play');" />
-        <input type="button" class="button" id="stopButton" value="Stop" onclick="sendValue('stop');" />
-        <input type="button" class="button" id="stepButton" value="Step" onclick="sendValue('step');" />
-        <input type="button" class="button" id="resetButton" value="Reset" onClick="sendValue('reset');" />
+        <input type="button" class="button" id="playButton" value="Play" onclick="sendValue({status:'play'});" />
+        <input type="button" class="button" id="stopButton" value="Stop" onclick="sendValue({status:'stop'});" />
+        <input type="button" class="button" id="stepButton" value="Step" onclick="sendValue({status:'step'});" />
+        <input type="button" class="button" id="resetButton" value="Reset" onClick="sendValue({status:'reset'});" />
     </div>
 
     <div class="sidebar">
 
         <!-- Obstacles control -->
         <label>Obstacles linear speed</label>
-        <input type="range" class="custom_slider" id="obstacles_linear_speed_slider" min="-1" max="1" value="0" step="0.1"/>
+        <input type="range" class="custom_slider" id="obstacles_linear_speed_slider" min="-10" max="10" value="1"
+               step="0.1" oninput="sendValue({obs_lin_speed:String(this.value)});"/>
 
         <label>Obstacles angular speed</label>
-        <input type="range" class="custom_slider" id="obstacles_angular_speed_slider" min="-1" max="1" value="0" step="0.1"/>
+        <input type="range" class="custom_slider" id="obstacles_angular_speed_slider" min="-10" max="10" value="1"
+               step="0.1", oninput="sendValue({obs_ang_speed:String(this.value)});"/>
 
         <label>Robots speed</label>
-        <input type="range" class="custom_slider" id="robots_speed_slider" min="-1" max="1" value="0" step="0.1"/>
+        <input type="range" class="custom_slider" id="robots_speed_slider" min="-10" max="10" value="1"
+               step="0.1", oninput="sendValue({robot_speed:String(this.value)});"/>
 
         <label>Map control</label>
-        <input type="button" class="button" id="loadButton" value="Load map" onclick="sendStatusValue('load');" />
-        <input type="button" class="button" id="saveButton" value="Save map" onclick="sendStatusValue('save');" />
-        <input type="button" class="button" id="randomButton" value="Save map" onclick="sendStatusValue('random');" />
+        <input type="button" class="button" id="loadButton" value="Load map" onclick="sendValue(map:'load');" />
+        <input type="button" class="button" id="saveButton" value="Save map" onclick="sendValue(map:'save');" />
+        <input type="button" class="button" id="randomButton" value="Save map" onclick="sendValue(map:'random');" />
 
         <label>Invisibles</label>
 
@@ -78,7 +81,7 @@
 
     <script>
 
-    function sendValue(status) {
+    function sendValue(data) {
       var oReq = new XMLHttpRequest();
 
       // Updated to send data to the "/simulation_control" endpoint.
@@ -86,8 +89,11 @@
       oReq.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 
       // Send the "True" value as JSON
-      var value = JSON.stringify({ status: status });
-      oReq.send(value);
+      // var value = JSON.stringify({ status: status });
+
+      var jsonData = JSON.stringify(data);
+      // console.log(jsonData);
+      oReq.send(jsonData);
     };
     </script>
 

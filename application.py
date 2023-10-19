@@ -176,45 +176,38 @@ def simulation_control():
     data = request.get_json()  # Receive the JSON data sent from the client
 
     global running, stepping
-    if data and 'status' in data:
-        if data['status'] == 'play':
-            running = True
-            response = {'status': 'Running'}
-        elif data['status'] == 'stop':
-            running = False
-            response = {'status': 'Stopped'}
-        elif data['status'] == 'step':
-            stepping = True
-            response = {'status': 'Stepping'}
-        elif data['status'] == 'reset':
-            running = False
-            stepping = True
-            world.map.reset_map()
-            response = {'status': 'Resetting'}
-        else:
-            response = {'status': 'invalid'}
+    if data:
 
+        if 'status' in data:
+            if data['status'] == 'play':
+                running = True
+            elif data['status'] == 'stop':
+                running = False
+            elif data['status'] == 'step':
+                stepping = True
+            elif data['status'] == 'reset':
+                running = False
+                stepping = True
+                world.map.reset_map()
+
+        elif 'obs_lin_speed' in data:
+            speed_multiplier = float(data['obs_lin_speed'])
+            for obstacle in world.map.obstacles:
+                obstacle.linear_speed_multiplier = speed_multiplier
+
+        elif 'obs_ang_speed' in data:
+            speed_multiplier = float(data['obs_ang_speed'])
+            for obstacle in world.map.obstacles:
+                obstacle.angular_speed_multiplier = speed_multiplier
+
+        elif 'robot_speed' in data:
+            speed = float(data['robot_speed'])
+            print(f'Set robot speed to {speed}')
+            #  for robot in world.robots:
+            #     robot.speed = speed
+
+        response = {'status': 'invalid'}
         return jsonify(response)
-
-    elif data and 'linear_speed' in data:
-        speed_multiplier = float(data['linear_speed'])
-        for obstacle in world.map.obstacles:
-            current_vel = obstacle.vel
-            obstacle.vel = (
-                current_vel[0] * speed_multiplier,
-                current_vel[1] * speed_multiplier,
-                current_vel[2]
-            )
-
-    elif data and 'angular_speed' in data:
-        speed_multiplier = float(data['angular_speed'])
-        for obstacle in world.map.obstacles:
-            current_vel = obstacle.vel
-            obstacle.vel = (
-                current_vel[0],
-                current_vel[1],
-                current_vel[2] * speed_multiplier
-            )
 
     else:
         return jsonify({'status': 'Invalid data or value received.'}), 400

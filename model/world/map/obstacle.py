@@ -1,4 +1,3 @@
-import model.world.map.motion_laws as motion_laws
 from model.geometry.polygon import Polygon
 from model.geometry.point import Point
 import random
@@ -6,7 +5,7 @@ import random
 
 class Obstacle:
 
-    def __init__(self, polygon, pose, vel=None, motion_law=None):
+    def __init__(self, polygon, pose, vel=None):
 
         self.polygon = polygon
         self.pose = pose
@@ -16,21 +15,25 @@ class Obstacle:
         else:
             self.vel = vel
 
-        if motion_law is None:
-            self._motion_law_function = motion_laws.translation_and_rotation_motion
-        else:
-            self._motion_law_function = motion_law
+        # Global speed multipliers (the obstacles moves proportionally to these values)
+        self.linear_speed_multiplier = 1
+        self.angular_speed_multiplier = 1
 
     def step_motion(self, dt):
         """
         Simulate the obstacle's motion over the given time interval
         """
 
-        # x = self.pose[0]
-        # y = self.pose[1]
-        # self.pose = (x + self.vx * dt, y + self.vy * dt, self.pose[2])
-
-        self.pose = self._motion_law_function(self.pose, self.vel, dt)
+        # Update the pose based on the motion law (translation + rotation)
+        x, y, z = self.pose
+        vx, vy, vz = self.vel
+        lsm = self.linear_speed_multiplier
+        asm = self.angular_speed_multiplier
+        self.pose = (
+            x + vx * lsm * dt,
+            y + vy * lsm * dt,
+            (z + vz * asm * dt) % 360
+        )
 
         self.update_geometry()
 
@@ -42,7 +45,7 @@ class Obstacle:
         new_polygon = self.polygon.copy()
         new_pose = (self.pose[0], self.pose[1], self.pose[2])
         new_vel = (self.vel[0], self.vel[1], self.vel[2])
-        return Obstacle(new_polygon, new_pose, new_vel, self._motion_law_function)
+        return Obstacle(new_polygon, new_pose, new_vel)
 
 
 class RectangularObstacle(Obstacle):
