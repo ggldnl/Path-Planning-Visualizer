@@ -190,21 +190,28 @@ def simulation_control():
                 stepping = True
                 world.map.reset_map()
 
-        elif 'obs_lin_speed' in data:
+        if 'obs_lin_speed' in data:
             speed_multiplier = float(data['obs_lin_speed'])
             for obstacle in world.map.obstacles:
                 obstacle.linear_speed_multiplier = speed_multiplier
 
-        elif 'obs_ang_speed' in data:
+        if 'obs_ang_speed' in data:
             speed_multiplier = float(data['obs_ang_speed'])
             for obstacle in world.map.obstacles:
                 obstacle.angular_speed_multiplier = speed_multiplier
 
-        elif 'robot_speed' in data:
+        if 'robot_speed' in data:
             speed = float(data['robot_speed'])
             print(f'Set robot speed to {speed}')
             #  for robot in world.robots:
             #     robot.speed = speed
+
+        if 'map' in data:
+            flag = data['map']
+            if flag == 'random':
+                world.map.get_map(world.robots)
+                running = False
+                stepping = True
 
         response = {'status': 'invalid'}
         return jsonify(response)

@@ -45,22 +45,12 @@
 
 /* ------- */
 
-.checkbox_container {
-    display: flex;
-    align-items: center;
-    height: 25px;
-}
-
-.sidebar_checkbox {
-    display: flex;
-    margin-right: 10px;
-}
-
 table {
     border-spacing: 0px;
 }
 
 th, td {
+    border-collapse: collapse;
     text-align: left;
 }
 
@@ -70,6 +60,11 @@ th, td {
     margin: 0px 20px;
 }
 
+.table_checkbox{
+    height: 25px;
+}
+
+/* Define open and close sidebar buttons */
 label #open-sidebar-btn, label #close-sidebar-btn{
     position: absolute;
     cursor:pointer;
@@ -99,8 +94,7 @@ label #close-sidebar-btn {
 
 /* The open sidebar button is pressed */
 
-/* The sidebar is extended
- */
+/* The sidebar is extended */
  #sidebar-checkbox:checked ~ .sidebar{
     left: 0;
 }
