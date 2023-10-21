@@ -1,4 +1,3 @@
-
 #                      ___          ___          ___          ___        ___
 #                     /\  \        /\  \        /\  \        /\  \      /\  \
 #                    /::\  \      /::\  \      /::\  \      /::\  \     \:\  \
@@ -32,6 +31,7 @@ from typing import Iterator
 
 # Flask imports
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
+from flask_compress import Compress
 
 # Import scripts
 from scripts.frame import Frame
@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 
 # Configure the Flask app
 application = Flask(__name__, template_folder='template')
+Compress(application)
 
 # Initialize a random number generator
 # random.seed()
@@ -55,7 +56,7 @@ application = Flask(__name__, template_folder='template')
 # Application refresh rate
 # 20 Hz = 20 times a second: 1/20 = 0.05 update interval
 REFRESH_RATE = 20  # Hz
-UPDATE_FREQUENCY = 1/REFRESH_RATE
+UPDATE_FREQUENCY = 1 / REFRESH_RATE
 
 # running == True when the play button is pressed
 # running == False when the stop button is pressed
@@ -78,29 +79,31 @@ robot_polygons = URDFParser.parse('./model/world/robots/URDFs/cobalt.urdf')
 
 # ------------------------------ generation loop ----------------------------- #
 
-def generate_data() -> Iterator[str]:
-
-    """
-    This section checks if the HTTP request headers contain an "X-Forwarded-For" header.
-    This header is commonly used to store the original IP address of the client
-    when requests pass through one or more proxy servers or load balancers.
-    """
-    if request.headers.getlist("X-Forwarded-For"):
+def get_client_ip():
+    x_forwarded_for = request.headers.getlist("X-Forwarded-For")
+    if x_forwarded_for:
         """
         If the "X-Forwarded-For" header is present in the request headers 
         (i.e., request.headers.getlist("X-Forwarded-For") is not empty), 
         it extracts the client's IP address from the first element of the list.
         """
-        client_ip = request.headers.getlist("X-Forwarded-For")[0]
-    else:
-        """
-        If the "X-Forwarded-For" header is not present or empty, it falls back to 
-        using request.remote_addr. request.remote_addr is Flask's way of accessing 
-        the IP address of the client making the request. 
-        If this is also unavailable, it sets client_ip to an empty string ("").
-        """
-        client_ip = request.remote_addr or ""
+        return x_forwarded_for[0]
+    """
+    If the "X-Forwarded-For" header is not present or empty, it falls back to 
+    using request.remote_addr. request.remote_addr is Flask's way of accessing 
+    the IP address of the client making the request. 
+    If this is also unavailable, it sets client_ip to an empty string ("").
+    """
+    return request.remote_addr or ""
 
+
+def generate_data() -> Iterator[str]:
+    """
+    This section checks if the HTTP request headers contain an "X-Forwarded-For" header.
+    This header is commonly used to store the original IP address of the client
+    when requests pass through one or more proxy servers or load balancers.
+    """
+    client_ip = get_client_ip()
     try:
 
         logger.info("Client %s connected", client_ip)
@@ -222,4 +225,3 @@ def simulation_control():
 
 if __name__ == "__main__":
     application.run(host="0.0.0.0", threaded=True)
-
