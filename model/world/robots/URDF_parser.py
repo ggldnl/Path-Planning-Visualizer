@@ -62,7 +62,12 @@ class URDFParser:
             [0, 0, 0, 1]
         ])
 
-        # Combine translation and rotation to get the transformation matrix
+        # Combine translation and rotation to get the transformation matrix.
+        # The order in which we do the product matters. For translation first
+        # and then rotation we would multiply the translation matrix by the
+        # rotation matrix (T * R). If we want to first apply the rotation
+        # and then the translation, we would want to multiply the rotation
+        # matrix by the translation matrix (R * T)
         transformation_matrix = np.dot(translation_matrix, rotation_matrix)
 
         return transformation_matrix
@@ -234,7 +239,7 @@ class URDFParser:
                     ]
                 )
                 points = np.concatenate((base, base))
-                points[discretization_points // 2:, 2] = length
+                points[discretization_points:, 2] = length
 
             elif link_geometry_type == 'sphere':
 
@@ -307,7 +312,7 @@ class URDFParser:
 if __name__ == '__main__':
 
     # Test urdf file in local folder
-    urdf_path = "URDFs/cobalt.urdf"
+    urdf_path = "URDFs/test.urdf"
     polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points
@@ -320,7 +325,7 @@ if __name__ == '__main__':
         y = [p.y for p in polygon.points]
         plt.plot(x, y, color='blue')
 
-    plt.title("Projected XY Points of Rotated 3D Box")
+    plt.title("Projected XY Points")
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.grid(True)
