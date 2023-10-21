@@ -41,8 +41,8 @@ class URDFParser:
     @classmethod
     def create_transformation_matrix(cls, origin_xyz, origin_rpy):
 
-        x, y, z = URDFParser.parse_xyz(origin_xyz)
-        roll, pitch, yaw = URDFParser.parse_xyz(origin_rpy)
+        x, y, z = origin_xyz
+        roll, pitch, yaw = origin_rpy
 
         # Create the translation matrix
         translation_matrix = np.array([
@@ -71,6 +71,38 @@ class URDFParser:
         transformation_matrix = np.dot(translation_matrix, rotation_matrix)
 
         return transformation_matrix
+
+    @classmethod
+    def create_rotation_matrix(cls, origin_rpy):
+
+        roll, pitch, yaw = origin_rpy
+
+        # Compute the elements of the combined rotation matrix
+        cos_phi, sin_phi = np.cos(roll), np.sin(roll)
+        cos_theta, sin_theta = np.cos(pitch), np.sin(pitch)
+        cos_psi, sin_psi = np.cos(yaw), np.sin(yaw)
+
+        # Compute the combined rotation matrix
+        R = np.array([
+            [cos_theta * cos_psi, -cos_phi * sin_psi + sin_phi * sin_theta * cos_psi,
+             sin_phi * sin_psi + cos_phi * sin_theta * cos_psi],
+            [cos_theta * sin_psi, cos_phi * cos_psi + sin_phi * sin_theta * sin_psi,
+             -sin_phi * cos_psi + cos_phi * sin_theta * sin_psi],
+            [-sin_theta, sin_phi * cos_theta, cos_phi * cos_theta]
+        ])
+
+        return R
+
+    @classmethod
+    def create_translation_vector(cls, origin_xyz):
+
+        tx, ty, tz = origin_xyz
+
+        T = np.array([
+            tx, ty, tz
+        ])
+
+        return T
 
     @classmethod
     def _parse_urdf(cls, path):
@@ -140,10 +172,6 @@ class URDFParser:
     @classmethod
     def _apply_joint_transformations(cls, links_dict, joints_dict):
 
-        # Add a global transformation matrix to each link
-        for link_name in links_dict:
-            links_dict[link_name]['transformation_matrix'] = np.identity(4)
-
         # Find the root: the root is never a child in the joint dict
         link_names = [key for key in links_dict.keys()]
         for joint_name, joint_info in joints_dict.items():
@@ -184,7 +212,10 @@ class URDFParser:
                     origin_xyz = joint['origin_xyz']
                     origin_rpy = joint['origin_rpy']
 
-                    child_transformation_matrix = URDFParser.create_transformation_matrix(origin_xyz, origin_rpy)
+                    child_transformation_matrix = URDFParser.create_transformation_matrix(
+                        URDFParser.parse_xyz(origin_xyz),
+                        URDFParser.parse_xyz(origin_rpy)
+                    )
                     updated_transformation_matrix = np.dot(transformation_matrix, child_transformation_matrix)
                     links_dict[child_link_name]['transformation_matrix'] = updated_transformation_matrix
 
@@ -234,12 +265,12 @@ class URDFParser:
 
                 base = np.array(
                     [
-                        [radius * np.cos(angle), radius * np.sin(angle), 0]
+                        [radius * np.cos(angle), radius * np.sin(angle), -length / 2]
                         for angle in np.linspace(0, 2 * np.pi, discretization_points)
                     ]
                 )
                 points = np.concatenate((base, base))
-                points[discretization_points:, 2] = length
+                points[discretization_points:, 2] = length / 2
 
             elif link_geometry_type == 'sphere':
 
@@ -312,7 +343,7 @@ class URDFParser:
 if __name__ == '__main__':
 
     # Test urdf file in local folder
-    urdf_path = "URDFs/test.urdf"
+    urdf_path = "URDFs/test_2.urdf"
     polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points
