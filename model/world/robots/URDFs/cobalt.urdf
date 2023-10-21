@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="my_robot">
+<robot name="Cobalt">
 
   <!-- Define the base of the robot as a box -->
   <link name="base_link">
