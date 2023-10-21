@@ -1,8 +1,6 @@
 from model.geometry.point import Point
-import model.geometry.linalg as linalg
 
 import numpy as np
-import math
 
 
 class Polygon:
