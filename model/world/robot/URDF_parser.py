@@ -114,24 +114,49 @@ class URDFParser:
         for link in root.findall(".//link"):
             link_name = link.get("name")
 
+            # Find the visual element
             boxes = link.findall(".//visual/geometry/box")
             cylinders = link.findall(".//visual/geometry/cylinder")
             spheres = link.findall(".//visual/geometry/sphere")
             visuals = boxes + cylinders + spheres
 
-            for visual in visuals:
-                geometry_type = visual.tag
-                if geometry_type == "box":
-                    dimensions = visual.attrib['size']
-                    links[link_name] = {"type": "box", "dimensions": dimensions}
-                elif geometry_type == "cylinder":
-                    radius = visual.attrib['radius']
-                    length = visual.attrib['length']
-                    links[link_name] = {"type": "cylinder", "radius": radius, "length": length}
-                elif geometry_type == "sphere":
-                    radius = visual.attrib['radius']
-                    links[link_name] = {"type": "sphere", "radius": radius}
-                break  # Only consider the first visual element
+            # Should have only one visual element
+            if len(visuals) > 1:
+                raise ValueError('Malformed URDF file')
+            visual = visuals[0]
+
+            geometry_type = visual.tag
+            if geometry_type == "box":
+                dimensions = visual.attrib['size']
+                links[link_name] = {"type": "box", "dimensions": dimensions}
+            elif geometry_type == "cylinder":
+                radius = visual.attrib['radius']
+                length = visual.attrib['length']
+                links[link_name] = {"type": "cylinder", "radius": radius, "length": length}
+            elif geometry_type == "sphere":
+                radius = visual.attrib['radius']
+                links[link_name] = {"type": "sphere", "radius": radius}
+
+            # Do not consider mesh objects
+
+            # Add the transformation matrix for the link
+            links[link_name]["transformation_matrix"] = np.identity(4)
+
+            # Some links can have a translation or rotation
+            origins = link.findall(".//visual/origin")
+            if len(origins) > 1:
+                raise ValueError('Malformed URDF file')
+
+            if len(origins) > 0:
+                origin = origins[0]
+
+                # We must account for a different initial transformation
+                link_xyz = origin.attrib.get('xyz')
+                link_rpy = origin.attrib.get('rpy')
+                links[link_name]["transformation_matrix"] = URDFParser.create_transformation_matrix(
+                    URDFParser.parse_xyz(link_xyz),
+                    URDFParser.parse_xyz(link_rpy)
+                )
 
         joints = {}
         for joint in root.findall(".//joint"):
@@ -141,31 +166,37 @@ class URDFParser:
             parent_link = joint.find(".//parent").get("link")
             child_link = joint.find(".//child").get("link")
 
-            # The origin element is used to define the position and orientation of a
-            # particular element within the robot model. It specifies a reference frame
-            # for that element and allows you to position and orient the element
-            # relative to that reference frame.
-            # Its attributes are xyz and rpy
-            joint_origin = joint.find(".//origin").attrib
-            joint_origin_xyz = joint_origin['xyz']
-            joint_origin_rpy = joint_origin['rpy']
+            if parent_link in links and child_link in links:
 
-            # The axis element is used to define the orientation of an axis of rotation
-            # for a joint. It is typically used within joint descriptions to specify
-            # the axis of rotation for that joint. The axis element has attributes for
-            # specifying the orientation of the axis, that is xyz.
-            # If the axis were {'xyz': '0 0 1'} it would have meant that the joint has
-            # a rotation axis along the Z-axis of its reference frame.
-            # joint_axis = joint.find(".//axis")
+                # The origin element is used to define the position and orientation of a
+                # particular element within the robot model. It specifies a reference frame
+                # for that element and allows you to position and orient the element
+                # relative to that reference frame.
+                # Its attributes are xyz and rpy
+                joint_origin = joint.find(".//origin").attrib
+                joint_origin_xyz = joint_origin.get('xyz')
+                joint_origin_rpy = joint_origin.get('rpy')
 
-            # Store joint information in joint_dict
-            joints[joint_name] = {
-                "type": joint_type,
-                "parent_link": parent_link,
-                "child_link": child_link,
-                "origin_xyz": joint_origin_xyz,
-                "origin_rpy": joint_origin_rpy
-            }
+                # Maybe there is no rotation
+                if joint_origin_rpy is None:
+                    joint_origin_rpy = "0.0 0.0 0.0"
+
+                # The axis element is used to define the orientation of an axis of rotation
+                # for a joint. It is typically used within joint descriptions to specify
+                # the axis of rotation for that joint. The axis element has attributes for
+                # specifying the orientation of the axis, that is xyz.
+                # If the axis were {'xyz': '0 0 1'} it would have meant that the joint has
+                # a rotation axis along the Z-axis of its reference frame.
+                # joint_axis = joint.find(".//axis")
+
+                # Store joint information in joint_dict
+                joints[joint_name] = {
+                    "type": joint_type,
+                    "parent_link": parent_link,
+                    "child_link": child_link,
+                    "origin_xyz": joint_origin_xyz,
+                    "origin_rpy": joint_origin_rpy
+                }
 
         return links, joints
 
@@ -180,7 +211,7 @@ class URDFParser:
                 link_names.remove(joint_child)
 
         if len(link_names) != 1:
-            raise ValueError('Malformed URDF file')
+            raise ValueError('Malformed URDF file: two or more links are not joined to anything')
 
         root = link_names[0]
 
@@ -191,15 +222,15 @@ class URDFParser:
             joints_dict[joint]['used'] = 'false'
 
         # Recursive call to apply the transformations to each link
-        URDFParser._recursive_apply_joint_transformations(root, np.identity(4), links_dict, joints_dict)
+        URDFParser._recursive_apply_joint_transformations(root, links_dict, joints_dict)
 
         return links_dict
 
     @classmethod
-    def _recursive_apply_joint_transformations(cls, link_name, transformation_matrix, links_dict, joints_dict):
+    def _recursive_apply_joint_transformations(cls, link_name, links_dict, joints_dict):
 
         if link_name in links_dict:
-            links_dict[link_name]['transformation_matrix'] = transformation_matrix
+
             for joint_name in joints_dict.keys():
 
                 joint = joints_dict[joint_name]
@@ -212,7 +243,8 @@ class URDFParser:
                     origin_xyz = joint['origin_xyz']
                     origin_rpy = joint['origin_rpy']
 
-                    child_transformation_matrix = URDFParser.create_transformation_matrix(
+                    parent_transformation_matrix = links_dict[link_name]['transformation_matrix']
+                    link_transformation_matrix = URDFParser.create_transformation_matrix(
                         URDFParser.parse_xyz(origin_xyz),
                         URDFParser.parse_xyz(origin_rpy)
                     )
@@ -223,7 +255,6 @@ class URDFParser:
 
                     URDFParser._recursive_apply_joint_transformations(
                         child_link_name,
-                        updated_transformation_matrix,
                         links_dict,
                         joints_dict
                     )
