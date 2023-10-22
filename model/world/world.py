@@ -1,5 +1,6 @@
 from model.world.map.map_builder import MapBuilder
-from random import Random
+import model.geometry.utils as utils
+from model.exceptions.collision_exception import CollisionException
 
 
 class World:
@@ -27,6 +28,9 @@ class World:
     def add_robot(self, robot, controller):
         self.robots.append(robot)
         self.controllers.append(controller)
+
+    def solids(self):
+        return self.map.obstacles + self.robots
 
     def step(self):
         """
@@ -58,4 +62,22 @@ class World:
         Test the world for existing collisions with solids.
         Raises a CollisionException if one occurs.
         """
-        pass
+
+        solids = self.solids()
+
+        for robot in self.robots:
+
+            polygon1 = robot.bodies
+
+            # Robots can collide with other robots and with the obstacles
+            for solid in solids:
+
+                if solid is not robot:  # Don't bother testing an object against itself
+
+                    polygon2 = solid.polygon  # polygon2
+
+                    if utils.check_nearness(
+                        polygon1, polygon2
+                    ):  # Don't bother testing objects that are not near each other
+                        if polygon1.intersects(polygon2):
+                            raise CollisionException(f'Robot {robot.name} collided with an obstacle.')
