@@ -416,7 +416,7 @@ if __name__ == '__main__':
 
     # Test urdf file in local folder
     urdf_path = "robots/R2D2/R2D2.urdf"
-    polygons, names = URDFParser.parse(urdf_path)
+    polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points
     import matplotlib.pyplot as plt

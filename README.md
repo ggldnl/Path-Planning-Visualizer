@@ -17,6 +17,7 @@
 - [ ] update documentation
 - [ ] add save and load capabilities
 - [ ] add sensors support to URDF parser
+- [ ] fix inverted angles in link origin (URDF parser)
 - [ ] scale the map to match real world measures
 - [ ] move from current, complex, translation and scale logic to
     translate() and scale() on sort of a contextManager object in javascript
