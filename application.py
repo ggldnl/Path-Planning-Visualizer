@@ -38,7 +38,9 @@ from scripts.frame import Frame
 
 # Import stuff from the model
 from model.world.world import World
-from model.world.robots.URDF_parser import URDFParser
+from model.world.robot.URDF_parser import URDFParser
+from model.world.robot.differential_drive_robot import DifferentialDriveRobot
+from model.world.robot.robots.cobalt.cobalt import Cobalt
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -65,6 +67,16 @@ running = False
 # it is set to False after one iteration
 stepping = True
 
+# Boolean controlling whether to show the respective elements
+show_trace = False
+show_sensors = False
+show_path = False
+
+# Boolean to update only the robot (some of its attributes needs to be shown or hidden).
+# It will be turned off the iteration after the update happens.
+# TODO: implement actual update
+update_robot = False
+
 # Define the world here so we can access it through the routes
 world = World(UPDATE_FREQUENCY)
 
@@ -72,8 +84,11 @@ world = World(UPDATE_FREQUENCY)
 frame = Frame()
 
 # Create the robot
-# TODO: add sensors and motors, use a configuration file
-robot_polygons = URDFParser.parse('./model/world/robots/URDFs/cobalt.urdf')
+# robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
+# robot = DifferentialDriveRobot(robot_polygons)
+robot = Cobalt()
+controller = None
+world.add_robot(robot, controller)
 
 
 # ------------------------------ generation loop ----------------------------- #
@@ -122,9 +137,23 @@ def generate_data() -> Iterator[str]:
                 # Step the simulation
                 world.step()
 
-                # Add the robots to the frame
-                frame.add_polygons(world.robots, 'orange')
-                frame.add_polygons(robot_polygons, '#00640066', '#006400FF')
+                # Add the robot to the frame
+                for robot in world.robots:
+
+                    frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
+
+                    # Add sensors if the option is enabled
+                    if show_sensors:
+                        frame.add_polygons([sensor.polygon for sensor in robot.sensors], '#FFBF0066')
+
+                    """
+                    # Add the path
+                    if show_path:
+                        frame.add_lines()
+                
+                    # Add the controller path
+                    # Boh
+                    """
 
                 # Add the obstacles to the frame (we can change color for moving and steady obstacles)
 
@@ -140,7 +169,6 @@ def generate_data() -> Iterator[str]:
                 frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], '#0047AB66')
 
                 # Add the start and the goal points to the frame
-                # frame.add_circle([0, 0], 0.2, '#00640066')
                 frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, '#00008B66')
 
                 # Dump the data
@@ -175,7 +203,11 @@ def chart_data() -> Response:
 def simulation_control():
     data = request.get_json()  # Receive the JSON data sent from the client
 
+    # Reference the global boolean control variables
     global running, stepping
+    global show_trace, show_sensors, show_path
+    global update_robot
+
     if data:
 
         if 'status' in data:
@@ -201,10 +233,9 @@ def simulation_control():
                 obstacle.angular_speed_multiplier = speed_multiplier
 
         if 'robot_speed' in data:
-            speed = float(data['robot_speed'])
-            print(f'Set robot speed to {speed}')
-            #  for robot in world.robots:
-            #     robot.speed = speed
+            speed_multiplier = float(data['robot_speed'])
+            for robot in world.robots:
+                robot.speed_multiplier = speed_multiplier
 
         if 'map' in data:
             flag = data['map']
@@ -212,8 +243,25 @@ def simulation_control():
                 world.map.get_map(world.robots)
                 running = False
                 stepping = True
+            elif flag == 'load':
+                # TODO add load capability with dialog
+                pass
+            elif flag == 'save':
+                # TODO add save capability with dialog
+                pass
 
-        response = {'status': 'invalid'}
+        if 'show' in data:
+            flag = data['show']
+            if flag == 'trace':
+                show_trace = not show_trace
+            if flag == 'sensors':
+                show_sensors = not show_sensors
+            if flag == 'path':
+                show_path = not show_path
+            # TODO update the robot (cascading) when one of these checkboxes is ticked
+            update_robot = True
+
+        response = {'status': 'Changes registered'}
         return jsonify(response)
 
     else:
