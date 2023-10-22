@@ -84,11 +84,15 @@ world = World(UPDATE_FREQUENCY)
 frame = Frame()
 
 # Create the robot
-# robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
-# robot = DifferentialDriveRobot(robot_polygons)
-robot = Cobalt()
+
+robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
+robot = DifferentialDriveRobot(robot_polygons)
 controller = None
 world.add_robot(robot, controller)
+
+# robot = Cobalt()
+# controller = None
+# world.add_robot(robot, controller)
 
 
 # ------------------------------ generation loop ----------------------------- #
