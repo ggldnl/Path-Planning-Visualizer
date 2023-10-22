@@ -10,6 +10,39 @@ NUM_CIRC_POINTS = 20
 class URDFParser:
 
     @classmethod
+    def _pretty_dot_print(cls, left_matrix, right_matrix, left_name=None, right_name=None):
+
+        assert left_matrix.shape == right_matrix.shape
+
+        result = left_matrix.dot(right_matrix)
+
+        print(f'{left_name}{" "* 44}{right_name}')
+
+        for i in range(len(left_matrix)):
+            print('|', end='')
+            for j in range(len(left_matrix[i])):
+                print(f'{left_matrix[i][j]:2.6f}   ', end='')
+            print('|', end='')
+            if i == len(left_matrix) // 2:
+                print(f'   @   ', end='')
+            else:
+                print('       ', end='')
+            print('|', end='')
+            for j in range(len(right_matrix[i])):
+                print(f'{right_matrix[i][j]:2.6f}   ', end='')
+            print('|', end='')
+            if i == len(left_matrix) // 2:
+                print(f'   =   ', end='')
+            else:
+                print('       ', end='')
+            print('|', end='')
+            for j in range(len(result[i])):
+                print(f'{result[i][j]:2.6f}   ', end='')
+            print('|', end='')
+            print()
+        print()
+
+    @classmethod
     def _decompose_transformation_matrix(cls, matrix):
 
         # Extract the 3x3 rotation submatrix
@@ -222,12 +255,12 @@ class URDFParser:
             joints_dict[joint]['used'] = 'false'
 
         # Recursive call to apply the transformations to each link
-        URDFParser._recursive_apply_joint_transformations(root, links_dict, joints_dict)
+        URDFParser._recursive_apply_joint_transformations(root, np.identity(4), links_dict, joints_dict)
 
         return links_dict
 
     @classmethod
-    def _recursive_apply_joint_transformations(cls, link_name, links_dict, joints_dict):
+    def _recursive_apply_joint_transformations(cls, link_name, parent_transformation_matrix, links_dict, joints_dict):
 
         if link_name in links_dict:
 
@@ -237,24 +270,32 @@ class URDFParser:
 
                 # Take a joint that has the selected link as parent
                 if joint['parent_link'] == link_name and joint['used'] == 'false':
-                    # Update its transformation matrix
 
+                    # Update its transformation matrix
                     child_link_name = joint['child_link']
                     origin_xyz = joint['origin_xyz']
                     origin_rpy = joint['origin_rpy']
 
-                    parent_transformation_matrix = links_dict[link_name]['transformation_matrix']
                     link_transformation_matrix = URDFParser.create_transformation_matrix(
                         URDFParser.parse_xyz(origin_xyz),
                         URDFParser.parse_xyz(origin_rpy)
                     )
-                    updated_transformation_matrix = np.dot(transformation_matrix, child_transformation_matrix)
-                    links_dict[child_link_name]['transformation_matrix'] = updated_transformation_matrix
 
+                    # This is the transformation matrix that will be streamlined to the next joint
+                    updated_transformation_matrix = np.dot(parent_transformation_matrix, link_transformation_matrix)
+
+                    # The link has another transformation matrix that does not need to be streamlined to the next link
+                    child_transformation_matrix = links_dict[child_link_name]['transformation_matrix']
+                    absolute_child_transformation = np.dot(updated_transformation_matrix, child_transformation_matrix)
+                    links_dict[child_link_name]['transformation_matrix'] = absolute_child_transformation
+
+                    # Consume the joint
                     joint['used'] = 'true'
 
+                    # Next
                     URDFParser._recursive_apply_joint_transformations(
                         child_link_name,
+                        updated_transformation_matrix,
                         links_dict,
                         joints_dict
                     )
@@ -374,8 +415,8 @@ class URDFParser:
 if __name__ == '__main__':
 
     # Test urdf file in local folder
-    urdf_path = "URDFs/test_2.urdf"
-    polygons = URDFParser.parse(urdf_path)
+    urdf_path = "robots/R2D2/R2D2.urdf"
+    polygons, names = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points
     import matplotlib.pyplot as plt
