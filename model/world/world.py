@@ -24,8 +24,9 @@ class World:
     def set_period(self, dt):
         self.dt = dt
 
-    def add_robot_controller(self, controller, robot):
-        self.controllers.append(controller(robot))
+    def add_robot(self, robot, controller):
+        self.robots.append(robot)
+        self.controllers.append(controller)
 
     def step(self):
         """
@@ -34,9 +35,10 @@ class World:
 
         dt = self.dt
 
+        """
         for controller in self.controllers:
             controller.step_motion(self.map)
-
+        """
 
         # Step all the obstacles
         for obstacle in self.map.obstacles:
@@ -48,11 +50,8 @@ class World:
         # Increment world time
         self.world_time += dt
 
-
     def _apply_physics(self):
         self._detect_collisions()
-
-
 
     def _detect_collisions(self):
         """
