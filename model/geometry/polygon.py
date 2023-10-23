@@ -1,8 +1,6 @@
 from model.geometry.point import Point
-import model.geometry.linalg as linalg
 
 import numpy as np
-import math
 
 
 class Polygon:
@@ -97,11 +95,43 @@ class Polygon:
             point.x += offset_x
             point.y += offset_y
 
-    def rotate(self, angle_degrees):
+    def rotate_around(self, x, y, angle, is_deg=True):
+        """
+        Rotate the polygon around a specified point by the specified angle.
+        """
+
+        if is_deg:
+            angle_radians = np.deg2rad(angle)
+        else:
+            angle_radians = angle
+
+        # Apply rotation to each point
+        for point in self.points:
+            # Translate the point to the origin (center) of rotation
+            translated_x = point.x - x
+            translated_y = point.y - y
+
+            # Perform the rotation
+            new_x = translated_x * np.cos(angle_radians) - translated_y * np.sin(angle_radians)
+            new_y = translated_x * np.sin(angle_radians) + translated_y * np.cos(angle_radians)
+
+            # Translate the point back to its original position
+            point.x = new_x + x
+            point.y = new_y + y
+
+    def rotate(self, angle, is_deg=True):
+        """
+        Rotate around the center by the specified angle
+        """
 
         center_x, center_y = self.find_center()
-        angle_radians = np.deg2rad(angle_degrees)
-        self.angle += angle_degrees
+
+        if is_deg:
+            angle_radians = np.deg2rad(angle)
+            self.angle += angle
+        else:
+            angle_radians = angle
+            self.angle += np.rad2deg(angle)
 
         # Apply rotation to each point
         for point in self.points:
@@ -117,10 +147,10 @@ class Polygon:
             point.x = new_x + center_x
             point.y = new_y + center_y
 
-    def transform(self, pose):
+    def transform(self, pose, is_deg=True):
         x, y, alpha = pose
         self.translate(x, y)
-        self.rotate(alpha)
+        self.rotate(alpha, is_deg)
 
     def translate_to(self, x, y):
         center_x, center_y = self.find_center()
@@ -128,14 +158,14 @@ class Polygon:
         offset_y = y - center_y
         self.translate(offset_x, offset_y)
 
-    def rotate_to(self, target_angle):
+    def rotate_to(self, target_angle, is_deg=True):
         # Compute the angle difference
         angle_diff = target_angle - self.angle
-        self.rotate(angle_diff)
+        self.rotate(angle_diff, is_deg)
 
-    def transform_to(self, pose):
+    def transform_to(self, pose, is_deg=True):
         self.translate_to(pose[0], pose[1])
-        self.rotate_to(pose[2])
+        self.rotate_to(pose[2], is_deg)
 
     def find_center(self):
         total_x = sum(point.x for point in self.points)

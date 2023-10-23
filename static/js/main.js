@@ -101,8 +101,8 @@ window.onload = function () {
             pixelOffset.x = beforeOffsetX;
             pixelOffset.y = beforeOffsetY;
         }
-        if (scale > 1000) {
-            scale = 1000;
+        if (scale > 1500) {
+            scale = 1500;
             pixelOffset.x = beforeOffsetX;
             pixelOffset.y = beforeOffsetY;
         }

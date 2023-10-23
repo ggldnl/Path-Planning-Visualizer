@@ -10,6 +10,39 @@ NUM_CIRC_POINTS = 20
 class URDFParser:
 
     @classmethod
+    def _pretty_dot_print(cls, left_matrix, right_matrix, left_name=None, right_name=None):
+
+        assert left_matrix.shape == right_matrix.shape
+
+        result = left_matrix.dot(right_matrix)
+
+        print(f'{left_name}{" "* 44}{right_name}')
+
+        for i in range(len(left_matrix)):
+            print('|', end='')
+            for j in range(len(left_matrix[i])):
+                print(f'{left_matrix[i][j]:2.6f}   ', end='')
+            print('|', end='')
+            if i == len(left_matrix) // 2:
+                print(f'   @   ', end='')
+            else:
+                print('       ', end='')
+            print('|', end='')
+            for j in range(len(right_matrix[i])):
+                print(f'{right_matrix[i][j]:2.6f}   ', end='')
+            print('|', end='')
+            if i == len(left_matrix) // 2:
+                print(f'   =   ', end='')
+            else:
+                print('       ', end='')
+            print('|', end='')
+            for j in range(len(result[i])):
+                print(f'{result[i][j]:2.6f}   ', end='')
+            print('|', end='')
+            print()
+        print()
+
+    @classmethod
     def _decompose_transformation_matrix(cls, matrix):
 
         # Extract the 3x3 rotation submatrix
@@ -41,8 +74,8 @@ class URDFParser:
     @classmethod
     def create_transformation_matrix(cls, origin_xyz, origin_rpy):
 
-        x, y, z = URDFParser.parse_xyz(origin_xyz)
-        roll, pitch, yaw = URDFParser.parse_xyz(origin_rpy)
+        x, y, z = origin_xyz
+        roll, pitch, yaw = origin_rpy
 
         # Create the translation matrix
         translation_matrix = np.array([
@@ -73,6 +106,38 @@ class URDFParser:
         return transformation_matrix
 
     @classmethod
+    def create_rotation_matrix(cls, origin_rpy):
+
+        roll, pitch, yaw = origin_rpy
+
+        # Compute the elements of the combined rotation matrix
+        cos_phi, sin_phi = np.cos(roll), np.sin(roll)
+        cos_theta, sin_theta = np.cos(pitch), np.sin(pitch)
+        cos_psi, sin_psi = np.cos(yaw), np.sin(yaw)
+
+        # Compute the combined rotation matrix
+        R = np.array([
+            [cos_theta * cos_psi, -cos_phi * sin_psi + sin_phi * sin_theta * cos_psi,
+             sin_phi * sin_psi + cos_phi * sin_theta * cos_psi],
+            [cos_theta * sin_psi, cos_phi * cos_psi + sin_phi * sin_theta * sin_psi,
+             -sin_phi * cos_psi + cos_phi * sin_theta * sin_psi],
+            [-sin_theta, sin_phi * cos_theta, cos_phi * cos_theta]
+        ])
+
+        return R
+
+    @classmethod
+    def create_translation_vector(cls, origin_xyz):
+
+        tx, ty, tz = origin_xyz
+
+        T = np.array([
+            tx, ty, tz
+        ])
+
+        return T
+
+    @classmethod
     def _parse_urdf(cls, path):
 
         tree = ET.parse(path)
@@ -82,24 +147,49 @@ class URDFParser:
         for link in root.findall(".//link"):
             link_name = link.get("name")
 
+            # Find the visual element
             boxes = link.findall(".//visual/geometry/box")
             cylinders = link.findall(".//visual/geometry/cylinder")
             spheres = link.findall(".//visual/geometry/sphere")
             visuals = boxes + cylinders + spheres
 
-            for visual in visuals:
-                geometry_type = visual.tag
-                if geometry_type == "box":
-                    dimensions = visual.attrib['size']
-                    links[link_name] = {"type": "box", "dimensions": dimensions}
-                elif geometry_type == "cylinder":
-                    radius = visual.attrib['radius']
-                    length = visual.attrib['length']
-                    links[link_name] = {"type": "cylinder", "radius": radius, "length": length}
-                elif geometry_type == "sphere":
-                    radius = visual.attrib['radius']
-                    links[link_name] = {"type": "sphere", "radius": radius}
-                break  # Only consider the first visual element
+            # Should have only one visual element
+            if len(visuals) > 1:
+                raise ValueError('Malformed URDF file')
+            visual = visuals[0]
+
+            geometry_type = visual.tag
+            if geometry_type == "box":
+                dimensions = visual.attrib['size']
+                links[link_name] = {"type": "box", "dimensions": dimensions}
+            elif geometry_type == "cylinder":
+                radius = visual.attrib['radius']
+                length = visual.attrib['length']
+                links[link_name] = {"type": "cylinder", "radius": radius, "length": length}
+            elif geometry_type == "sphere":
+                radius = visual.attrib['radius']
+                links[link_name] = {"type": "sphere", "radius": radius}
+
+            # Do not consider mesh objects
+
+            # Add the transformation matrix for the link
+            links[link_name]["transformation_matrix"] = np.identity(4)
+
+            # Some links can have a translation or rotation
+            origins = link.findall(".//visual/origin")
+            if len(origins) > 1:
+                raise ValueError('Malformed URDF file')
+
+            if len(origins) > 0:
+                origin = origins[0]
+
+                # We must account for a different initial transformation
+                link_xyz = origin.attrib.get('xyz')
+                link_rpy = origin.attrib.get('rpy')
+                links[link_name]["transformation_matrix"] = URDFParser.create_transformation_matrix(
+                    URDFParser.parse_xyz(link_xyz),
+                    URDFParser.parse_xyz(link_rpy)
+                )
 
         joints = {}
         for joint in root.findall(".//joint"):
@@ -109,40 +199,42 @@ class URDFParser:
             parent_link = joint.find(".//parent").get("link")
             child_link = joint.find(".//child").get("link")
 
-            # The origin element is used to define the position and orientation of a
-            # particular element within the robot model. It specifies a reference frame
-            # for that element and allows you to position and orient the element
-            # relative to that reference frame.
-            # Its attributes are xyz and rpy
-            joint_origin = joint.find(".//origin").attrib
-            joint_origin_xyz = joint_origin['xyz']
-            joint_origin_rpy = joint_origin['rpy']
+            if parent_link in links and child_link in links:
 
-            # The axis element is used to define the orientation of an axis of rotation
-            # for a joint. It is typically used within joint descriptions to specify
-            # the axis of rotation for that joint. The axis element has attributes for
-            # specifying the orientation of the axis, that is xyz.
-            # If the axis were {'xyz': '0 0 1'} it would have meant that the joint has
-            # a rotation axis along the Z-axis of its reference frame.
-            # joint_axis = joint.find(".//axis")
+                # The origin element is used to define the position and orientation of a
+                # particular element within the robot model. It specifies a reference frame
+                # for that element and allows you to position and orient the element
+                # relative to that reference frame.
+                # Its attributes are xyz and rpy
+                joint_origin = joint.find(".//origin").attrib
+                joint_origin_xyz = joint_origin.get('xyz')
+                joint_origin_rpy = joint_origin.get('rpy')
 
-            # Store joint information in joint_dict
-            joints[joint_name] = {
-                "type": joint_type,
-                "parent_link": parent_link,
-                "child_link": child_link,
-                "origin_xyz": joint_origin_xyz,
-                "origin_rpy": joint_origin_rpy
-            }
+                # Maybe there is no rotation
+                if joint_origin_rpy is None:
+                    joint_origin_rpy = "0.0 0.0 0.0"
+
+                # The axis element is used to define the orientation of an axis of rotation
+                # for a joint. It is typically used within joint descriptions to specify
+                # the axis of rotation for that joint. The axis element has attributes for
+                # specifying the orientation of the axis, that is xyz.
+                # If the axis were {'xyz': '0 0 1'} it would have meant that the joint has
+                # a rotation axis along the Z-axis of its reference frame.
+                # joint_axis = joint.find(".//axis")
+
+                # Store joint information in joint_dict
+                joints[joint_name] = {
+                    "type": joint_type,
+                    "parent_link": parent_link,
+                    "child_link": child_link,
+                    "origin_xyz": joint_origin_xyz,
+                    "origin_rpy": joint_origin_rpy
+                }
 
         return links, joints
 
     @classmethod
     def _apply_joint_transformations(cls, links_dict, joints_dict):
-
-        # Add a global transformation matrix to each link
-        for link_name in links_dict:
-            links_dict[link_name]['transformation_matrix'] = np.identity(4)
 
         # Find the root: the root is never a child in the joint dict
         link_names = [key for key in links_dict.keys()]
@@ -152,7 +244,7 @@ class URDFParser:
                 link_names.remove(joint_child)
 
         if len(link_names) != 1:
-            raise ValueError('Malformed URDF file')
+            raise ValueError('Malformed URDF file: two or more links are not joined to anything')
 
         root = link_names[0]
 
@@ -168,28 +260,39 @@ class URDFParser:
         return links_dict
 
     @classmethod
-    def _recursive_apply_joint_transformations(cls, link_name, transformation_matrix, links_dict, joints_dict):
+    def _recursive_apply_joint_transformations(cls, link_name, parent_transformation_matrix, links_dict, joints_dict):
 
         if link_name in links_dict:
-            links_dict[link_name]['transformation_matrix'] = transformation_matrix
+
             for joint_name in joints_dict.keys():
 
                 joint = joints_dict[joint_name]
 
                 # Take a joint that has the selected link as parent
                 if joint['parent_link'] == link_name and joint['used'] == 'false':
-                    # Update its transformation matrix
 
+                    # Update its transformation matrix
                     child_link_name = joint['child_link']
                     origin_xyz = joint['origin_xyz']
                     origin_rpy = joint['origin_rpy']
 
-                    child_transformation_matrix = URDFParser.create_transformation_matrix(origin_xyz, origin_rpy)
-                    updated_transformation_matrix = np.dot(transformation_matrix, child_transformation_matrix)
-                    links_dict[child_link_name]['transformation_matrix'] = updated_transformation_matrix
+                    link_transformation_matrix = URDFParser.create_transformation_matrix(
+                        URDFParser.parse_xyz(origin_xyz),
+                        URDFParser.parse_xyz(origin_rpy)
+                    )
 
+                    # This is the transformation matrix that will be streamlined to the next joint
+                    updated_transformation_matrix = np.dot(parent_transformation_matrix, link_transformation_matrix)
+
+                    # The link has another transformation matrix that does not need to be streamlined to the next link
+                    child_transformation_matrix = links_dict[child_link_name]['transformation_matrix']
+                    absolute_child_transformation = np.dot(updated_transformation_matrix, child_transformation_matrix)
+                    links_dict[child_link_name]['transformation_matrix'] = absolute_child_transformation
+
+                    # Consume the joint
                     joint['used'] = 'true'
 
+                    # Next
                     URDFParser._recursive_apply_joint_transformations(
                         child_link_name,
                         updated_transformation_matrix,
@@ -234,12 +337,12 @@ class URDFParser:
 
                 base = np.array(
                     [
-                        [radius * np.cos(angle), radius * np.sin(angle), 0]
+                        [radius * np.cos(angle), radius * np.sin(angle), -length / 2]
                         for angle in np.linspace(0, 2 * np.pi, discretization_points)
                     ]
                 )
                 points = np.concatenate((base, base))
-                points[discretization_points:, 2] = length
+                points[discretization_points:, 2] = length / 2
 
             elif link_geometry_type == 'sphere':
 
@@ -312,7 +415,7 @@ class URDFParser:
 if __name__ == '__main__':
 
     # Test urdf file in local folder
-    urdf_path = "URDFs/test.urdf"
+    urdf_path = "robots/R2D2/R2D2.urdf"
     polygons = URDFParser.parse(urdf_path)
 
     # Plot the projected XY points

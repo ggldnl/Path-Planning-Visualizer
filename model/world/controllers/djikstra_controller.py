@@ -1,5 +1,5 @@
 from .controller import Controller
-from ..robots.robot import Robot
+from ..robot.robot import Robot
 
 
 class DjikstraController(Controller):

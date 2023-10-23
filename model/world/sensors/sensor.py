@@ -1,11 +1,11 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 
 class Sensor(metaclass=ABCMeta):
-    def __init__(self, name, sensor_type):
+    def __init__(self, name):
         self.name = name
-        self.sensor_type = sensor_type
 
+    @abstractmethod
     def read(self):
         # Implement the read method specific to the sensor type
         pass
