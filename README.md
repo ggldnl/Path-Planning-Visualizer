@@ -13,6 +13,7 @@
 
 - [x] write URDF for cobalt
 - [x] define environment
+- [ ] remove annoying checkbox (upper left corner) that loads before the rest of the page 
 - [ ] redefine communication between backend and frontend (make it lighter)
 - [ ] update documentation
 - [ ] add save and load capabilities
