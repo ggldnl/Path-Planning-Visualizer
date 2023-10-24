@@ -67,7 +67,7 @@ class World:
 
         for robot in self.robots:
 
-            polygon1 = robot.bodies
+            polygon1 = robot.body
 
             # Robots can collide with other robots and with the obstacles
             for solid in solids:

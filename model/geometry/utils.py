@@ -8,8 +8,8 @@ def check_nearness(polygon1, polygon2):
     do not intersect.
     """
 
-    c1, r1 = polygon1.bounding_circle
-    c2, r2 = polygon2.bounding_circle
+    c1, r1 = polygon1.center, polygon1.radius
+    c2, r2 = polygon2.center, polygon2.radius
     return c1.distance(c2) <= r1 + r2
 
 

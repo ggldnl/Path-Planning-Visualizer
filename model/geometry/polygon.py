@@ -27,6 +27,8 @@ class Polygon:
         # Initialize internal angle to 0 degrees
         self.angle = 0
 
+        self.center, self.radius = self.get_bounding_circle()
+
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
 
