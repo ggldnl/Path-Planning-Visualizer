@@ -143,5 +143,8 @@ class Point:
     def to_dict(self):
         return {'x': self.x, 'y': self.y}
 
+    def to_array(self):
+        return [self.x, self.y]
+
     def copy(self):
         return Point(self.x, self.y)
