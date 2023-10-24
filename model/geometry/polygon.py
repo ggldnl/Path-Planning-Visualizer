@@ -90,6 +90,18 @@ class Polygon:
             Point(max_x, min_y)
         ])
 
+    def get_bounding_circle(self):
+
+        center_x, center_y = self.find_center()
+        center = Point(center_x, center_y)
+
+        radius = 0
+        for point in self.points:
+            distance = center.distance(point)
+            radius = max(radius, distance)
+
+        return center, radius
+
     def translate(self, offset_x, offset_y):
         for point in self.points:
             point.x += offset_x
