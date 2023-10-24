@@ -103,6 +103,25 @@
             </tbody>
         </table>
 
+        <label class="sidebar_label">Controller</label>
+
+        <div id="controllers-container">
+            <button id="joystick_btn" onclick="sendValue({controller:'joystick'});">
+                <i class="fas fa-gamepad"></i>
+            </button>
+            <button id="go_to_goal_btn" onclick="sendValue({controller:'go_to_goal'});">
+                <i class="fas fa-map-marked-alt"></i>
+            </button>
+        </div>
+
+        <label class="sidebar_label">Planners</label>
+
+        <div id="planners-container">
+            <input type="button" class="button" id="planner1Button" value="P1" onclick="sendValue({planner:'p1'});" />
+            <input type="button" class="button" id="planner2Button" value="P2" onclick="sendValue({planner:'p2'});" />
+        </div>
+
+
     </div>
 
     <!-- Javascript -->
