@@ -19,8 +19,8 @@ class World:
         # Initialize the map
         self.map = MapBuilder().build()
 
-        # TODO provide load map capabilities
         self.map.get_map(self.robots)
+        #self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
 
     def set_period(self, dt):
         self.dt = dt
@@ -29,8 +29,9 @@ class World:
         self.robots.append(robot)
         self.controllers.append(controller)
 
-    def solids(self):
-        return self.map.obstacles + self.robots
+    def reset_robots(self):
+        for robot in self.robots:
+            robot.pose = (0, 0, 0)
 
     def step(self):
         """
@@ -48,13 +49,17 @@ class World:
         for obstacle in self.map.obstacles:
             obstacle.step_motion(dt)
 
+        # print(self.map.obstacles[0].polygon)
+        # print(self.map.obstacles[0].pose)
+        # print()
+
         # Apply physics interactions
-        self._apply_physics()
+         #self._apply_physics()
 
         # Increment world time
         self.world_time += dt
 
-    def _apply_physics(self):
+    def apply_physics(self):
         self._detect_collisions()
 
     def _detect_collisions(self):
@@ -63,7 +68,7 @@ class World:
         Raises a CollisionException if one occurs.
         """
 
-        solids = self.solids()
+        solids = self.map.obstacles + self.robots
 
         for robot in self.robots:
 

@@ -1,4 +1,3 @@
-
 #                      ___          ___          ___          ___        ___
 #                     /\  \        /\  \        /\  \        /\  \      /\  \
 #                    /::\  \      /::\  \      /::\  \      /::\  \     \:\  \
@@ -33,6 +32,7 @@ from typing import Iterator
 # Flask imports
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
+from model.exceptions.collision_exception import CollisionException
 # Import scripts
 from scripts.frame import Frame
 
@@ -57,7 +57,7 @@ application = Flask(__name__, template_folder='template')
 # Application refresh rate
 # 20 Hz = 20 times a second: 1/20 = 0.05 update interval
 REFRESH_RATE = 20  # Hz
-UPDATE_FREQUENCY = 1/REFRESH_RATE
+UPDATE_FREQUENCY = 1 / REFRESH_RATE
 
 # running == True when the play button is pressed
 # running == False when the stop button is pressed
@@ -85,10 +85,10 @@ frame = Frame()
 
 # Create the robot
 
-#robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
-#robot = DifferentialDriveRobot(robot_polygons)
-#controller = None
-#world.add_robot(robot, controller)
+# robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
+# robot = DifferentialDriveRobot(robot_polygons)
+# controller = None
+# world.add_robot(robot, controller)
 
 robot = Cobalt()
 controller = None
@@ -98,7 +98,6 @@ world.add_robot(robot, controller)
 # ------------------------------ generation loop ----------------------------- #
 
 def generate_data() -> Iterator[str]:
-
     """
     This section checks if the HTTP request headers contain an "X-Forwarded-For" header.
     This header is commonly used to store the original IP address of the client
@@ -135,54 +134,64 @@ def generate_data() -> Iterator[str]:
 
             if running or stepping:
 
-                # Clear the frame
-                frame.clear()
+                try:
 
-                # Step the simulation
-                world.step()
+                    # Step the simulation
+                    world.step()
 
-                # Add the robot to the frame
-                for robot in world.robots:
+                    # Clear the frame
+                    frame.clear()
 
-                    frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
+                    # Add the robot to the frame
+                    for robot in world.robots:
 
-                    # Add sensors if the option is enabled
-                    if show_sensors:
-                        frame.add_polygons([sensor.polygon for sensor in robot.sensors], '#FFBF0066')
+                        frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
 
-                    """
-                    # Add the path
-                    if show_path:
-                        frame.add_lines()
-                
-                    # Add the controller path
-                    # Boh
-                    """
+                        # Add sensors if the option is enabled
+                        if show_sensors:
+                            frame.add_polygons([sensor.polygon for sensor in robot.sensors], '#FFBF0066')
 
-                # Add the obstacles to the frame (we can change color for moving and steady obstacles)
+                        """
+                        # Add the path
+                        if show_path:
+                            frame.add_lines()
+                    
+                        # Add the controller path
+                        # Boh
+                        """
 
-                # steady_obstacles = [
-                #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
-                # ]
-                # moving_obstacles = [
-                #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
-                # ]
-                # frame.add_polygons(steady_obstacles, '#8B000066')
-                # frame.add_polygons(moving_obstacles, '#8B000066')
+                    # Add the obstacles to the frame (we can change color for moving and steady obstacles)
 
-                frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], '#0047AB66')
+                    # steady_obstacles = [
+                    #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
+                    # ]
+                    # moving_obstacles = [
+                    #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
+                    # ]
+                    # frame.add_polygons(steady_obstacles, '#8B000066')
+                    # frame.add_polygons(moving_obstacles, '#8B000066')
 
-                # Add the start and the goal points to the frame
-                frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, '#00008B66')
+                    frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], '#0047AB66')
 
-                # Dump the data
-                json_data = frame.to_json()
+                    # Add the start and the goal points to the frame
+                    frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, '#00008B66')
 
-                if stepping:
-                    stepping = False
+                    # Dump the data
+                    json_data = frame.to_json()
 
-            yield f"data:{json_data}\n\n"
-            time.sleep(UPDATE_FREQUENCY)
+                    if stepping:
+                        stepping = False
+
+                    yield f"data:{json_data}\n\n"
+                    time.sleep(UPDATE_FREQUENCY)
+
+                    # Check for collisions; if the case, stop
+                    world.apply_physics()
+
+                except CollisionException:
+                    running = False
+                    break
+
     except GeneratorExit:
         logger.info("Client %s disconnected", client_ip)
 
@@ -241,18 +250,21 @@ def simulation_control():
             for robot in world.robots:
                 robot.speed_multiplier = speed_multiplier
 
-        if 'map' in data:
-            flag = data['map']
-            if flag == 'random':
-                world.map.get_map(world.robots)
-                running = False
-                stepping = True
-            elif flag == 'load':
-                # TODO add load capability with dialog
-                pass
-            elif flag == 'save':
-                # TODO add save capability with dialog
-                pass
+        if 'random_map' in data:
+            world.map.get_map(world.robots)
+            running = False
+            stepping = True
+
+        if 'load' in data:
+            file_content = data['load']
+            world.map.load_map_from_json_data(file_content)
+            world.reset_robots()
+            running = False
+            stepping = True
+
+        if 'save' in data:
+            file_path = data['save']
+            world.map.save_map(file_path)
 
         if 'show' in data:
             flag = data['show']
@@ -274,4 +286,3 @@ def simulation_control():
 
 if __name__ == "__main__":
     application.run(host="0.0.0.0", threaded=True)
-

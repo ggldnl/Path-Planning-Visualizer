@@ -1,6 +1,7 @@
 from model.geometry.point import Point
 
 import numpy as np
+import json
 
 
 class Polygon:
@@ -27,7 +28,8 @@ class Polygon:
         # Initialize internal angle to 0 degrees
         self.angle = 0
 
-        self.center, self.radius = self.get_bounding_circle()
+        self.center = self._find_center()
+        self.radius = self._find_radius()
 
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
@@ -65,8 +67,16 @@ class Polygon:
     def to_dict(self):
         return {'points': [point.to_dict() for point in self.points]}
 
-    def add(self, point):
-        self.points.append(point)
+    @classmethod
+    def from_dict(cls, dictionary):
+
+        # point_list = json.loads(dictionary['points'], object_hook=lambda d: Point(d['x'], d['y']))
+
+        points = []
+        for point_dictionary in dictionary['points']:
+            points.append(Point.from_dict(point_dictionary))
+
+        return Polygon(points)
 
     def get_bounding_box(self):
         """
@@ -92,22 +102,26 @@ class Polygon:
             Point(max_x, min_y)
         ])
 
-    def get_bounding_circle(self):
-
-        center_x, center_y = self.find_center()
-        center = Point(center_x, center_y)
+    def _find_radius(self):
+        """
+        Supposes that the center has already been found
+        """
 
         radius = 0
         for point in self.points:
-            distance = center.distance(point)
+            distance = self.center.distance(point)
             radius = max(radius, distance)
 
-        return center, radius
+        return radius
 
     def translate(self, offset_x, offset_y):
+
         for point in self.points:
             point.x += offset_x
             point.y += offset_y
+
+        # Update the center
+        self.center = self._find_center()
 
     def rotate_around(self, x, y, angle, is_deg=True):
         """
@@ -133,12 +147,12 @@ class Polygon:
             point.x = new_x + x
             point.y = new_y + y
 
+        self.center = self._find_center()
+
     def rotate(self, angle, is_deg=True):
         """
         Rotate around the center by the specified angle
         """
-
-        center_x, center_y = self.find_center()
 
         if is_deg:
             angle_radians = np.deg2rad(angle)
@@ -150,16 +164,16 @@ class Polygon:
         # Apply rotation to each point
         for point in self.points:
             # Translate the point to the origin (center) of rotation
-            translated_x = point.x - center_x
-            translated_y = point.y - center_y
+            translated_x = point.x - self.center.x
+            translated_y = point.y - self.center.y
 
             # Perform the rotation
             new_x = translated_x * np.cos(angle_radians) - translated_y * np.sin(angle_radians)
             new_y = translated_x * np.sin(angle_radians) + translated_y * np.cos(angle_radians)
 
             # Translate the point back to its original position
-            point.x = new_x + center_x
-            point.y = new_y + center_y
+            point.x = new_x + self.center.x
+            point.y = new_y + self.center.y
 
     def transform(self, pose, is_deg=True):
         x, y, alpha = pose
@@ -167,9 +181,8 @@ class Polygon:
         self.rotate(alpha, is_deg)
 
     def translate_to(self, x, y):
-        center_x, center_y = self.find_center()
-        offset_x = x - center_x
-        offset_y = y - center_y
+        offset_x = x - self.center.x
+        offset_y = y - self.center.y
         self.translate(offset_x, offset_y)
 
     def rotate_to(self, target_angle, is_deg=True):
@@ -181,13 +194,13 @@ class Polygon:
         self.translate_to(pose[0], pose[1])
         self.rotate_to(pose[2], is_deg)
 
-    def find_center(self):
+    def _find_center(self):
         total_x = sum(point.x for point in self.points)
         total_y = sum(point.y for point in self.points)
         num_points = len(self.points)
         center_x = total_x / num_points
         center_y = total_y / num_points
-        return center_x, center_y
+        return Point(center_x, center_y)
 
     def get_edges(self):
         # Get the edges of the polygon

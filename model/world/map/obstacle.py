@@ -47,6 +47,16 @@ class Obstacle:
         new_vel = (self.vel[0], self.vel[1], self.vel[2])
         return Obstacle(new_polygon, new_pose, new_vel)
 
+    def to_dict(self):
+        return {'polygon': self.polygon.to_dict(), 'pose': self.pose, 'vel': self.vel}
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        polygon = Polygon.from_dict(dictionary['polygon'])
+        pose = tuple(dictionary['pose'])
+        vel = tuple(dictionary['vel'])
+        return Obstacle(polygon, pose, vel)
+
 
 class RectangularObstacle(Obstacle):
 
