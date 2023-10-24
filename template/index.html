@@ -100,6 +100,9 @@
                 <td><label class="table_label">Show path</label></td>
                 <td><input type="checkbox" class="table_checkbox" onclick="sendValue({show:'path'});"></td>
                 </tr>
+                <td><label class="table_label">Show true pose</label></td>
+                <td><input type="checkbox" class="table_checkbox" onclick="sendValue({show:'pose'});"></td>
+                </tr>
             </tbody>
         </table>
 
@@ -119,6 +122,7 @@
         <div id="planners-container">
             <input type="button" class="button" id="planner1Button" value="P1" onclick="sendValue({planner:'p1'});" />
             <input type="button" class="button" id="planner2Button" value="P2" onclick="sendValue({planner:'p2'});" />
+            <input type="button" class="button" id="planner4Button" value="RL" onclick="sendValue({planner:'RL'});" />
         </div>
 
 
