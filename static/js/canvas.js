@@ -108,7 +108,16 @@ export function drawGrid(
         drawLine(ctx, px, 0, px, screenSize.height, gridColor, 0.25);
 
         // Draw a numeric reference
-        if (pixelScale > 100) {
+        if (pixelScale > 1000) {
+            if (x !== 0 && x % 1 === 0) {
+                ctx.fillStyle = textColor
+                ctx.fillText(
+                    (x / 10).toString() + 'm',
+                    px + textOffset.x,
+                    originY - textOffset.y
+                );
+            }
+        } else if (pixelScale > 100) {
             if (x !== 0 && x % 5 === 0) {
                 ctx.fillStyle = textColor
                 ctx.fillText(
@@ -135,7 +144,15 @@ export function drawGrid(
         drawLine(ctx, 0, py, screenSize.width, py, gridColor, 0.25);
 
         // Draw a numeric reference
-        if (pixelScale > 100) {
+        if (pixelScale > 1000) {
+            if (y !== 0 && y % 1 === 0) {
+                ctx.fillText(
+                    (-y / 10).toString() + 'm',
+                    originX + textOffset.x,
+                    py - textOffset.y
+                );
+            }
+        } else if (pixelScale > 100) {
             if (y !== 0 && y % 5 === 0) {
                 ctx.fillText(
                     (-y / 10).toString() + 'm',
