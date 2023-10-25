@@ -33,6 +33,7 @@ from typing import Iterator
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
 from model.exceptions.collision_exception import CollisionException
+from model.world.controllers.djikstra_controller import DijkstraController
 # Import scripts
 from scripts.frame import Frame
 
@@ -83,17 +84,6 @@ world = World(UPDATE_FREQUENCY)
 # Buffer for all the geometries that will be drawn on screen
 frame = Frame()
 
-# Create the robot
-
-# robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
-# robot = DifferentialDriveRobot(robot_polygons)
-# controller = None
-# world.add_robot(robot, controller)
-
-robot = Cobalt()
-controller = None
-world.add_robot(robot, controller)
-
 
 # ------------------------------ generation loop ----------------------------- #
 
@@ -143,7 +133,10 @@ def generate_data() -> Iterator[str]:
                     frame.clear()
 
                     # Add the robot to the frame
-                    for robot in world.robots:
+                    for i, robot in enumerate(world.robots):
+                        world.controllers[i].update_goal()
+                        linear_speed, angular_speed = world.controllers[i].get_control()
+                        robot.set_speed(linear_speed, angular_speed)
 
                         frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
 
@@ -285,4 +278,13 @@ def simulation_control():
 
 
 if __name__ == "__main__":
+    # Create the robot
+
+    # robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
+    # robot = DifferentialDriveRobot(robot_polygons)
+    # controller = None
+    # world.add_robot(robot, controller)
+    robot = Cobalt()
+    controller = DijkstraController(world.map, robot)
+    world.add_robot(robot, controller)
     application.run(host="0.0.0.0", threaded=True)

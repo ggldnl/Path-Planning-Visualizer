@@ -12,6 +12,6 @@ class Controller(metaclass=ABCMeta):
         goal_pos = map.goal
         return goal_pos, self.robot.estimated_pose
 
-    @abstractmethod
+    #@abstractmethod
     def step_motion(self, map: Map):
         return
