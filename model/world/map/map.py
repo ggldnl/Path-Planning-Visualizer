@@ -74,9 +74,17 @@ class Map:
         self.initial_obstacles = []
 
         # Current obstacle position
-        self.obstacles = []
+        self._obstacles = []
 
         self.current_goal = None
+
+    @property
+    def goal(self):
+        return self.current_goal
+
+    @property
+    def obstacles(self):
+        return self._obstacles
 
     def get_map(self, robots):
 
@@ -175,14 +183,14 @@ class Map:
                 obstacles.append(obstacle)
 
         # Update the obstacles and the goal
-        self.obstacles = obstacles
+        self._obstacles = obstacles
         self.current_goal = goal
 
         # Backup the current map so that we can reset it later
         self.initial_obstacles = [obstacle.copy() for obstacle in obstacles]
 
     def reset_map(self):
-        self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
+        self._obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
 
     def save_map(self, filename):
         with open(filename, "wb") as file:
@@ -192,5 +200,5 @@ class Map:
     def load_map(self, filename):
         with open(filename, "rb") as file:
             self.initial_obstacles = pickle.load(file)
-            self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
+            self._obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
             self.current_goal = pickle.load(file)
