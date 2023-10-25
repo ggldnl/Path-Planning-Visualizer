@@ -1,7 +1,11 @@
 from abc import ABCMeta, abstractmethod
+from scipy.spatial import ConvexHull
+
+from model.geometry.polygon import Polygon
 
 
 class Robot(metaclass=ABCMeta):
+
     def __init__(self, name, bodies, motors=None):
 
         # Name of the robot
@@ -17,6 +21,18 @@ class Robot(metaclass=ABCMeta):
 
         # Robot base consists of multiple polygons
         self.bodies = bodies
+
+        # The polygon is the outline of the entire robot. It will
+        # serve to check collisions
+        points = []
+        for body in bodies:
+            for point in body.points:
+                points.append(point.to_array())
+
+        # Take only the outermost among them
+        hull = ConvexHull(points)
+        outermost_points = [points[i] for i in hull.vertices]
+        self.body = Polygon(outermost_points)
 
         # Sensor objects
         self.sensors = []
@@ -54,9 +70,12 @@ class Robot(metaclass=ABCMeta):
 
     def update_geometry(self):
 
-        # Update the base polygons
+        # Update the bodies
         for polygon in self.bodies:
             polygon.transform_to(self.pose)
+
+        # Update the polygon
+        self.polygon.transform_to(self.pose)
 
         # Update the sensor polygons
         for sensor in self.sensors:

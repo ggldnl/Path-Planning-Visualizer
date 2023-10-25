@@ -25,6 +25,15 @@ button, input {
 
 /* The home button is moved to the end of the sidebar
  */
- #sidebar-checkbox:checked ~ #home_btn{
+#sidebar-checkbox:checked ~ #home_btn{
     left: 340px;
+}
+
+/* To disable a button, make it inherit this class
+ */
+.grayed-out-button {
+    background-color: #ccc;
+    color: #888;
+    cursor: not-allowed;
+    pointer-events: none;
 }

@@ -13,9 +13,14 @@
 
 - [x] write URDF for cobalt
 - [x] define environment
+- [ ] remove annoying checkbox (upper left corner) that loads before the rest of the page 
 - [ ] redefine communication between backend and frontend (make it lighter)
+- [ ] replace buttons with radio buttons for controller and planner menus
+- [ ] highlight the current choice in controller and planner menus
+- [ ] disable the planner menu if the current planner is joystick
 - [ ] update documentation
-- [ ] add save and load capabilities
+- [x] add save capabilities
+- [ ] add load capabilities
 - [ ] add sensors support to URDF parser
 - [ ] fix inverted angles in link origin (URDF parser)
 - [x] scale the map to match real world measures

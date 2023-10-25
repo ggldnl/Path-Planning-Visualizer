@@ -103,6 +103,7 @@ class MapBuilder:
     def set_obs_moving_count(self, obs_moving_count):
         self._check_non_negative(obs_moving_count, strict=False)
         self.map.obs_moving_count = obs_moving_count
+        return self
 
     def set_obs_linear_speed_range(self, obs_min_lin_speed, obs_max_lin_speed):
         self._check_range(obs_min_lin_speed, obs_max_lin_speed)

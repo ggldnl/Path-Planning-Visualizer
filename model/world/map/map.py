@@ -10,8 +10,6 @@ from model.geometry.point import Point
 
 # Serialization
 import pickle
-
-# TODO implement json serialization
 import json
 
 
@@ -192,13 +190,53 @@ class Map:
     def reset_map(self):
         self._obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
 
-    def save_map(self, filename):
+    def save_as_pickle(self, filename):
         with open(filename, "wb") as file:
             pickle.dump(self.initial_obstacles, file)
             pickle.dump(self.current_goal, file)
 
-    def load_map(self, filename):
+    def save_as_json(self, filename):
+        data = {
+            "initial_obstacles": [obstacle.to_dict() for obstacle in self.initial_obstacles],
+            "current_goal": self.current_goal.to_dict()
+        }
+
+        with open(filename, "w") as file:
+            json.dump(data, file)
+
+    def save_map(self, filename):
+        self.save_as_json(filename)
+
+    def load_map_from_pickle(self, filename):
         with open(filename, "rb") as file:
             self.initial_obstacles = pickle.load(file)
             self._obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
             self.current_goal = pickle.load(file)
+
+    def load_map_from_json_file(self, filename):
+        with open(filename, 'rb') as file:
+            data = json.load(file)
+            self.load_map_from_json_data(data)
+
+    def load_map_from_json_data(self, data):
+
+        # Before:
+        # 'Polygon(points=[Point(x=-2.5118392672536327, y=0.6265351022705381), Point(x=-2.3844202224503315, y=1.350435265340675), Point(x=-1.6980977246005748, y=1.2296305445182016), Point(x=-1.8255167694038765, y=0.5057303814480627)])'
+        #
+        # After:
+        # 'Polygon(points=[Point(x=-2.1213483391343777, y=-0.2953322538783505), Point(x=-1.3422613909428343, y=0.0158506375034122), Point(x=-1.2619030194447984, y=-0.18533702462689794), Point(x=-2.0409899676363423, y=-0.49651991600866063)])'
+        self.current_goal = Point.from_dict(data['current_goal'])
+
+        obstacle_data = data['initial_obstacles']
+        obstacles = []
+        for obstacle_dictionary in obstacle_data:
+            obstacle = Obstacle.from_dict(obstacle_dictionary)
+            obstacles.append(obstacle)
+
+        self.obstacles = obstacles
+        self.initial_obstacles = [obstacle.copy() for obstacle in self.obstacles]
+        print('Map updated!')
+
+    def load_map(self, filename):
+        self.load_map_from_json_file(filename)
+

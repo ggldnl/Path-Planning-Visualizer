@@ -65,13 +65,14 @@
         <label class="sidebar_label">Map control</label>
 
         <div id="map-button-container">
-            <button id="load_btn" onclick="sendValue({map:'load'});">
+            <button id="load_btn"> <!--class="grayed-out-button">-->
                 <i class="fas fa-upload"></i>
+                <input type="file" style="display: none;" id="file_input" onchange="handleFileLoad(event)">
             </button>
-            <button id="save_btn" onclick="sendValue({map:'save'});">
+            <button id="save_btn" class="grayed-out-button">
                 <i class="fas fa-save"></i>
             </button>
-            <button id="random_btn" onclick="sendValue({map:'random'});">
+            <button id="random_btn" onclick="sendValue({random_map:'placeholder'});">
                 <i class="fas fa-random"></i>
             </button>
         </div>
@@ -100,8 +101,32 @@
                 <td><label class="table_label">Show path</label></td>
                 <td><input type="checkbox" class="table_checkbox" onclick="sendValue({show:'path'});"></td>
                 </tr>
+                <tr>
+                <td><label class="table_label">Show true pose</label></td>
+                <td><input type="checkbox" class="table_checkbox" onclick="sendValue({show:'pose'});"></td>
+                </tr>
             </tbody>
         </table>
+
+        <label class="sidebar_label">Controller</label>
+
+        <div id="controllers-container">
+            <button id="joystick_btn" onclick="sendValue({controller:'joystick'});">
+                <i class="fas fa-gamepad"></i>
+            </button>
+            <button id="go_to_goal_btn" onclick="sendValue({controller:'go_to_goal'});">
+                <i class="fas fa-map-marked-alt"></i>
+            </button>
+        </div>
+
+        <label class="sidebar_label">Planners</label>
+
+        <div id="planners-container">
+            <input type="button" class="button" id="planner1Button" value="P1" onclick="sendValue({planner:'p1'});" />
+            <input type="button" class="button" id="planner2Button" value="P2" onclick="sendValue({planner:'p2'});" />
+            <input type="button" class="button" id="planner4Button" value="RL" onclick="sendValue({planner:'RL'});" />
+        </div>
+
 
     </div>
 
@@ -127,6 +152,36 @@
       // console.log(jsonData);
       oReq.send(jsonData);
     };
+
+    // Bind the load button to the input file form
+    document.getElementById("load_btn").addEventListener("click", function() {
+        document.getElementById("file_input").click();
+    });
+
+    // When the load button is pressed, the click is dispatched to the file_input element
+    // that invokes the handleFileLoad method
+    function handleFileLoad(event) {
+        // Handle the selected file here
+        const file = event.target.files[0];
+        console.log(file);
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const jsonContent = JSON.parse(e.target.result);
+                    sendValue({'load':jsonContent});
+                } catch (error) {
+                    console.error("Error parsing JSON:", error);
+                }
+            };
+
+            reader.readAsText(file);
+        } else {
+            console.error("No file selected.");
+        }
+    }
     </script>
 
 </body>

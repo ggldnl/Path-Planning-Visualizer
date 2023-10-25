@@ -143,5 +143,12 @@ class Point:
     def to_dict(self):
         return {'x': self.x, 'y': self.y}
 
+    @classmethod
+    def from_dict(cls, dictionary):
+        return Point(dictionary['x'], dictionary['y'])
+
+    def to_array(self):
+        return [self.x, self.y]
+
     def copy(self):
         return Point(self.x, self.y)
