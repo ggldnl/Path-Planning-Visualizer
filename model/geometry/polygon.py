@@ -1,7 +1,7 @@
 from model.geometry.point import Point
+from model.geometry.segment import Segment
 
 import numpy as np
-import json
 
 
 class Polygon:
@@ -228,11 +228,20 @@ class Polygon:
                 max_proj = projection
         return min_proj, max_proj
 
-    def intersects(self, other_polygon):
-        for edge in self.get_edges() + other_polygon.get_edges():
+    def intersects(self, other):
+
+        # Check if the input is a Polygon or a Line
+        if isinstance(other, Polygon):
+            edges_other = other.get_edges()
+        elif isinstance(other, Segment):
+            edges_other = [(other.start, other.end)]
+        else:
+            raise ValueError("Input must be a Polygon or a Line")
+
+        for edge in self.get_edges() + edges_other:
             axis = self._normal(edge)
             min1, max1 = self._project(axis)
-            min2, max2 = other_polygon._project(axis)
+            min2, max2 = other._project(axis)
 
             if max1 < min2 or max2 < min1:
                 # If there is a gap along this axis, the polygons do not intersect
