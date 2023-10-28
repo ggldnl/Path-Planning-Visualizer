@@ -14,3 +14,4 @@ dependencies:
   - shapely>=2.0.1
   - pip:
       - flask-compress==1.14
+      - rtree==1.1.0

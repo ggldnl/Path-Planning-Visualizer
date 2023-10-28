@@ -12,6 +12,43 @@ from model.geometry.point import Point
 import pickle
 import json
 
+import shapely.geometry
+import rtree
+
+
+class Map:
+    def __init__(self):
+        self.obstacle_tree = rtree.index.Index()
+        self.obstacles = []
+
+    def add_obstacle(self, polygon_coords):
+        polygon = shapely.geometry.Polygon(polygon_coords)
+        obstacle_id = len(self.obstacles)
+        self.obstacles.append(polygon)
+        self.obstacle_tree.insert(obstacle_id, polygon.bounds)
+
+    def is_obstacle(self, line_coords):
+        line = shapely.geometry.LineString(line_coords)
+        for obstacle_id in self.obstacle_tree.intersection(line.bounds):
+            if line.intersects(self.obstacles[obstacle_id]):
+                return True
+        return False
+
+    def get_neighbors(self, node, step_size=1):
+        x, y = node
+        neighbors = [
+            (x - step_size, y),
+            (x + step_size, y),
+            (x, y - step_size),
+            (x, y + step_size),
+            (x - step_size, y - step_size),
+            (x + step_size, y - step_size),
+            (x - step_size, y + step_size),
+            (x + step_size, y + step_size),
+        ]
+
+        return neighbors
+
 
 class Map:
     def __init__(self,
@@ -75,6 +112,8 @@ class Map:
         self._obstacles = []
 
         self.current_goal = None
+
+
 
     @property
     def goal(self):
