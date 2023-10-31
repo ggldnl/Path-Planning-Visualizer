@@ -59,8 +59,13 @@ window.onload = function () {
             else if (type == 'circle')
                 drawCircle(ctx, shape['pos'], pixelOrigin, scale, shape['radius'], shape['fillColor'], shape['borderColor']);
             else if (type == 'line')
-                console.log('drawing line');
+                // TODO fix this
+                console.log(shape);
+                const line = shape['line'];
+                // drawLine(ctx, line[0][0], line[0][1], line[1][0], line[1][1], pixelOrigin, scale, shape['fillColor'], shape['lineWidth']);
         }
+
+        drawLine(ctx, 0, 0, 2.5, 2.5, pixelOrigin, scale, '#FF0000', 1);
 
         requestAnimationFrame(drawScreen);
     }
