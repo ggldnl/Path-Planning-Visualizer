@@ -65,8 +65,6 @@ window.onload = function () {
                 // drawLine(ctx, line[0][0], line[0][1], line[1][0], line[1][1], pixelOrigin, scale, shape['fillColor'], shape['lineWidth']);
         }
 
-        drawLine(ctx, 0, 0, 2.5, 2.5, pixelOrigin, scale, '#FF0000', 1);
-
         requestAnimationFrame(drawScreen);
     }
 
