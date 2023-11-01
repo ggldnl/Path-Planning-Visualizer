@@ -54,10 +54,10 @@ class Cobalt(DifferentialDriveRobot):
         right_wheel_pose = (-0.04, 0, 0)
 
         left_wheel_polygon = wheel_polygon.copy()
-        left_wheel_polygon.transform_to(left_wheel_pose)
+        left_wheel_polygon.transform(left_wheel_pose)
 
         right_wheel_polygon = wheel_polygon.copy()
-        right_wheel_polygon.transform_to(right_wheel_pose)
+        right_wheel_polygon.transform(right_wheel_pose)
 
         caster_wheel_radius = 0.005
         caster_wheel = Polygon([
@@ -67,7 +67,7 @@ class Cobalt(DifferentialDriveRobot):
 
         caster_wheel_pose = (0, -0.035, 0)
 
-        caster_wheel.transform_to(caster_wheel_pose)
+        caster_wheel.transform(caster_wheel_pose)
 
         bodies = [
             base_polygon,

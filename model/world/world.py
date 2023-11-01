@@ -17,7 +17,7 @@ class World:
         self.controllers = []
 
         # Initialize the map
-        self.map = MapBuilder().build()
+        self.map = MapBuilder().set_obs_moving_count(1).set_obs_steady_count(1).build()
 
         self.map.get_map(self.robots)
         #self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
@@ -46,15 +46,12 @@ class World:
         """
 
         # Step all the obstacles
+        # TODO setup controllers
         for obstacle in self.map.obstacles:
             obstacle.step_motion(dt)
 
-        # print(self.map.obstacles[0].polygon)
-        # print(self.map.obstacles[0].pose)
-        # print()
-
-        # Apply physics interactions
-         #self._apply_physics()
+        for robot in self.robots:
+            robot.step_motion(dt)
 
         # Increment world time
         self.world_time += dt
@@ -72,7 +69,7 @@ class World:
 
         for robot in self.robots:
 
-            polygon1 = robot.body
+            polygon1 = robot.outline
 
             # Robots can collide with other robots and with the obstacles
             for solid in solids:

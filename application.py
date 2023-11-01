@@ -85,12 +85,13 @@ frame = Frame()
 
 # Create the robot
 
+# R2D2
 # robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
 # robot = DifferentialDriveRobot(robot_polygons)
-# controller = None
-# world.add_robot(robot, controller)
 
+# Cobalt
 robot = Cobalt()
+
 controller = None
 world.add_robot(robot, controller)
 
@@ -276,6 +277,20 @@ def simulation_control():
                 show_path = not show_path
             # TODO update the robot (cascading) when one of these checkboxes is ticked
             update_robot = True
+
+        if 'direction' in data:
+            dir = data['direction']
+            robot = world.robots[0]
+            target_pose = robot.target_pose
+            if dir == 'up':
+                robot.target_pose = (target_pose[0], target_pose[1] + 0.1, target_pose[2])
+            elif dir == 'down':
+                robot.target_pose = (target_pose[0], target_pose[1] - 0.1, target_pose[2])
+            elif dir == 'left':
+                robot.target_pose = (target_pose[0], target_pose[1], target_pose[2] + 10)
+            elif dir == 'right':
+                robot.target_pose = (target_pose[0], target_pose[1], target_pose[2] - 10)
+            print(f'Received [{dir}]: new target pose: {world.robots[0].target_pose}')
 
         response = {'status': 'Changes registered'}
         return jsonify(response)

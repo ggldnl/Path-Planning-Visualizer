@@ -15,19 +15,18 @@
 - [x] define environment
 - [ ] remove annoying checkbox (upper left corner) that loads before the rest of the page 
 - [ ] redefine communication between backend and frontend (make it lighter)
-- [ ] replace buttons with radio buttons for controller and planner menus
-- [ ] highlight the current choice in controller and planner menus
-- [ ] disable the planner menu if the current planner is joystick
+- [x] replace buttons with radio buttons for controller and planner menus
+- [x] highlight the current choice in controller and planner menus
+- [x] disable the planner menu if the current planner is joystick
 - [ ] update documentation
-- [x] add save capabilities
-- [ ] add load capabilities
-- [ ] add sensors support to URDF parser
+- [ ] add save capabilities
+- [x] add load capabilities
+- [ ] ~~add sensors support to URDF parser~~
 - [ ] fix inverted angles in link origin (URDF parser)
 - [x] scale the map to match real world measures
 - [ ] move from current, complex, translation and scale logic to
     translate() and scale() on sort of a contextManager object in javascript
-- [ ] add typing
-- [ ] add input checking
+- [ ] add typing and input checking
 - [ ] add radar in gui to see sensors read from the robot
 - [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
 - [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
