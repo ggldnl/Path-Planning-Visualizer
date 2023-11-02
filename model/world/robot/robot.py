@@ -3,10 +3,6 @@ from scipy.spatial import ConvexHull
 import numpy as np
 
 from model.geometry.polygon import Polygon
-from model.geometry.point import Point
-
-
-EPS = 0.001  # 1 mm
 
 
 class Robot(metaclass=ABCMeta):
@@ -44,6 +40,10 @@ class Robot(metaclass=ABCMeta):
         # Motor objects
         self.motors = []
 
+        # Define tolerance in translation/rotation
+        self.TRANSLATION_EPSILON = 0.001  # 1mm
+        self.ROTATION_EPSILON = 5  # 5 deg
+
     def add_sensor(self, sensor, pose, is_deg=True):
 
         # The pose is relative to the center of the robot
@@ -59,38 +59,7 @@ class Robot(metaclass=ABCMeta):
         # Store the current pose
         self.previous_pose = self.current_pose
 
-        current_x, current_y, current_theta = self.current_pose
-        target_x, target_y, target_theta = self.target_pose
-
-        distance = np.sqrt(np.power(target_x - current_x, 2) + np.power(target_y - current_y, 2))
-        if distance < EPS:
-
-            current_x = target_x
-            current_y = target_y
-
-        else:
-
-            delta_x = target_x - current_x
-            delta_y = target_y - current_y
-
-            current_x = current_x + delta_x * dt * self.speed_multiplier
-            current_y = current_y + delta_y * dt * self.speed_multiplier
-
-        distance_theta = abs(target_theta - current_theta)
-        if distance_theta < EPS * 10:
-
-            current_theta = target_theta
-
-        else:
-
-            # This is if we use radians in the pose
-            # delta_theta = np.arctan2(np.sin(target_theta - current_theta), np.cos(target_theta - current_theta))
-            delta_theta = target_theta - current_theta
-            current_theta = current_theta + delta_theta * dt * self.speed_multiplier
-
-        self.current_pose = (current_x, current_y, current_theta)
-
-        # Update the estimated pose
+        # Update the current pose
         self.apply_dynamics(dt)
 
         # Update the geometries
