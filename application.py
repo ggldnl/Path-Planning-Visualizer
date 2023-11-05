@@ -134,17 +134,14 @@ def generate_data() -> Iterator[str]:
                     # Clear the frame
                     frame.clear()
 
-                    frame.add_line([0, 0], [1, 1], 1, '#FF0000')
-                    frame.add_line([1, 1], [2, 1], 1, '#FF0000')
-                    frame.add_line([2, 1], [3, 2], 1, '#FF0000')
-
                     # Add the robot to the frame
                     for robot, controller in zip(world.robots, world.controllers):
 
-                        if controller.path:
-                            lines_list = [Point(x[0], x[1]).to_dict() for x in controller.path]
-                            #print(lines_list)
-                            #frame.add_lines(lines_list, 6, '#ff0000')
+                        if show_path:
+                            if controller.path:
+                                points = [[x, y] for x, y in controller.path]
+                                for i in range(1, len(points)):
+                                    frame.add_lines(points[i - 1], points[i], 6, '#ff0000')
 
                         frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
 
