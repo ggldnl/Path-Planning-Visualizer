@@ -75,7 +75,7 @@ class Robot(metaclass=ABCMeta):
             polygon.transform_to(self.pose)
 
         # Update the polygon
-        self.polygon.transform_to(self.pose)
+        #self.polygon.transform_to(self.pose)
 
         # Update the sensor polygons
         for sensor in self.sensors:
@@ -86,7 +86,7 @@ class Robot(metaclass=ABCMeta):
             motor.polygon.transform_to(self.pose)
 
     @abstractmethod
-    def apply_dynamics(self, dt):
+    def apply_dynamics(self, pose):
         return
 
     @abstractmethod

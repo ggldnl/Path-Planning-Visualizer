@@ -10,8 +10,12 @@ class DifferentialDriveRobot(Robot):
 
         self.wheel_base_length = None
 
-    def apply_dynamics(self, dt):
+    def apply_dynamics(self, pose):
 
+        self.pose =pose
+        self.update_geometry()
+
+        """
         # Compute the change in wheel angle (in radians)
         d_angle_left = dt * self.motors[0].speed
         d_angle_right = dt * self.motors[1].speed
@@ -41,6 +45,7 @@ class DifferentialDriveRobot(Robot):
         self.estimated_pose = (new_x, new_y, new_theta)
         self.motors[0].encoder.step_revolutions(revolutions_left)
         self.motors[1].encoder.step_revolutions(revolutions_right)
+        """
 
     def add_motor(self, motor, pose):
         if len(self.motors) == 2:

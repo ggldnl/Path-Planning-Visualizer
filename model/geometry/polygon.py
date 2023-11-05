@@ -1,4 +1,5 @@
 from model.geometry.point import Point
+from model.geometry.segment import Segment
 
 import numpy as np
 import json
@@ -30,6 +31,10 @@ class Polygon:
 
         self.center = self._find_center()
         self.radius = self._find_radius()
+
+    @property
+    def bounds(self):
+        return self.get_bounding_box(as_tuple=True)
 
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
@@ -78,7 +83,7 @@ class Polygon:
 
         return Polygon(points)
 
-    def get_bounding_box(self):
+    def get_bounding_box(self, as_tuple=False):
         """
         Returns the bounding box of the polygon.
         """
@@ -94,6 +99,9 @@ class Polygon:
             max_x = max(max_x, point.x)
             min_y = min(min_y, point.y)
             max_y = max(max_y, point.y)
+
+        if as_tuple:
+            return (min_x, min_y, max_x, max_y)
 
         return Polygon([
             Point(min_x, min_y),
@@ -192,7 +200,7 @@ class Polygon:
 
     def transform_to(self, pose, is_deg=True):
         self.translate_to(pose[0], pose[1])
-        self.rotate_to(pose[2], is_deg)
+        #self.rotate_to(pose[2], is_deg)
 
     def _find_center(self):
         total_x = sum(point.x for point in self.points)
@@ -228,11 +236,20 @@ class Polygon:
                 max_proj = projection
         return min_proj, max_proj
 
-    def intersects(self, other_polygon):
-        for edge in self.get_edges() + other_polygon.get_edges():
+    def intersects(self, other):
+
+        # Check if the input is a Polygon or a Line
+        if isinstance(other, Polygon):
+            edges_other = other.get_edges()
+        elif isinstance(other, Segment):
+            edges_other = [(other.start, other.end)]
+        else:
+            raise ValueError("Input must be a Polygon or a Line")
+
+        for edge in self.get_edges() + edges_other:
             axis = self._normal(edge)
             min1, max1 = self._project(axis)
-            min2, max2 = other_polygon._project(axis)
+            min2, max2 = other._project(axis)
 
             if max1 < min2 or max2 < min1:
                 # If there is a gap along this axis, the polygons do not intersect

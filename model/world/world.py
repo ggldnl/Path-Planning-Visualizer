@@ -10,6 +10,7 @@ class World:
         # Initialize world time
         self.world_time = 0.0  # seconds
         self.dt = dt  # seconds
+        self.idx = 0
 
         self.robots = []
 
@@ -20,7 +21,7 @@ class World:
         self.map = MapBuilder().build()
 
         self.map.get_map(self.robots)
-        #self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
+        # self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
 
     def set_period(self, dt):
         self.dt = dt
@@ -40,24 +41,38 @@ class World:
 
         dt = self.dt
 
-        """
-        for controller in self.controllers:
-            controller.step_motion(self.map)
-        """
-
         # Step all the obstacles
         for obstacle in self.map.obstacles:
             obstacle.step_motion(dt)
+
+        for robot, controller in zip(self.robots, self.controllers):
+            if self.idx == 0:
+                break
+            # TODO path.
+            if self.idx == 1:
+                #path = controller.search()
+                pass
+            path = controller.search()
+            print(path)
+            if controller.path:
+                print(controller.path)
+                robot.apply_dynamics(controller.path.pop())
+        self.idx += 1
+
 
         # print(self.map.obstacles[0].polygon)
         # print(self.map.obstacles[0].pose)
         # print()
 
         # Apply physics interactions
-         #self._apply_physics()
+        # self._apply_physics()
 
         # Increment world time
         self.world_time += dt
+
+    def search(self):
+        for controller in self.controllers:
+            controller.search()  # todo to be sync and not having an instance on controller
 
     def apply_physics(self):
         self._detect_collisions()
@@ -82,7 +97,7 @@ class World:
                     polygon2 = solid.polygon  # polygon2
 
                     if utils.check_nearness(
-                        polygon1, polygon2
+                            polygon1, polygon2
                     ):  # Don't bother testing objects that are not near each other
                         if polygon1.intersects(polygon2):
                             raise CollisionException(f'Robot {robot.name} collided with an obstacle.')

@@ -33,7 +33,8 @@ from typing import Iterator
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
 from model.exceptions.collision_exception import CollisionException
-from model.world.controllers.djikstra_controller import DijkstraController
+from model.geometry.point import Point
+from model.world.controllers.a_r_controller import AStarController
 # Import scripts
 from scripts.frame import Frame
 
@@ -133,10 +134,12 @@ def generate_data() -> Iterator[str]:
                     frame.clear()
 
                     # Add the robot to the frame
-                    for i, robot in enumerate(world.robots):
-                        world.controllers[i].update_goal()
-                        linear_speed, angular_speed = world.controllers[i].get_control()
-                        robot.set_speed(linear_speed, angular_speed)
+                    for robot, controller in zip(world.robots, world.controllers):
+
+                        if controller.path:
+                            lines_list = [Point(x[0], x[1]).to_dict() for x in controller.path]
+                            #print(lines_list)
+                            #frame.add_lines(lines_list, 6, '#ff0000')
 
                         frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
 
@@ -172,6 +175,8 @@ def generate_data() -> Iterator[str]:
                     # Dump the data
                     json_data = frame.to_json()
 
+
+
                     if stepping:
                         stepping = False
 
@@ -180,6 +185,8 @@ def generate_data() -> Iterator[str]:
 
                     # Check for collisions; if the case, stop
                     world.apply_physics()
+
+                    #world.search()
 
                 except CollisionException:
                     running = False
@@ -285,6 +292,6 @@ if __name__ == "__main__":
     # controller = None
     # world.add_robot(robot, controller)
     robot = Cobalt()
-    controller = DijkstraController(world.map, robot)
+    controller = AStarController(world.map, robot)
     world.add_robot(robot, controller)
-    application.run(host="0.0.0.0", threaded=True)
+    application.run(host="0.0.0.0", port=5000, threaded=True)

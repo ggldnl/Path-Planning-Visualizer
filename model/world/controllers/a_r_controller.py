@@ -1,20 +1,23 @@
 import heapq
 import math
 
-from model.world.map.map import Map
+from model.world.map.map_rtree import Map
+from model.world.robot.robot import Robot
 
 
 class AStarController:
-    def __init__(self, start, goal, map: Map):
-        self.start = start
-        self.goal = goal
+    def __init__(self, map: Map, robot: Robot):
+        self.path = []
+        self.start = robot.pose #todo check if needed
+        self.goal = map.goal
         self.map = map
+        self.step_size = 0.1
 
-        self.open_set = []
-        self.closed_set = set()
+        self.open_set = [] #nodes to be explored.
+        self.closed_set = set() #explored nodes
         self.came_from = {}
-        self.g_score = {self.start: 0}
-        self.f_score = {self.start: self.heuristic(self.start, self.goal)}
+        self.g_score = {self.start: 0} #cost of getting from the start node to a given node
+        self.f_score = {self.start: self.heuristic(self.start, self.goal)} #total cost of getting from the start node to the goal node through a given node
 
         heapq.heappush(self.open_set, (self.f_score[self.start], self.start))
 
@@ -27,18 +30,25 @@ class AStarController:
         while current in self.came_from:
             current = self.came_from[current]
             path.append(current)
-        return path[::-1]
+        self.path = path#[::-1]
+        return self.path if isinstance(self.path, list) else list(self.path)
 
     def search(self):
+        self.open_set = []  # nodes to be explored.
+        self.closed_set = set()  # explored nodes
+        self.came_from = {}
+        self.g_score = {self.start: 0}  # cost of getting from the start node to a given node
+        self.f_score = {self.start: self.heuristic(self.start, self.goal)}
         while self.open_set:
             current_f_score, current = heapq.heappop(self.open_set)
 
-            if current == self.goal:
+            if current == tuple(self.goal):
                 return self.reconstruct_path(current)
 
             self.closed_set.add(current)
 
-            for neighbor in self.map.get_neighbors(current):
+            for neighbor in self.map.get_neighbors(node=current,
+                                                   step_size=self.step_size):
                 if neighbor in self.closed_set:
                     continue
 
@@ -59,7 +69,7 @@ class AStarController:
         return None  # Path not found
 
     def is_collision(self, node1, node2):
-        return self.map.is_obstacle([node1, node2])
+        return self.map.is_obstacle(node1, node2)
 
     def update_map(self, new_map):
         self.map = new_map

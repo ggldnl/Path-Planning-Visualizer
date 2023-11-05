@@ -1,55 +1,29 @@
-from model.world.map.map import Map
+from model.world.map.map_rtree import Map
 
-
-# Default environment parameters
-OBS_MIN_WIDTH = 0.2  # meters
-OBS_MAX_WIDTH = OBS_MIN_WIDTH + 0.5
-OBS_MIN_HEIGHT = 0.4
-OBS_MAX_HEIGHT = OBS_MIN_HEIGHT + 0.5
-OBS_MIN_DIST = 0.8
-OBS_MAX_DIST = 5.0
-OBS_STEADY_COUNT = 10
-OBS_MOVING_COUNT = 60
-OBS_MIN_LIN_SPEED = -0.1
-OBS_MAX_LIN_SPEED = 0.1
-OBS_MIN_ANG_SPEED = -45
-OBS_MAX_ANG_SPEED = 45
-GOAL_MIN_DIST = 2.0
-GOAL_MAX_DIST = 3.0
-MIN_GOAL_CLEARANCE = 0.1
+default_params = {
+    "obs_min_dist": 0.8,
+    "obs_max_dist": 5.0,
+    "obs_min_width": 0.2,
+    "obs_max_width": 0.7,
+    "obs_min_height": 0.4,
+    "obs_max_height": 0.9,
+    "obs_steady_count": 10,
+    "obs_moving_count": 60,
+    "obs_min_lin_speed": -0.1,
+    "obs_max_lin_speed": 0.1,
+    "obs_min_ang_speed": -45,
+    "obs_max_ang_speed": 45,
+    "goal_min_dist": 2.0,
+    "goal_max_dist": 3.0,
+    "min_goal_clearance": 0.1
+}
 
 
 class MapBuilder:
 
     def __init__(self):
 
-        self.map = Map(
-
-            # Obstacle parameters
-            obs_min_dist=OBS_MIN_DIST,
-            obs_max_dist=OBS_MAX_DIST,
-
-            # If the obstacles are rectangles:
-            obs_min_width=OBS_MIN_WIDTH,
-            obs_max_width=OBS_MAX_WIDTH,
-            obs_min_height=OBS_MIN_HEIGHT,
-            obs_max_height=OBS_MAX_HEIGHT,
-
-            obs_steady_count=OBS_STEADY_COUNT,
-            obs_moving_count=OBS_MOVING_COUNT,
-
-            # Speed
-            obs_min_lin_speed=OBS_MIN_LIN_SPEED,
-            obs_max_lin_speed=OBS_MAX_LIN_SPEED,
-            obs_min_ang_speed=OBS_MIN_ANG_SPEED,
-            obs_max_ang_speed=OBS_MAX_ANG_SPEED,
-
-            # Goal parameters
-            goal_min_dist=GOAL_MIN_DIST,
-            goal_max_dist=GOAL_MAX_DIST,
-
-            min_goal_clearance=MIN_GOAL_CLEARANCE
-        )
+        self.map = Map(**default_params)
 
     @classmethod
     def _check_range(cls, a, b, min_distance=None):
