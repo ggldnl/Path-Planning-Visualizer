@@ -91,6 +91,10 @@ class Cobalt(DifferentialDriveRobot):
         self.add_sensor(front_sensor, (0, radius - 0.005, 0), is_deg=False)
         self.add_sensor(right_sensor, (-a, b, np.pi / 4), is_deg=False)
 
+        # Robot is headed on positive x values
+        for body in bodies:
+            body.rotate_around(0, 0, -90)
+
 
 if __name__ == '__main__':
 
