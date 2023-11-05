@@ -1,5 +1,5 @@
 button, input {
-	margin: 0 2px; /* exterior */
+	margin: 2px 2px; /* exterior */
 	padding: 10px 20px; /* interior */
 	height: 50px;
 	background: #262626;
@@ -36,4 +36,8 @@ button, input {
     color: #888;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+.highlighted-button {
+    border: 2px solid #ffffff;
 }

@@ -85,7 +85,6 @@ world = World(UPDATE_FREQUENCY)
 # Buffer for all the geometries that will be drawn on screen
 frame = Frame()
 
-
 # ------------------------------ generation loop ----------------------------- #
 
 def generate_data() -> Iterator[str]:
@@ -276,6 +275,24 @@ def simulation_control():
                 show_path = not show_path
             # TODO update the robot (cascading) when one of these checkboxes is ticked
             update_robot = True
+
+        if 'direction' in data:
+            dir = data['direction']
+            robot = world.robots[0]
+            target_pose = robot.target_pose
+            if dir == 'up':
+                # robot.target_pose = (target_pose[0], target_pose[1] + 0.1, 90)
+                robot.target_pose = (0.5, 0.5, 0)
+            elif dir == 'down':
+                # robot.target_pose = (target_pose[0], target_pose[1] - 0.1, 270)
+                robot.target_pose = (0.5, -0.5, 90)
+            elif dir == 'left':
+                # robot.target_pose = (target_pose[0], target_pose[1], target_pose[2] + 10)
+                robot.target_pose = (-0.5, -0.5, 180)
+            elif dir == 'right':
+                # robot.target_pose = (target_pose[0], target_pose[1], target_pose[2] - 10)
+                robot.target_pose = (-0.5, 0.5, 270)
+            print(f'Received [{dir}]: new target pose: {world.robots[0].target_pose}')
 
         response = {'status': 'Changes registered'}
         return jsonify(response)

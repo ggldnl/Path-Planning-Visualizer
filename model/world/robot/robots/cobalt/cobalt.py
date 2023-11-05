@@ -54,10 +54,10 @@ class Cobalt(DifferentialDriveRobot):
         right_wheel_pose = (-0.04, 0, 0)
 
         left_wheel_polygon = wheel_polygon.copy()
-        left_wheel_polygon.transform_to(left_wheel_pose)
+        left_wheel_polygon.transform(left_wheel_pose)
 
         right_wheel_polygon = wheel_polygon.copy()
-        right_wheel_polygon.transform_to(right_wheel_pose)
+        right_wheel_polygon.transform(right_wheel_pose)
 
         caster_wheel_radius = 0.005
         caster_wheel = Polygon([
@@ -67,7 +67,7 @@ class Cobalt(DifferentialDriveRobot):
 
         caster_wheel_pose = (0, -0.035, 0)
 
-        caster_wheel.transform_to(caster_wheel_pose)
+        caster_wheel.transform(caster_wheel_pose)
 
         bodies = [
             base_polygon,
@@ -90,6 +90,10 @@ class Cobalt(DifferentialDriveRobot):
         self.add_sensor(left_sensor, (a, b, -np.pi / 4), is_deg=False)
         self.add_sensor(front_sensor, (0, radius - 0.005, 0), is_deg=False)
         self.add_sensor(right_sensor, (-a, b, np.pi / 4), is_deg=False)
+
+        # Robot is headed on positive x values
+        for body in bodies:
+            body.rotate_around(0, 0, -90)
 
 
 if __name__ == '__main__':

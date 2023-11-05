@@ -11,7 +11,26 @@
  * @param {string} color - The color of the line (e.g., 'red', '#00FF00', 'rgba(255, 0, 0, 0.5)').
  * @param {number} width - The width of the line in pixels.
  */
-export function drawLine(ctx, x1, y1, x2, y2, color, width) {
+export function drawLine(ctx, x1, y1, x2, y2, pixelOrigin, pixelScale, color, width) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+
+    // First point
+    var x1_2 = pixelOrigin.x + x1 * pixelScale;
+    var y1_2 = pixelOrigin.y - y1 * pixelScale;
+
+    var x2_2 = pixelOrigin.x + x2 * pixelScale;
+    var y2_2 = pixelOrigin.y - y2 * pixelScale;
+
+    ctx.moveTo(x1_2, y1_2);
+
+    ctx.lineTo(x2_2, y2_2);
+
+    ctx.stroke();
+}
+
+export function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
@@ -95,17 +114,17 @@ export function drawGrid(
     );
 
     // Draw horizontal axis
-    drawLine(ctx, 0, originY, screenSize.width, originY, axisColor, 1);
+    drawGridLine(ctx, 0, originY, screenSize.width, originY, axisColor, 1);
 
     // Draw vertical axis
-    drawLine(ctx, originX, 0, originX, screenSize.height, axisColor, 1);
+    drawGridLine(ctx, originX, 0, originX, screenSize.height, axisColor, 1);
     
     // Draw grid
     var leftEdge = Math.floor(-(screenSize.width / 2 - pixelOffset.x) / pixelScale);
     var rightEdge = Math.ceil((screenSize.width / 2 + pixelOffset.x) / pixelScale);
     for (var x = leftEdge * 10; x <= rightEdge * 10; x += 1) {
         var px = originX + pixelScale * x / 10;
-        drawLine(ctx, px, 0, px, screenSize.height, gridColor, 0.25);
+        drawGridLine(ctx, px, 0, px, screenSize.height, gridColor, 0.25);
 
         // Draw a numeric reference
         if (pixelScale > 1000) {
@@ -141,7 +160,7 @@ export function drawGrid(
     var bottomEdge = Math.ceil((screenSize.height / 2 + pixelOffset.y) / pixelScale);
     for (var y = topEdge * 10; y <= bottomEdge * 10; y += 1) {
         var py = originY + pixelScale * y / 10;
-        drawLine(ctx, 0, py, screenSize.width, py, gridColor, 0.25);
+        drawGridLine(ctx, 0, py, screenSize.width, py, gridColor, 0.25);
 
         // Draw a numeric reference
         if (pixelScale > 1000) {

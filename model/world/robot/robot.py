@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from scipy.spatial import ConvexHull
+import numpy as np
 
 from model.geometry.polygon import Polygon
 
@@ -12,12 +13,16 @@ class Robot(metaclass=ABCMeta):
         self.name = name
 
         # Robot starts at the origin
-        self.pose = (0, 0, 0)
+        self.previous_pose = (0, 0, 0)
+        self.current_pose = (0, 0, 0)
+        self.target_pose = (0, 0, 0)
+
+        # Odometry
         self.estimated_pose = (0, 0, 0)
 
-        # TODO remove this, let the controller set the velocity vector
-        self.vel = (0.5, 0.5, 0)
-        self.speed_multiplier = 1
+        self.linear_velocity = 0.2  # m/s
+        self.angular_velocity = 45.0  # rad/s
+        # self.speed_multiplier = 1
 
         # Robot base consists of multiple polygons
         self.bodies = bodies
@@ -32,13 +37,17 @@ class Robot(metaclass=ABCMeta):
         # Take only the outermost among them
         hull = ConvexHull(points)
         outermost_points = [points[i] for i in hull.vertices]
-        self.body = Polygon(outermost_points)
+        self.outline = Polygon(outermost_points)
 
         # Sensor objects
         self.sensors = []
 
         # Motor objects
         self.motors = []
+
+        # Define tolerance in translation/rotation
+        self.TRANSLATION_EPSILON = 0.005  # 1mm
+        self.ROTATION_EPSILON = 5  # 5 deg
 
     def add_sensor(self, sensor, pose, is_deg=True):
 
@@ -52,17 +61,10 @@ class Robot(metaclass=ABCMeta):
         Simulate the obstacle's motion over the given time interval
         """
 
-        # Update the real pose
-        x, y, z = self.pose
-        vx, vy, vz = self.vel
-        lsm = self.speed_multiplier
-        self.pose = (
-            x + vx * lsm * dt,
-            y + vy * lsm * dt,
-            (z + vz * dt) % 360
-        )
+        # Store the current pose
+        self.previous_pose = self.current_pose
 
-        # Update the estimated pose
+        # Update the current pose
         self.apply_dynamics(dt)
 
         # Update the geometries
@@ -70,23 +72,39 @@ class Robot(metaclass=ABCMeta):
 
     def update_geometry(self):
 
+        # Compute the displacement from the previous pose
+        current_x, current_y, current_theta = self.current_pose
+        previous_x, previous_y, previous_theta = self.previous_pose
+
+        dx = current_x - previous_x
+        dy = current_y - previous_y
+        dtheta = (current_theta - previous_theta) % 360
+
         # Update the bodies
         for polygon in self.bodies:
-            polygon.transform_to(self.pose)
+            polygon.translate(dx, dy)
+            polygon.rotate_around(current_x, current_y, dtheta)
 
-        # Update the polygon
-        #self.polygon.transform_to(self.pose)
+        # Update the outline polygon
+        self.outline.translate(dx, dy)
+        self.outline.rotate_around(current_x, current_y, dtheta)
 
         # Update the sensor polygons
         for sensor in self.sensors:
-            sensor.polygon.transform_to(self.pose)
+            sensor.polygon.translate(dx, dy)
+            sensor.polygon.rotate_around(current_x, current_y, dtheta)
 
         # Update the motor polygons
         for motor in self.motors:
-            motor.polygon.transform_to(self.pose)
+            motor.polygon.translate(dx, dy)
+            motor.polygon.rotate_around(current_x, current_y, dtheta)
 
     @abstractmethod
-    def apply_dynamics(self, pose):
+    def apply_dynamics(self, dt):
+        return
+
+    @abstractmethod
+    def compute_odometry(self, dt):
         return
 
     @abstractmethod

@@ -4,8 +4,8 @@ from model.geometry.point import Point
 class Segment:
 
     def __init__(self, start, end):
-        self.start = Point(start[0], start[1])
-        self.end = Point(end[0], end[1])
+        self.start = start
+        self.end = end
 
     @property
     def bounds(self):
@@ -14,21 +14,6 @@ class Segment:
         min_y = min(self.start.y, self.end.y)
         max_y = max(self.start.y, self.end.y)
         return (min_x, min_y, max_x, max_y)
-
-    def intersects(self, polygon):
-        # Get the edges of the polygon
-        edges_polygon = polygon.get_edges()
-
-        for edge_polygon in edges_polygon:
-            axis = self._normal()  # Calculate the normal vector of the segment
-            min1, max1 = self._project(axis)
-            min2, max2 = edge_polygon._project(axis)
-
-            if max1 < min2 or max2 < min1:
-                # If there is a gap along this axis, the segment and polygon do not intersect
-                return False
-
-        return True
 
     def _normal(self):
         # Compute the normal vector of the segment

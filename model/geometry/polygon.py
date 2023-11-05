@@ -2,7 +2,6 @@ from model.geometry.point import Point
 from model.geometry.segment import Segment
 
 import numpy as np
-import json
 
 
 class Polygon:

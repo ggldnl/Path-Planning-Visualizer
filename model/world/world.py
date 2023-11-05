@@ -18,7 +18,7 @@ class World:
         self.controllers = []
 
         # Initialize the map
-        self.map = MapBuilder().build()
+        self.map = MapBuilder().set_obs_moving_count(1).set_obs_steady_count(1).build()
 
         self.map.get_map(self.robots)
         # self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
@@ -87,7 +87,7 @@ class World:
 
         for robot in self.robots:
 
-            polygon1 = robot.body
+            polygon1 = robot.outline
 
             # Robots can collide with other robots and with the obstacles
             for solid in solids:
