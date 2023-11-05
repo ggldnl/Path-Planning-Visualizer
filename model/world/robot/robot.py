@@ -17,7 +17,12 @@ class Robot(metaclass=ABCMeta):
         self.current_pose = (0, 0, 0)
         self.target_pose = (0, 0, 0)
 
-        self.speed_multiplier = 1
+        # Odometry
+        self.estimated_pose = (0, 0, 0)
+
+        self.linear_velocity = 0.2  # m/s
+        self.angular_velocity = 45.0  # rad/s
+        # self.speed_multiplier = 1
 
         # Robot base consists of multiple polygons
         self.bodies = bodies
@@ -41,7 +46,7 @@ class Robot(metaclass=ABCMeta):
         self.motors = []
 
         # Define tolerance in translation/rotation
-        self.TRANSLATION_EPSILON = 0.001  # 1mm
+        self.TRANSLATION_EPSILON = 0.005  # 1mm
         self.ROTATION_EPSILON = 5  # 5 deg
 
     def add_sensor(self, sensor, pose, is_deg=True):
@@ -96,6 +101,10 @@ class Robot(metaclass=ABCMeta):
 
     @abstractmethod
     def apply_dynamics(self, dt):
+        return
+
+    @abstractmethod
+    def compute_odometry(self, dt):
         return
 
     @abstractmethod
