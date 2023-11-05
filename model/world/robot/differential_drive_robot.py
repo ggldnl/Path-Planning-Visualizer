@@ -69,10 +69,6 @@ class DifferentialDriveRobot(Robot):
                     else:
                         current_y = target_y
 
-                print(f'current {self.current_pose} -> target {self.target_pose}')
-                print(f'current_x({current_x} | target_x({target_x}) | current_y({current_y}) | target_y({target_y})')
-                print()
-
         self.current_pose = (current_x, current_y, current_theta)
 
     def compute_odometry(self, dt):
