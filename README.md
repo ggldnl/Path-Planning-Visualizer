@@ -27,12 +27,7 @@
 - [ ] move from current, complex, translation and scale logic to
     translate() and scale() on sort of a contextManager object in javascript
 - [ ] add typing and input checking
-- [ ] add radar in gui to see sensors read from the robot
+- [ ] ~~add radar in gui to see sensors read from the robot~~
 - [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
 - [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
 - [ ] make the robot follow the shortest angle
-
-
-
-
-
