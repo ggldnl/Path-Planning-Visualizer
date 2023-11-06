@@ -247,10 +247,15 @@ def simulation_control():
             for obstacle in world.map.obstacles:
                 obstacle.angular_speed_multiplier = speed_multiplier
 
-        if 'robot_speed' in data:
-            speed_multiplier = float(data['robot_speed'])
+        if 'robot_linear_velocity' in data:
+            linear_velocity = float(data['robot_linear_velocity'])
             for robot in world.robots:
-                robot.speed_multiplier = speed_multiplier
+                robot.linear_velocity = linear_velocity
+
+        if 'robot_angular_velocity' in data:
+            angular_velocity = float(data['robot_angular_velocity'])
+            for robot in world.robots:
+                robot.angular_velocity = angular_velocity
 
         if 'random_map' in data:
             world.map.get_map(world.robots)
