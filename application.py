@@ -140,8 +140,12 @@ def generate_data() -> Iterator[str]:
                         if show_path:
                             if controller.path:
                                 points = [[x, y] for x, y in controller.path]
+
+                                robot_x, robot_y, _ = robot.current_pose
+                                frame.add_line([robot_x, robot_y], points[0], 1, '#ff0000')
+
                                 for i in range(1, len(points)):
-                                    frame.add_lines(points[i - 1], points[i], 6, '#ff0000')
+                                    frame.add_line(points[i - 1], points[i], 1, '#ff0000')
 
                         frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
 
