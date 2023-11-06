@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from ..map.map import Map
+from ..map.map_rtree import Map
 
 
 class Controller(metaclass=ABCMeta):
