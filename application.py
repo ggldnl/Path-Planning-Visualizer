@@ -28,6 +28,7 @@ import logging
 import sys
 import time
 from typing import Iterator
+import numpy as np
 
 # Flask imports
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
@@ -279,19 +280,35 @@ def simulation_control():
         if 'direction' in data:
             dir = data['direction']
             robot = world.robots[0]
-            target_pose = robot.target_pose
+
+            step_size = 0.1  # m
+            x, y, theta = robot.current_pose
+
             if dir == 'up':
-                # robot.target_pose = (target_pose[0], target_pose[1] + 0.1, 90)
-                robot.target_pose = (0.5, 0.5, 0)
+
+                new_x = x + step_size * np.cos(np.deg2rad(theta))
+                new_y = y + step_size * np.sin(np.deg2rad(theta))
+                delta_x = new_x - x
+                delta_y = new_y - y
+                new_theta = np.rad2deg(np.arctan2(delta_y, delta_x))
+
+                robot.target_pose = (new_x, new_y, new_theta)
+
             elif dir == 'down':
-                # robot.target_pose = (target_pose[0], target_pose[1] - 0.1, 270)
-                robot.target_pose = (0.5, -0.5, 90)
+
+                # new_x = x + step_size * np.cos(np.deg2rad(theta))
+                # new_y = y + step_size * np.sin(np.deg2rad(theta))
+                # robot.target_pose = (new_x, new_y, theta)
+                pass
+
             elif dir == 'left':
-                # robot.target_pose = (target_pose[0], target_pose[1], target_pose[2] + 10)
-                robot.target_pose = (-0.5, -0.5, 180)
+
+                robot.target_pose = (x, y, theta + 10)
+
             elif dir == 'right':
-                # robot.target_pose = (target_pose[0], target_pose[1], target_pose[2] - 10)
-                robot.target_pose = (-0.5, 0.5, 270)
+
+                robot.target_pose = (x, y, theta - 10)
+
             print(f'Received [{dir}]: new target pose: {world.robots[0].target_pose}')
 
         response = {'status': 'Changes registered'}
@@ -309,6 +326,6 @@ if __name__ == "__main__":
     # controller = None
     # world.add_robot(robot, controller)
     robot = Cobalt()
-    controller = AStarController(world.map, robot)
+    controller = AStarController(world.map.goal, robot)
     world.add_robot(robot, controller)
     application.run(host="0.0.0.0", port=5000, threaded=True)

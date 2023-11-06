@@ -4,8 +4,8 @@ from model.geometry.point import Point
 class Segment:
 
     def __init__(self, start, end):
-        self.start = start
-        self.end = end
+        self.start = Point(start[0], start[1])
+        self.end = Point(end[0], end[1])
 
     @property
     def bounds(self):

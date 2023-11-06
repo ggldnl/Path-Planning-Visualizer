@@ -1,3 +1,5 @@
+import numpy as np
+
 from model.world.map.map_builder import MapBuilder
 import model.geometry.utils as utils
 from model.exceptions.collision_exception import CollisionException
@@ -18,7 +20,7 @@ class World:
         self.controllers = []
 
         # Initialize the map
-        self.map = MapBuilder().set_obs_moving_count(1).set_obs_steady_count(1).build()
+        self.map = MapBuilder().set_obs_moving_count(2).set_obs_steady_count(100).build()
 
         self.map.get_map(self.robots)
         # self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
@@ -50,15 +52,22 @@ class World:
                 break
             # TODO path.
             if self.idx == 1:
-                #path = controller.search()
-                pass
-            path = controller.search()
-            print(path)
+                # path = controller.search()
+                #pass
+                path = controller.search(self.map)
+                print(path)
             if controller.path:
                 print(controller.path)
-                robot.apply_dynamics(controller.path.pop())
+                if robot.is_at_target():
+                    next_pose = controller.path.pop()
+                    new_x = next_pose[0]
+                    new_y = next_pose[1]
+                    delta_x = new_x - robot.current_pose[0]
+                    delta_y = new_y - robot.current_pose[1]
+                    new_theta = np.rad2deg(np.arctan2(delta_y, delta_x))
+                    robot.target_pose = (next_pose[0], next_pose[1], new_theta)
+            robot.step_motion(dt)
         self.idx += 1
-
 
         # print(self.map.obstacles[0].polygon)
         # print(self.map.obstacles[0].pose)
