@@ -79,10 +79,6 @@ class World:
         # Increment world time
         self.world_time += dt
 
-    def search(self):
-        for controller in self.controllers:
-            controller.search()  # todo to be sync and not having an instance on controller
-
     def apply_physics(self):
         self._detect_collisions()
 

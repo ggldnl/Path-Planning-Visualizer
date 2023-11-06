@@ -199,7 +199,7 @@ class Polygon:
 
     def transform_to(self, pose, is_deg=True):
         self.translate_to(pose[0], pose[1])
-        #self.rotate_to(pose[2], is_deg)
+        self.rotate_to(pose[2], is_deg)
 
     def _find_center(self):
         total_x = sum(point.x for point in self.points)

@@ -181,8 +181,6 @@ def generate_data() -> Iterator[str]:
                     # Dump the data
                     json_data = frame.to_json()
 
-
-
                     if stepping:
                         stepping = False
 
@@ -191,8 +189,6 @@ def generate_data() -> Iterator[str]:
 
                     # Check for collisions; if the case, stop
                     world.apply_physics()
-
-                    #world.search()
 
                 except CollisionException:
                     running = False

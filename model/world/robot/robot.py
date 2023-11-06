@@ -112,6 +112,5 @@ class Robot(metaclass=ABCMeta):
         # Number of motors is constrained based on the type of the robot
         return
 
-
     def is_at_target(self):
         return self.current_pose == self.target_pose

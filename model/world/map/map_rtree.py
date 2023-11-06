@@ -40,6 +40,9 @@ class Map:
 
                  min_goal_clearance
                  ):
+
+        # Set parameters
+
         # Distance from the center (spawning point)
         self.obs_min_dist = obs_min_dist
         self.obs_max_dist = obs_max_dist
