@@ -1,27 +1,15 @@
 
-/**
- * Draws a straight line on the canvas context ctx from the point (x1, y1)
- * to the point (x2, y2) with the specified line color and width.
- *
- * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw the line.
- * @param {number} x1 - The x-coordinate of the starting point of the line.
- * @param {number} y1 - The y-coordinate of the starting point of the line.
- * @param {number} x2 - The x-coordinate of the ending point of the line.
- * @param {number} y2 - The y-coordinate of the ending point of the line.
- * @param {string} color - The color of the line (e.g., 'red', '#00FF00', 'rgba(255, 0, 0, 0.5)').
- * @param {number} width - The width of the line in pixels.
- */
-export function drawLine(ctx, x1, y1, x2, y2, pixelOrigin, pixelScale, color, width) {
+export function drawLine(ctx, p1, p2, pixelOrigin, pixelScale, color, width) {
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
 
     // First point
-    var x1_2 = pixelOrigin.x + x1 * pixelScale;
-    var y1_2 = pixelOrigin.y - y1 * pixelScale;
+    var x1_2 = pixelOrigin.x + p1[0] * pixelScale;
+    var y1_2 = pixelOrigin.y - p1[1] * pixelScale;
 
-    var x2_2 = pixelOrigin.x + x2 * pixelScale;
-    var y2_2 = pixelOrigin.y - y2 * pixelScale;
+    var x2_2 = pixelOrigin.x + p2[0] * pixelScale;
+    var y2_2 = pixelOrigin.y - p2[1] * pixelScale;
 
     ctx.moveTo(x1_2, y1_2);
 
@@ -30,7 +18,7 @@ export function drawLine(ctx, x1, y1, x2, y2, pixelOrigin, pixelScale, color, wi
     ctx.stroke();
 }
 
-export function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
+function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
@@ -39,16 +27,6 @@ export function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
     ctx.stroke();
 }
 
-/**
- * Draws a circle with radius r on the canvas in (x,y).
- *
- * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw the circle.
- * @param {number} x - The x-coordinate of the center of the circle.
- * @param {number} y - The y-coordinate of the center of the circle.
- * @param {number} radius - The radius of the circle in pixels.
- * @param {string} color - The color of the circle's outline or fill (e.g., 'blue', '#FFA500', 'rgba(0, 0, 255, 0.8)').
- * @param {boolean} filled - A boolean value indicating whether the circle should be filled (`true`) or only outlined (`false`).
- */
 export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, fillColor, borderColor=null) {
 
     // Position of the circle in the new coordinate frame
@@ -72,19 +50,6 @@ export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, fi
     ctx.closePath();
 }
 
-/**
- * Draws a cartesian grid on the canvas with the specified properties.
- *
- * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw.
- * @param {Object} pixelOffset - An object containing x and y pixel offsets (translation).
- * @param {number} pixelScale - The scale factor for mapping pixels to coordinates.
- * @param {Object} screenSize - An object containing the width and height of the canvas/screen.
- * @param {Object} textOffset - An object containing x and y offsets of text elements wrt the axis.
- * @param {string} backgroundColor - The background color of the canvas.
- * @param {string} axisColor - The color of the horizontal and vertical axes.
- * @param {string} gridColor - The color of the grid lines.
- * @param {string} textColor - The color of the text.
- */
 export function drawGrid(
         ctx,
         pixelOffset,
@@ -191,15 +156,6 @@ export function drawGrid(
     }
 }
 
-/**
- * Draws a polygon on the canvas context.
- *
- * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw the polygon.
- * @param {Array} points - An array of objects representing the points of the polygon, each having x and y coordinates.
- * @param {string} color - The color of the polygon's outline or fill (e.g., 'green', '#FFA500', 'rgba(255, 0, 0, 0.8)').
- * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
- * @param {boolean} filled - A boolean value indicating whether the polygon should be filled or only outlined.
- */
 export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, borderColor=null) {
 
     if (points.length > 0) {
@@ -207,16 +163,20 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, bor
         ctx.beginPath();
 
         // First point
-        var x = pixelOrigin.x + points[0][0] * pixelScale;
-        var y = pixelOrigin.y - points[0][1] * pixelScale;
+        var x0 = pixelOrigin.x + points[0][0] * pixelScale;
+        var y0 = pixelOrigin.y - points[0][1] * pixelScale;
 
-        ctx.moveTo(x, y);
+        ctx.moveTo(x0, y0);
 
+        var x = 0;
+        var y = 0;
         for (let i = 1; i < points.length; i++) {
             x = pixelOrigin.x + points[i][0] * pixelScale;
             y = pixelOrigin.y - points[i][1] * pixelScale;
             ctx.lineTo(x, y);
         }
+
+        ctx.lineTo(x0, y0);
 
         ctx.fillStyle = fillColor;
         ctx.fill();
@@ -232,18 +192,6 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, bor
     }
 }
 
-/**
- * Draws a polygon inscribed into the specified circumference on the canvas.
- *
- * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context on which to draw the polygon.
- * @param {number} x - The x-coordinate of the center of the polygon.
- * @param {number} y - The y-coordinate of the center of the polygon.
- * @param {number} radius - The radius of the circumscribed circle of the polygon.
- * @param {number} sides - The number of sides of the polygon (e.g., 3 for a triangle, 5 for a pentagon, etc.).
- * @param {string} color - The color of the polygon's outline or fill (e.g., 'green', '#FFA500', 'rgba(255, 0, 0, 0.8)').
- * @param {string} lineJoin - Line join type (e.g. 'round' to smooth the edges of the polygon).
- * @param {boolean} filled - A boolean value indicating whether the polygon should be filled (`true`) or only outlined (`false`).
- */
 export function drawCircumscribedPolygon(ctx, x, y, radius, sides, filLColor, borderColor=null) {
     ctx.lineJoin = 'round';
     ctx.beginPath();

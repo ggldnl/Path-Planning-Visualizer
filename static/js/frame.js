@@ -44,10 +44,11 @@ export class Frame {
     )
   }
 
-  addLine(line, lineWidth, fillColor, borderColor = null) {
+  addLine(p1, p2, lineWidth, fillColor, borderColor = null) {
     this.drawList.push({
       type: "line",
-      lines: line,
+      p1: p1,
+      p2: p2,
       lineWidth: lineWidth,
       fillColor: fillColor,
       borderColor: borderColor,
@@ -56,7 +57,8 @@ export class Frame {
 
   addLineFromDict(dict) {
     this.addLine(
-        dict['line'],
+        dict['p1'],
+        dict['p2'],
         dict['line_width'],
         dict['fill_color'],
         dict['border_color']

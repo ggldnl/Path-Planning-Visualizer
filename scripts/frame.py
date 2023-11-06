@@ -37,20 +37,21 @@ class Frame:
         for polygon in polygons:
             self.add_polygon(polygon, fill_color, border_color)
 
-    def add_line(self, line, line_width, fill_color, border_color=None):
+    def add_line(self, p1, p2, line_width, fill_color, border_color=None):
         self.draw_list.append(
             {
                 "type": "line",
-                "points": line,  # TODO uniform with polygon
+                "p1": p1,
+                "p2": p2,
                 "line_width": line_width,
                 "fill_color": fill_color,
                 "border_color": border_color,
             }
         )
 
-    def add_lines(self, lines, line_widths, fill_color, border_color=None):
-        for line, line_width in zip(lines, line_widths):
-            self.add_line(line, line_width, fill_color, border_color)
+    def add_lines(self, p1s, p2s, line_widths, fill_color, border_color=None):
+        for p1, p2, line_width in zip(p1s, p2s, line_widths):
+            self.add_line(p1, p2, line_width, fill_color, border_color)
 
     def to_json(self):
         return json.dumps(self.draw_list)

@@ -144,6 +144,10 @@ def generate_data() -> Iterator[str]:
                     # Clear the frame
                     frame.clear()
 
+                    frame.add_line([0, 0], [1, 1], 1, '#FF0000')
+                    frame.add_line([1, 1], [2, 1], 1, '#FF0000')
+                    frame.add_line([2, 1], [3, 2], 1, '#FF0000')
+
                     # Add the robot to the frame
                     for robot in world.robots:
 
