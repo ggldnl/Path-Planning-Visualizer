@@ -159,11 +159,9 @@ class Map:
         obs_dist_range = self.obs_max_dist - self.obs_min_dist
 
         # test_geometries contains the robots and the goal
-        test_geometries = [r.body for r in robots] + [
+        test_geometries = [r.outline for r in robots] + [
             goal_test_geometry
-        ] + [
-                              start_test_geometry
-                          ]
+        ] + [ start_test_geometry ]
 
         # Generate moving obstacles
         obstacles = []
