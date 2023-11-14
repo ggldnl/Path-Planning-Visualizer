@@ -1,5 +1,5 @@
 from numbers import Number
-import math
+import numpy as np
 
 
 class Point:
@@ -144,7 +144,7 @@ class Point:
 
     def distance(self, other):
         if isinstance(other, Point):
-            return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+            return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
         raise ValueError('Unsupported distance operation')
 
     def to_dict(self):
