@@ -21,14 +21,14 @@ class Point:
             return self.x
         elif index == 1:
             return self.y
-        raise IndexError('Point index out of range')
+        raise IndexError(f'Point index out of range: {index}')
 
     def __setitem__(self, key, value):
         if key == 0:
             self.x = value
         elif key == 1:
             self.y = value
-        raise IndexError('Point index out of range')
+        raise IndexError(f'Point index out of range: {key}')
 
     # Python 3.x uses __truediv__ and __floordiv__. __div__ is 2.x-only.
 
