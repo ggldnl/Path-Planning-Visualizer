@@ -1,6 +1,7 @@
 from model.world.map.map import Map
 from model.geometry.point import Point
 from model.world.map.obstacle import Obstacle
+from model.geometry.intersection import check_intersection
 
 import pickle
 import json
@@ -23,6 +24,13 @@ class StandardMap(Map):
 
     def reset_map(self):
         self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
+
+    def query_region(self, region):
+        result = []
+        for i in range(len(self.obstacles)):
+            if check_intersection(region, self.obstacles[i]):
+                result.append(i)
+        return result
 
     def save_as_pickle(self, filename):
         with open(filename, "wb") as file:
