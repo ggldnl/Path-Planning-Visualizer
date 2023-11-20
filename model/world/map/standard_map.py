@@ -18,6 +18,9 @@ class StandardMap(Map):
         self.obstacles.append(obstacle)
         self.initial_obstacles.append(obstacle.copy())
 
+    def step_motion(self, dt):
+        pass
+
     def reset_map(self):
         self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
 
