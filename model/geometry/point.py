@@ -1,5 +1,5 @@
 from numbers import Number
-import math
+import numpy as np
 
 
 class Point:
@@ -21,7 +21,14 @@ class Point:
             return self.x
         elif index == 1:
             return self.y
-        raise IndexError("Point index out of range")
+        raise IndexError(f'Point index out of range: {index}')
+
+    def __setitem__(self, key, value):
+        if key == 0:
+            self.x = value
+        elif key == 1:
+            self.y = value
+        raise IndexError(f'Point index out of range: {key}')
 
     # Python 3.x uses __truediv__ and __floordiv__. __div__ is 2.x-only.
 
@@ -137,7 +144,7 @@ class Point:
 
     def distance(self, other):
         if isinstance(other, Point):
-            return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+            return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
         raise ValueError('Unsupported distance operation')
 
     def to_dict(self):

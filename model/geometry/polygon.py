@@ -1,10 +1,11 @@
 from model.geometry.point import Point
 from model.geometry.segment import Segment
+from model.geometry.shape import Shape
 
 import numpy as np
 
 
-class Polygon:
+class Polygon(Shape):
 
     def __init__(self, points):
         """
@@ -25,21 +26,20 @@ class Polygon:
             else:
                 raise ValueError(f'Invalid object {point}')
 
-        # Initialize internal angle to 0 degrees
-        self.angle = 0
+        # Super will instantiate the pose object
+        super().__init__()
 
-        self.center = self._find_center()
+        # Find the center and set pose x and y values
+        self._find_center()
+
+        # Find the enclosing radius
         self.radius = self._find_radius()
-
-    @property
-    def bounds(self):
-        return self.get_bounding_box(as_tuple=True)
 
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
 
         if num_sides < 3:
-            raise ValueError("Number of sides must be at least 3")
+            raise ValueError('Number of sides must be at least 3')
 
         angles = np.linspace(0, 2 * np.pi, num_sides, endpoint=False)
 
@@ -65,12 +65,6 @@ class Polygon:
 
         return cls(points)
 
-    def to_point_array(self):
-        return [[point.x, point.y] for point in self.points]
-
-    def to_dict(self):
-        return {'points': [point.to_dict() for point in self.points]}
-
     @classmethod
     def from_dict(cls, dictionary):
 
@@ -82,7 +76,13 @@ class Polygon:
 
         return Polygon(points)
 
-    def get_bounding_box(self, as_tuple=False):
+    def to_point_array(self):
+        return [[point.x, point.y] for point in self.points]
+
+    def to_dict(self):
+        return {'points': [point.to_dict() for point in self.points]}
+
+    def get_bounding_box(self):
         """
         Returns the bounding box of the polygon.
         """
@@ -99,15 +99,7 @@ class Polygon:
             min_y = min(min_y, point.y)
             max_y = max(max_y, point.y)
 
-        if as_tuple:
-            return (min_x, min_y, max_x, max_y)
-
-        return Polygon([
-            Point(min_x, min_y),
-            Point(min_x, max_y),
-            Point(max_x, max_y),
-            Point(max_x, min_y)
-        ])
+        return min_x, min_y, max_x, max_y
 
     def _find_radius(self):
         """
@@ -116,10 +108,17 @@ class Polygon:
 
         radius = 0
         for point in self.points:
-            distance = self.center.distance(point)
+            distance = np.sqrt((self.pose.x - point.x) ** 2 + (self.pose.y - point.y) ** 2)
             radius = max(radius, distance)
 
         return radius
+
+    def _find_center(self):
+        total_x = sum(point.x for point in self.points)
+        total_y = sum(point.y for point in self.points)
+        num_points = len(self.points)
+        self.pose.x = total_x / num_points
+        self.pose.y = total_y / num_points
 
     def translate(self, offset_x, offset_y):
 
@@ -127,104 +126,97 @@ class Polygon:
             point.x += offset_x
             point.y += offset_y
 
-        # Update the center
-        self.center = self._find_center()
+        self.pose.x += offset_x
+        self.pose.y += offset_y
 
-    def rotate_around(self, x, y, angle, is_deg=True):
+    def rotate_around_pose(self, pose):
+        x, y, theta = pose
+        self.rotate_around(x, y, theta)
+
+    def rotate_around(self, x, y, angle):
         """
-        Rotate the polygon around a specified point by the specified angle.
+        Rotate the polygon around a specified point by the specified angle (in radians).
         """
 
-        if is_deg:
-            angle_radians = np.deg2rad(angle)
-        else:
-            angle_radians = angle
+        if not 0 <= angle <= 2 * np.pi:
+            raise ValueError(f'Angle {angle} is not in radians')
 
         # Apply rotation to each point
         for point in self.points:
+
             # Translate the point to the origin (center) of rotation
             translated_x = point.x - x
             translated_y = point.y - y
 
             # Perform the rotation
-            new_x = translated_x * np.cos(angle_radians) - translated_y * np.sin(angle_radians)
-            new_y = translated_x * np.sin(angle_radians) + translated_y * np.cos(angle_radians)
+            new_x = translated_x * np.cos(angle) - translated_y * np.sin(angle)
+            new_y = translated_x * np.sin(angle) + translated_y * np.cos(angle)
 
             # Translate the point back to its original position
             point.x = new_x + x
             point.y = new_y + y
 
-        self.center = self._find_center()
+        # Update the center
+        self._find_center()
 
-    def rotate(self, angle, is_deg=True):
+    def rotate(self, angle):
         """
         Rotate around the center by the specified angle
         """
 
-        if is_deg:
-            angle_radians = np.deg2rad(angle)
-            self.angle += angle
-        else:
-            angle_radians = angle
-            self.angle += np.rad2deg(angle)
-
         # Apply rotation to each point
         for point in self.points:
             # Translate the point to the origin (center) of rotation
-            translated_x = point.x - self.center.x
-            translated_y = point.y - self.center.y
+            translated_x = point.x - self.pose.x
+            translated_y = point.y - self.pose.y
 
             # Perform the rotation
-            new_x = translated_x * np.cos(angle_radians) - translated_y * np.sin(angle_radians)
-            new_y = translated_x * np.sin(angle_radians) + translated_y * np.cos(angle_radians)
+            new_x = translated_x * np.cos(angle) - translated_y * np.sin(angle)
+            new_y = translated_x * np.sin(angle) + translated_y * np.cos(angle)
 
             # Translate the point back to its original position
-            point.x = new_x + self.center.x
-            point.y = new_y + self.center.y
+            point.x = new_x + self.pose.x
+            point.y = new_y + self.pose.y
 
-    def transform(self, pose, is_deg=True):
+    def transform(self, pose):
         x, y, alpha = pose
         self.translate(x, y)
-        self.rotate(alpha, is_deg)
+        self.rotate(alpha)
 
     def translate_to(self, x, y):
-        offset_x = x - self.center.x
-        offset_y = y - self.center.y
+        offset_x = x - self.pose.x
+        offset_y = y - self.pose.y
         self.translate(offset_x, offset_y)
 
-    def rotate_to(self, target_angle, is_deg=True):
+    def rotate_to(self, target_angle):
         # Compute the angle difference
-        angle_diff = target_angle - self.angle
-        self.rotate(angle_diff, is_deg)
+        angle_diff = target_angle - self.pose.theta
+        self.rotate(angle_diff)
 
-    def transform_to(self, pose, is_deg=True):
-        self.translate_to(pose[0], pose[1])
-        self.rotate_to(pose[2], is_deg)
+    def transform_to_pose(self, pose):
+        x, y, theta = pose
+        self.translate_to(x, y)
+        self.rotate_to(theta)
 
-    def _find_center(self):
-        total_x = sum(point.x for point in self.points)
-        total_y = sum(point.y for point in self.points)
-        num_points = len(self.points)
-        center_x = total_x / num_points
-        center_y = total_y / num_points
-        return Point(center_x, center_y)
+    def transform_to(self, x, y, theta):
+        self.translate_to(x, y)
+        self.rotate_to(theta)
 
     def get_edges(self):
         # Get the edges of the polygon
         edges = []
         for i in range(len(self.points)):
-            edge = (self.points[i], self.points[(i + 1) % len(self.points)])
+            edge = Segment(self.points[i], self.points[(i + 1) % len(self.points)])
             edges.append(edge)
         return edges
 
-    @classmethod
-    def _normal(cls, edge):
-        # Calculate the normal vector of an edge
-        p1, p2 = edge
-        return Point(-(p2.y - p1.y), p2.x - p1.x)
+    def check_nearness(self, other):
+        return self.pose.distance(other.pose) <= self.radius + other.radius
 
-    def _project(self, axis):
-        # Project the polygon onto an axis and return the min and max values
+    def project(self, axis):
+        """
+        Project the polygon onto an axis and return the min and max values
+        """
         min_proj = float('inf')
         max_proj = float('-inf')
         for point in self.points:
@@ -234,27 +226,6 @@ class Polygon:
             if projection > max_proj:
                 max_proj = projection
         return min_proj, max_proj
-
-    def intersects(self, other):
-
-        # Check if the input is a Polygon or a Line
-        if isinstance(other, Polygon):
-            edges_other = other.get_edges()
-        elif isinstance(other, Segment):
-            edges_other = [(other.start, other.end)]
-        else:
-            raise ValueError("Input must be a Polygon or a Line")
-
-        for edge in self.get_edges() + edges_other:
-            axis = self._normal(edge)
-            min1, max1 = self._project(axis)
-            min2, max2 = other._project(axis)
-
-            if max1 < min2 or max2 < min1:
-                # If there is a gap along this axis, the polygons do not intersect
-                return False
-
-        return True
 
     def copy(self):
         """
@@ -292,3 +263,21 @@ class Polygon:
     def __str__(self):
         point_str = ', '.join(str(point) for point in self.points)
         return f"Polygon(points=[{point_str}])"
+
+    def __getitem__(self, item):
+
+        if item < 0 or item > len(self.points) - 1:
+            raise IndexError(f'Polygon point index out of range: {item}')
+        return self.points[item]
+
+    def __setitem__(self, key, value):
+
+        if not isinstance(value, Point):
+            raise ValueError(f'Invalid object {type(value)}; must be Point.')
+
+        if key < 0 or key > len(self.points) - 1:
+            raise IndexError(f'Polygon point index out of range: {key}')
+
+        self.points[key] = value
+        self.radius = self._find_radius()
+        self._find_center()

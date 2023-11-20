@@ -1,5 +1,6 @@
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.geometry.polygon import Polygon
+from model.geometry.pose import Pose
 
 import numpy as np
 
@@ -50,8 +51,8 @@ class Cobalt(DifferentialDriveRobot):
             [wheel_height / 2, -wheel_radius]
         ])
 
-        left_wheel_pose = (0.04, 0, 0)
-        right_wheel_pose = (-0.04, 0, 0)
+        left_wheel_pose = Pose(0.04, 0, 0)
+        right_wheel_pose = Pose(-0.04, 0, 0)
 
         left_wheel_polygon = wheel_polygon.copy()
         left_wheel_polygon.transform(left_wheel_pose)
@@ -65,7 +66,7 @@ class Cobalt(DifferentialDriveRobot):
             for angle in np.linspace(0, 2 * np.pi, 8)
         ])
 
-        caster_wheel_pose = (0, -0.035, 0)
+        caster_wheel_pose = Pose(0, -0.035, 0)
 
         caster_wheel.transform(caster_wheel_pose)
 
@@ -76,24 +77,34 @@ class Cobalt(DifferentialDriveRobot):
             caster_wheel
         ]
 
-        super().__init__(bodies)
+        # Define the wheelbase
+        wheelbase = 0.035 * 2
+
+        super().__init__(bodies, wheelbase)
 
         # Add the sensors
-        left_sensor = ProximitySensor('left_sensor', 0.04, 30, is_deg=True)
-        front_sensor = ProximitySensor('front_sensor', 0.04, 30, is_deg=True)
-        right_sensor = ProximitySensor('right_sensor', 0.04, 30, is_deg=True)
+        left_sensor = ProximitySensor('left_sensor', 0.04, np.pi/6)
+        front_sensor = ProximitySensor('front_sensor', 0.04, np.pi/6)
+        right_sensor = ProximitySensor('right_sensor', 0.04, np.pi/6)
+
+        left_sensor_angle = np.pi / 6
+        right_sensor_angle = -left_sensor_angle
 
         # Left and right sensors are at 45 and 135 deg
-        a = radius * np.cos(np.pi / 4) - 0.005  # Subtract half a centimeter to make the sensor fit inside the robot
-        b = radius * np.sin(np.pi / 4) - 0.005
+        a = (radius - 0.005) * np.cos(left_sensor_angle)  # Subtract half a centimeter to fit the sensors inside
+        b = (radius - 0.005) * np.sin(left_sensor_angle)
 
-        self.add_sensor(left_sensor, (a, b, -np.pi / 4), is_deg=False)
-        self.add_sensor(front_sensor, (0, radius - 0.005, 0), is_deg=False)
-        self.add_sensor(right_sensor, (-a, b, np.pi / 4), is_deg=False)
+        self.add_sensor(left_sensor, Pose(-a, b, left_sensor_angle))
+        self.add_sensor(front_sensor, Pose(0, radius - 0.005, 0))
+        self.add_sensor(right_sensor, Pose(a, b, right_sensor_angle))
 
         # Robot is headed on positive x values
+        orientation = 3/2 * np.pi
         for body in bodies:
-            body.rotate_around(0, 0, -90)
+            body.rotate_around(0, 0, orientation)
+
+        for sensor in self.sensors:
+            sensor.polygon.rotate_around(0, 0, orientation)
 
 
 if __name__ == '__main__':
@@ -106,13 +117,13 @@ if __name__ == '__main__':
     plt.figure()
 
     for polygon in robot.bodies:
-        x = [point.x for point in polygon.points]
-        y = [point.y for point in polygon.points]
+        x = [point.x for point in polygon.points] + [polygon.points[0].x]
+        y = [point.y for point in polygon.points] + [polygon.points[0].y]
         plt.plot(x, y, color='blue')
 
     for sensor in robot.sensors:
-        x = [point.x for point in sensor.polygon.points]
-        y = [point.y for point in sensor.polygon.points]
+        x = [point.x for point in sensor.polygon.points] + [sensor.polygon.points[0].x]
+        y = [point.y for point in sensor.polygon.points] + [sensor.polygon.points[0].y]
         plt.plot(x, y, color='green')
 
     plt.title("Projected XY Points")

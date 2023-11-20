@@ -3,6 +3,7 @@ from scipy.spatial import ConvexHull
 import numpy as np
 
 from model.geometry.polygon import Polygon
+from model.geometry.pose import Pose
 
 
 class Robot(metaclass=ABCMeta):
@@ -13,16 +14,15 @@ class Robot(metaclass=ABCMeta):
         self.name = name
 
         # Robot starts at the origin
-        self.previous_pose = (0, 0, 0)
-        self.current_pose = (0, 0, 0)
-        self.target_pose = (0, 0, 0)
+        self.previous_pose = Pose(0, 0, 0)  # theta = 0 -> robot headed on positive x
+        self.current_pose = Pose(0, 0, 0)
+        self.target_pose = Pose(0, 0, 0)
 
         # Odometry
-        self.estimated_pose = (0, 0, 0)
+        self.estimated_pose = Pose(0, 0, 0)
 
         self.linear_velocity = 0.2  # m/s
-        self.angular_velocity = 45.0  # rad/s
-        # self.speed_multiplier = 1
+        self.angular_velocity = 0.005  # rad/s
 
         # Robot base consists of multiple polygons
         self.bodies = bodies
@@ -46,14 +46,14 @@ class Robot(metaclass=ABCMeta):
         self.motors = []
 
         # Define tolerance in translation/rotation
-        self.TRANSLATION_EPSILON = 0.005  # 1mm
         self.ROTATION_EPSILON = 5  # 5 deg
 
-    def add_sensor(self, sensor, pose, is_deg=True):
+    def add_sensor(self, sensor, pose):
 
         # The pose is relative to the center of the robot
-        sensor.polygon.rotate_around(0, 0, pose[2], is_deg)
-        sensor.polygon.translate(pose[0], pose[1])
+        # sensor.polygon.rotate_around(0, 0, pose.theta)
+        # sensor.polygon.translate(pose.x, pose.y)
+        sensor.polygon.transform(pose)
         self.sensors.append(sensor)
 
     def step_motion(self, dt):
@@ -78,7 +78,7 @@ class Robot(metaclass=ABCMeta):
 
         dx = current_x - previous_x
         dy = current_y - previous_y
-        dtheta = (current_theta - previous_theta) % 360
+        dtheta = (current_theta - previous_theta) % (2 * np.pi)
 
         # Update the bodies
         for polygon in self.bodies:

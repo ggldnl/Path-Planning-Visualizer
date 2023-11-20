@@ -1,8 +1,8 @@
 import numpy as np
 
 from model.world.map.map_builder import MapBuilder
-import model.geometry.utils as utils
 from model.exceptions.collision_exception import CollisionException
+from model.geometry.intersection import check_intersection
 
 
 class World:
@@ -19,11 +19,12 @@ class World:
         # Initialize lists of world objects
         self.controllers = []
 
-        # Initialize the map
-        self.map = MapBuilder().set_obs_moving_count(2).set_obs_steady_count(100).build()
+        # Initialize the map_legacy
+        self.map = MapBuilder().set_obs_moving_count(20).set_obs_steady_count(20).build()
 
-        self.map.get_map(self.robots)
-        # self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_test.json')
+        # TODO bug: map is generated before we add robots; we can add robots over obstacles
+        self.map.generate(self.robots)
+        # self.map_legacy.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map_legacy/maps/map_test.json')
 
     def set_period(self, dt):
         self.dt = dt
@@ -34,7 +35,9 @@ class World:
 
     def reset_robots(self):
         for robot in self.robots:
-            robot.pose = (0, 0, 0)
+            robot.pose.x = 0
+            robot.pose.y = 0
+            robot.pose.z = 0
 
     def step(self):
         """
@@ -43,7 +46,13 @@ class World:
 
         dt = self.dt
 
+        """
+        for controller in self.controllers:
+            controller.step_motion(self.map_legacy)
+        """
+
         # Step all the obstacles
+        # TODO setup controllers
         for obstacle in self.map.obstacles:
             obstacle.step_motion(dt)
 
@@ -101,8 +110,7 @@ class World:
 
                     polygon2 = solid.polygon  # polygon2
 
-                    if utils.check_nearness(
-                            polygon1, polygon2
-                    ):  # Don't bother testing objects that are not near each other
-                        if polygon1.intersects(polygon2):
+                    # Don't bother testing objects that are not near each other
+                    if polygon1.check_nearness(polygon2):
+                        if check_intersection(polygon1, polygon2):
                             raise CollisionException(f'Robot {robot.name} collided with an obstacle.')
