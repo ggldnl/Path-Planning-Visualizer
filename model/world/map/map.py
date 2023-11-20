@@ -86,6 +86,10 @@ class Map:
 
         self.current_goal = None
 
+    @property
+    def goal(self):
+        return self.current_goal
+
     @abstractmethod
     def _add_obstacle(self, obstacle):
         pass

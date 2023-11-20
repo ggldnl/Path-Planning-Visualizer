@@ -54,3 +54,21 @@ class StandardMap(Map):
         self.obstacles = obstacles
         self.initial_obstacles = [obstacle.copy() for obstacle in self.obstacles]
         print('Map updated!')
+
+
+    def get_neighbors(self, node, step_size=1, decimal_places=1):
+        if len(node) == 3:
+            x, y, z = node
+        elif len(node) == 2:
+            x, y = node
+        neighbors = [
+            (round(x - step_size, decimal_places), round(y, decimal_places)),
+            (round(x + step_size, decimal_places), round(y, decimal_places)),
+            (round(x, decimal_places), round(y - step_size, decimal_places)),
+            (round(x, decimal_places), round(y + step_size, decimal_places)),
+            (round(x - step_size, decimal_places), round(y - step_size, decimal_places)),
+            (round(x + step_size, decimal_places), round(y - step_size, decimal_places)),
+            (round(x - step_size, decimal_places), round(y + step_size, decimal_places)),
+            (round(x + step_size, decimal_places), round(y + step_size, decimal_places)),
+        ]
+        return neighbors

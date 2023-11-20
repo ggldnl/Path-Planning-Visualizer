@@ -1,21 +1,21 @@
 import heapq
 import math
 
-from model.world.map.map_rtree import Map
 from model.world.robot.robot import Robot
 
 
 class AStarController:
     def __init__(self, goal, robot: Robot):
         self.path = []
-        self.start = robot.current_pose #todo check if needed
+        self.start = robot.current_pose  # todo check if needed
         self.step_size = 0.1
 
-        self.open_set = [] #nodes to be explored.
-        self.closed_set = set() #explored nodes
+        self.open_set = []  # nodes to be explored.
+        self.closed_set = set()  # explored nodes
         self.came_from = {}
-        self.g_score = {self.start: 0} #cost of getting from the start node to a given node
-        self.f_score = {self.start: self.heuristic(self.start, goal)} #total cost of getting from the start node to the goal node through a given node
+        self.g_score = {self.start: 0}  # cost of getting from the start node to a given node
+        self.f_score = {self.start: self.heuristic(self.start,
+                                                   goal)}  # total cost of getting from the start node to the goal node through a given node
 
         heapq.heappush(self.open_set, (self.f_score[self.start], self.start))
 
@@ -28,7 +28,7 @@ class AStarController:
         while current in self.came_from:
             current = self.came_from[current]
             path.append(current)
-        self.path = path#[::-1]
+        self.path = path  # [::-1]
         self.open_set = []  # nodes to be explored.
         self.closed_set = set()  # explored nodes
         self.came_from = {}
@@ -46,7 +46,7 @@ class AStarController:
             self.closed_set.add(current)
 
             for neighbor in map.get_neighbors(node=current,
-                                                   step_size=self.step_size):
+                                              step_size=self.step_size):
                 if neighbor in self.closed_set:
                     continue
 
