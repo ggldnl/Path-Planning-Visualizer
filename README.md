@@ -31,3 +31,4 @@
 - [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
 - [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
 - [ ] make the robot follow the shortest angle
+- [ ] remove linalg/utils and incorporate their methods inside geometry

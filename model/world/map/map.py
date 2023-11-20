@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 # Math
 from math import pi, sin, cos
 import random
@@ -5,8 +7,10 @@ import random
 # Model
 from model.geometry.rectangle import Rectangle
 from model.world.map.obstacle import Obstacle
-from model.geometry.polygon import Polygon
 from model.geometry.point import Point
+from model.geometry.circle import Circle
+from model.geometry.pose import Pose
+from model.geometry.intersection import check_intersection
 
 # Serialization
 import pickle
@@ -14,6 +18,7 @@ import json
 
 
 class Map:
+
     def __init__(self,
                  # Obstacle parameters
                  obs_min_dist,
@@ -68,15 +73,52 @@ class Map:
 
         self.min_goal_clearance = min_goal_clearance
 
-        # Initial obstacle position
-        self.initial_obstacles = []
+        # Obstacles parameters range
+        self.obs_width_range = self.obs_max_width - self.obs_min_width
+        self.obs_height_range = self.obs_max_height - self.obs_min_height
+        self.obs_dist_range = self.obs_max_dist - self.obs_min_dist
 
-        # Current obstacle position
-        self.obstacles = []
+        # Initial obstacles
+        self.initial_obstacles = None
+
+        # Current obstacles
+        self.obstacles = None
 
         self.current_goal = None
 
-    def get_map(self, robots):
+    @abstractmethod
+    def _add_obstacle(self, obstacle):
+        pass
+
+    def _add_obstacles(self, obstacles):
+        for obstacle in obstacles:
+            self._add_obstacle(obstacle)
+
+    def _generate_random_obstacle(self):
+
+        # Generate dimensions
+        width = self.obs_min_width + (random.random() * self.obs_width_range)
+        height = self.obs_min_height + (random.random() * self.obs_height_range)
+
+        # Generate position
+        dist = self.obs_min_dist + (random.random() * self.obs_dist_range)
+        phi = -pi + (random.random() * 2 * pi)
+        x = dist * sin(phi)
+        y = dist * cos(phi)
+
+        # Generate orientation
+        theta = random.random() * 360
+
+        # We have a pose
+        pose = (x, y, theta)
+
+        # Create a polygon
+        polygon = Rectangle(width, height)
+        polygon.transform(pose)
+
+        return polygon
+
+    def generate(self, robots):
 
         # Generate the goal
         goal_dist_range = self.goal_max_dist - self.goal_min_dist
@@ -88,6 +130,8 @@ class Map:
 
         # Generate a proximity test geometry for the goal
         r = self.min_goal_clearance
+
+        """
         n = 6
         goal_test_geometry = []
         for i in range(n):
@@ -95,9 +139,13 @@ class Map:
                 Point(x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n))
             )
         goal_test_geometry = Polygon(goal_test_geometry)
+        """
+        goal_test_geometry = Circle(x, y, r)
 
         # Generate a proximity test geometry for the starting point
         r = self.obs_min_dist
+
+        """
         n = 6
         start_test_geometry = []
         for i in range(n):
@@ -105,130 +153,83 @@ class Map:
                 Point(x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n))
             )
         start_test_geometry = Polygon(start_test_geometry)
-
-        # Obstacles parameters range
-        obs_width_range = self.obs_max_width - self.obs_min_width
-        obs_height_range = self.obs_max_height - self.obs_min_height
-        obs_dist_range = self.obs_max_dist - self.obs_min_dist
+        # start_test_geometry = Circle(Point(0, 0), r)
+        """
+        start_test_geometry = Circle(0, 0, r)
 
         # test_geometries contains the robots and the goal
-        test_geometries = [r.outline for r in robots] + [
-            goal_test_geometry
-        ] + [
-            start_test_geometry
-        ]
+        test_geometries = [r.outline for r in robots] + [goal_test_geometry, start_test_geometry]
 
-        # Generate moving obstacles
-        obstacles = []
-        num_moving_obstacles_generated = 0
-        num_steady_obstacles_generated = 0
-        while (num_moving_obstacles_generated < self.obs_moving_count or
-               num_steady_obstacles_generated < self.obs_steady_count):
+        # Generate obstacles
+        moving_obstacles = []
+        while len(moving_obstacles) < self.obs_moving_count:
 
-            # Generate dimensions
-            width = self.obs_min_width + (random.random() * obs_width_range)
-            height = self.obs_min_height + (random.random() * obs_height_range)
-
-            # Generate position
-            dist = self.obs_min_dist + (random.random() * obs_dist_range)
-            phi = -pi + (random.random() * 2 * pi)
-            x = dist * sin(phi)
-            y = dist * cos(phi)
-
-            # Generate orientation
-            theta = random.random() * 360
-
-            # We have a pose
-            pose = (x, y, theta)
-
-            # Create a polygon
-            polygon = Rectangle(width, height)
-            polygon.transform(pose)
+            polygon = self._generate_random_obstacle()
 
             # Check if the polygon intersects one of the test geometries
             intersects = False
             for test_geometry in test_geometries:
-                intersects |= polygon.intersects(test_geometry)
+                intersects |= check_intersection(polygon, test_geometry)
                 if intersects:
                     break
 
             # The polygon is good: add the velocity vector and create an obstacle
             if not intersects:
 
-                # If we need to generate moving obstacles
-                if num_moving_obstacles_generated < self.obs_moving_count:
-                    vel = (
-                        random.uniform(self.obs_min_lin_speed, self.obs_max_lin_speed),
-                        random.uniform(self.obs_min_lin_speed, self.obs_max_lin_speed),
-                        random.uniform(self.obs_min_ang_speed, self.obs_max_ang_speed)
-                    )
-                    num_moving_obstacles_generated += 1
+                obstacle = Obstacle(polygon)
+                obstacle.set_random_velocity_vector()
+                moving_obstacles.append(obstacle)
 
-                # If we are done with the generation of moving obstacles
-                else:
-                    vel = (0, 0, 0)
-                    num_steady_obstacles_generated += 1
+        steady_obstacles = []
+        while len(steady_obstacles) < self.obs_steady_count:
+            
+            polygon = self._generate_random_obstacle()
 
-                obstacle = Obstacle(polygon, pose, vel)
-                obstacles.append(obstacle)
+            # Check if the polygon intersects one of the test geometries
+            intersects = False
+            for test_geometry in test_geometries:
+                intersects |= check_intersection(polygon, test_geometry)
+                if intersects:
+                    break
+
+            # The polygon is good: add the velocity vector and create an obstacle
+            if not intersects:
+
+                obstacle = Obstacle(polygon)
+                steady_obstacles.append(obstacle)
 
         # Update the obstacles and the goal
-        self.obstacles = obstacles
+        self._add_obstacles(moving_obstacles)
+        self._add_obstacles(steady_obstacles)
         self.current_goal = goal
 
-        # Backup the current map so that we can reset it later
-        self.initial_obstacles = [obstacle.copy() for obstacle in obstacles]
-
+    @abstractmethod
     def reset_map(self):
-        self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
+        pass
 
-    def save_as_pickle(self, filename):
-        with open(filename, "wb") as file:
-            pickle.dump(self.initial_obstacles, file)
-            pickle.dump(self.current_goal, file)
-
-    def save_as_json(self, filename):
-        data = {
-            "initial_obstacles": [obstacle.to_dict() for obstacle in self.initial_obstacles],
-            "current_goal": self.current_goal.to_dict()
-        }
-
-        with open(filename, "w") as file:
-            json.dump(data, file)
+    def load_map(self, filename):
+        self.load_map_from_json_file(filename)
 
     def save_map(self, filename):
         self.save_as_json(filename)
 
+    @abstractmethod
+    def save_as_pickle(self, filename):
+        pass
+
+    @abstractmethod
+    def save_as_json(self, filename):
+        pass
+
+    @abstractmethod
     def load_map_from_pickle(self, filename):
-        with open(filename, "rb") as file:
-            self.initial_obstacles = pickle.load(file)
-            self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
-            self.current_goal = pickle.load(file)
+        pass
 
     def load_map_from_json_file(self, filename):
         with open(filename, 'rb') as file:
             data = json.load(file)
             self.load_map_from_json_data(data)
 
+    @abstractmethod
     def load_map_from_json_data(self, data):
-
-        # Before:
-        # 'Polygon(points=[Point(x=-2.5118392672536327, y=0.6265351022705381), Point(x=-2.3844202224503315, y=1.350435265340675), Point(x=-1.6980977246005748, y=1.2296305445182016), Point(x=-1.8255167694038765, y=0.5057303814480627)])'
-        #
-        # After:
-        # 'Polygon(points=[Point(x=-2.1213483391343777, y=-0.2953322538783505), Point(x=-1.3422613909428343, y=0.0158506375034122), Point(x=-1.2619030194447984, y=-0.18533702462689794), Point(x=-2.0409899676363423, y=-0.49651991600866063)])'
-        self.current_goal = Point.from_dict(data['current_goal'])
-
-        obstacle_data = data['initial_obstacles']
-        obstacles = []
-        for obstacle_dictionary in obstacle_data:
-            obstacle = Obstacle.from_dict(obstacle_dictionary)
-            obstacles.append(obstacle)
-
-        self.obstacles = obstacles
-        self.initial_obstacles = [obstacle.copy() for obstacle in self.obstacles]
-        print('Map updated!')
-
-    def load_map(self, filename):
-        self.load_map_from_json_file(filename)
-
+        pass

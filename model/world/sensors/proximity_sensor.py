@@ -9,8 +9,7 @@ class ProximitySensor(Sensor):
     def __init__(self,
                  name,
                  max_range,
-                 phi_range,
-                 is_deg=True
+                 phi_range
                  ):
 
         super().__init__(name)
@@ -18,10 +17,7 @@ class ProximitySensor(Sensor):
         # Sensitivity attributes
         self.max_range = max_range
 
-        if is_deg:
-            self.phi_range = np.deg2rad(phi_range)
-        else:
-            self.phi_range = phi_range
+        self.phi_range = phi_range
 
         # Compute the base (b) using trigonometry
         h = self.max_range

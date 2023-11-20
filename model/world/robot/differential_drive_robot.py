@@ -6,11 +6,9 @@ import numpy as np
 
 class DifferentialDriveRobot(Robot):
 
-    def __init__(self, bodies, motors=None):
+    def __init__(self, bodies, wheelbase, motors=None):
         super().__init__('Differential Drive Robot', bodies, motors)
-
-        # TODO set this
-        self.wheelbase = 0.2
+        self.wheelbase = wheelbase
 
     def apply_dynamics(self, dt):
 
@@ -20,11 +18,26 @@ class DifferentialDriveRobot(Robot):
         # The robot is now at the target, we need to reach the target orientation
         if current_x == target_x and current_y == target_y:
 
-            delta_theta = target_theta - current_theta
+            # Calculate the difference between current and target theta
+            theta_diff = target_theta - current_theta
 
-            if abs(delta_theta) > self.ROTATION_EPSILON:
-                current_theta += self.angular_velocity * dt * np.copysign(1, delta_theta)
-            else:
+            # Normalize the difference to the range [-pi, pi)
+            theta_diff = (theta_diff + np.pi) % (2 * np.pi) - np.pi
+
+            # Determine the direction of rotation (+1 for clockwise, -1 for counterclockwise)
+            direction = 1 if theta_diff > 0 else -1
+
+            # Calculate the incremental rotation step
+            step = self.angular_velocity * dt * direction
+
+            # Update the current theta
+            current_theta = (current_theta + step) % (2 * np.pi)
+
+            # Adjust theta to the correct range
+            current_theta = (current_theta + 2 * np.pi) % (2 * np.pi)
+
+            # Check if the rotation is close enough to the target angle
+            if abs(theta_diff) < self.ROTATION_EPSILON:
                 current_theta = target_theta
 
         else:
@@ -33,19 +46,34 @@ class DifferentialDriveRobot(Robot):
             delta_x = target_x - current_x
             delta_y = target_y - current_y
 
-            target_angle = np.rad2deg(np.arctan2(delta_y, delta_x))
-            delta_theta = target_angle - current_theta
+            target_angle = np.arctan2(delta_y, delta_x)
 
-            # Rotate the robot towards the new point
-            if abs(delta_theta) > self.ROTATION_EPSILON:
-                current_theta += self.angular_velocity * dt * np.copysign(1, delta_theta)
+            # Calculate the difference between current and target theta
+            theta_diff = target_angle - current_theta
 
-            else:
+            # Normalize the difference to the range [-pi, pi)
+            theta_diff = (theta_diff + np.pi) % (2 * np.pi) - np.pi
+
+            # Determine the direction of rotation (+1 for clockwise, -1 for counterclockwise)
+            direction = 1 if theta_diff > 0 else -1
+
+            # Calculate the incremental rotation step
+            step = self.angular_velocity * dt * direction
+
+            # Update the current theta
+            current_theta = (current_theta + step) % (2 * np.pi)
+
+            # Adjust theta to the correct range
+            current_theta = (current_theta + 2 * np.pi) % (2 * np.pi)
+
+            # Check if the rotation is close enough to the target angle
+            if abs(theta_diff) < self.ROTATION_EPSILON:
+
                 # The robot points to the target
                 current_theta = target_angle
 
                 # Move the robot forward
-                increment_x = self.linear_velocity * dt * np.cos(np.deg2rad(current_theta))
+                increment_x = self.linear_velocity * dt * np.cos(current_theta)
                 if target_x >= current_x:
                     if current_x + increment_x >= target_x:
                         current_x = target_x
@@ -57,7 +85,7 @@ class DifferentialDriveRobot(Robot):
                     else:
                         current_x = target_x
 
-                increment_y = self.linear_velocity * dt * np.sin(np.deg2rad(current_theta))
+                increment_y = self.linear_velocity * dt * np.sin(current_theta)
                 if target_y >= current_y:
                     if current_y + increment_y >= target_y:
                         current_y = target_y

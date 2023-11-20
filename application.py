@@ -28,20 +28,23 @@ import logging
 import sys
 import time
 from typing import Iterator
-
 import numpy as np
+
 # Flask imports
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
 from model.exceptions.collision_exception import CollisionException
+from model.geometry.point import Point
 # Import scripts
 from scripts.frame import Frame
 
 # Import stuff from the model
 from model.world.world import World
+from model.world.color_palette import *
 from model.world.robot.URDF_parser import URDFParser
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.world.robot.robots.cobalt.cobalt import Cobalt
+from model.world.controllers.a_star_controller import AStarController
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -73,9 +76,15 @@ show_trace = False
 show_sensors = False
 show_path = False
 
+# TODO read this!
 # Boolean to update only the robot (some of its attributes needs to be shown or hidden).
 # It will be turned off the iteration after the update happens.
-# TODO: implement actual update
+#
+# This can be solved by simply updating the frame each time regardless of the value of
+# running and stepping variables. This poses another problem: with the actual communication
+# protocol between frontend and backend, the amount of data exchanged is very big, so by
+# not sending data when the simulation is stopped we can reduce the memory consumption.
+# This should be fixed in later updates!
 update_robot = False
 
 # Define the world here so we can access it through the routes
@@ -84,20 +93,8 @@ world = World(UPDATE_FREQUENCY)
 # Buffer for all the geometries that will be drawn on screen
 frame = Frame()
 
-# Create the robot
-
-# R2D2
-# robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
-# robot = DifferentialDriveRobot(robot_polygons)
-
-# Cobalt
-robot = Cobalt()
-
-controller = None
-world.add_robot(robot, controller)
-
-
 # ------------------------------ generation loop ----------------------------- #
+
 
 def generate_data() -> Iterator[str]:
     """
@@ -130,8 +127,8 @@ def generate_data() -> Iterator[str]:
 
         # Main loop
         global running, stepping
-        running = False
-        stepping = True
+        # running = False
+        # stepping = True
         while True:
 
             if running or stepping:
@@ -144,18 +141,25 @@ def generate_data() -> Iterator[str]:
                     # Clear the frame
                     frame.clear()
 
-                    frame.add_line([0, 0], [1, 1], 1, '#FF0000')
-                    frame.add_line([1, 1], [2, 1], 1, '#FF0000')
-                    frame.add_line([2, 1], [3, 2], 1, '#FF0000')
-
                     # Add the robot to the frame
-                    for robot in world.robots:
+                    for robot, controller in zip(world.robots, world.controllers):
 
-                        frame.add_polygons(robot.bodies, '#00640066', '#006400FF')
+                        if show_path:
+                            if controller.path:
+
+                                points = [[x, y] for x, y in controller.path]
+
+                                # robot_x, robot_y, _ = robot.current_pose
+                                # frame.add_line([robot_x, robot_y], points[-1], 1, '#ff0000')
+
+                                for i in range(1, len(points)):
+                                    frame.add_line(points[i - 1], points[i], 1, path_color)
+
+                        frame.add_polygons(robot.bodies, default_robot_fill_color, default_robot_border_color)
 
                         # Add sensors if the option is enabled
                         if show_sensors:
-                            frame.add_polygons([sensor.polygon for sensor in robot.sensors], '#FFBF0066')
+                            frame.add_polygons([sensor.polygon for sensor in robot.sensors], sensor_color_alert_0)
 
                         """
                         # Add the path
@@ -169,18 +173,18 @@ def generate_data() -> Iterator[str]:
                     # Add the obstacles to the frame (we can change color for moving and steady obstacles)
 
                     # steady_obstacles = [
-                    #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel == (0, 0, 0)
+                    # obstacle.polygon for obstacle in world.map_legacy.current_obstacles if obstacle.vel == (0, 0, 0)
                     # ]
                     # moving_obstacles = [
-                    #     obstacle.polygon for obstacle in world.map.current_obstacles if obstacle.vel != (0, 0, 0)
+                    # obstacle.polygon for obstacle in world.map_legacy.current_obstacles if obstacle.vel != (0, 0, 0)
                     # ]
                     # frame.add_polygons(steady_obstacles, '#8B000066')
                     # frame.add_polygons(moving_obstacles, '#8B000066')
 
-                    frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], '#0047AB66')
+                    frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], obstacle_fill_color)
 
                     # Add the start and the goal points to the frame
-                    frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, '#00008B66')
+                    frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, goal_fill_color)
 
                     # Dump the data
                     json_data = frame.to_json()
@@ -193,6 +197,8 @@ def generate_data() -> Iterator[str]:
 
                     # Check for collisions; if the case, stop
                     world.apply_physics()
+
+                    # world.search()
 
                 except CollisionException:
                     running = False
@@ -285,10 +291,14 @@ def simulation_control():
                 show_sensors = not show_sensors
             if flag == 'path':
                 show_path = not show_path
+
             # TODO update the robot (cascading) when one of these checkboxes is ticked
             update_robot = True
 
         if 'direction' in data:
+
+            # TODO for now, only the first robot can be controlled with the arrow keys.
+            # Future implementations can use the mouse to select one of the robots
             dir = data['direction']
             robot = world.robots[0]
 
@@ -297,28 +307,36 @@ def simulation_control():
 
             if dir == 'up':
 
-                new_x = x + step_size * np.cos(np.deg2rad(theta))
-                new_y = y + step_size * np.sin(np.deg2rad(theta))
+                new_x = x + step_size * np.cos(theta)
+                new_y = y + step_size * np.sin(theta)
                 delta_x = new_x - x
                 delta_y = new_y - y
-                new_theta = np.rad2deg(np.arctan2(delta_y, delta_x))
+                new_theta = np.arctan2(delta_y, delta_x)
 
                 robot.target_pose = (new_x, new_y, new_theta)
 
             elif dir == 'down':
 
-                # new_x = x + step_size * np.cos(np.deg2rad(theta))
-                # new_y = y + step_size * np.sin(np.deg2rad(theta))
-                # robot.target_pose = (new_x, new_y, theta)
+                # This is not feasible since part of the algorithm to step the robot
+                # turns the robot towards the point to reach. In a backward movement
+                # the orientation remains unchanged
+                #
+                # new_x = x - step_size * np.cos(theta)
+                # new_y = y - step_size * np.sin(theta)
+                # robot.target_pose = (new_x, new_y, -theta)
                 pass
 
             elif dir == 'left':
 
-                robot.target_pose = (x, y, theta + 10)
+                new_theta = theta + step_size
+                new_theta = new_theta % (2 * np.pi)
+                robot.target_pose = (x, y, new_theta)
 
             elif dir == 'right':
 
-                robot.target_pose = (x, y, theta - 10)
+                new_theta = theta - step_size
+                new_theta = new_theta % (2 * np.pi)
+                robot.target_pose = (x, y, new_theta)
 
             print(f'Received [{dir}]: new target pose: {world.robots[0].target_pose}')
 
@@ -330,4 +348,16 @@ def simulation_control():
 
 
 if __name__ == "__main__":
-    application.run(host="0.0.0.0", threaded=True)
+    # Create the robot
+
+    # robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
+    # robot = DifferentialDriveRobot(robot_polygons)
+    # controller = None
+    # world.add_robot(robot, controller)
+
+    robot = Cobalt()
+    # controller = AStarController(world.map.goal, robot)
+    controller = None
+    world.add_robot(robot, controller)
+
+    application.run(host="0.0.0.0", port=5000, threaded=True)

@@ -1,13 +1,22 @@
 from abc import ABCMeta
-from ..map.map import Map
+from model.world.map_legacy.map import Map
+from model.geometry.point import Point
 
 
 class Controller(metaclass=ABCMeta):
-    # si interfaccia con il mondo
-    def __init__(self, robot):
-        self.robot = robot
-        self.drive_train # vettore da generare dove deve andare robot
+
+    def __init__(self):
+
+        self.path = []
 
     def step_motion(self, map: Map):
-        self.robot.
-        return
+        pass
+
+    def is_robot_at(self):
+        return True
+
+    def get_next_point(self):
+        return None
+
+    def compute_path(self):
+        pass
