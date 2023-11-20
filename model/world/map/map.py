@@ -208,6 +208,11 @@ class Map:
         self.current_goal = goal
 
     @abstractmethod
+    def step_motion(self, dt):
+        # The actual implementation of the map can do other operations other than stepping the obstacles
+        pass
+
+    @abstractmethod
     def reset_map(self):
         pass
 

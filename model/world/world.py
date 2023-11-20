@@ -52,9 +52,7 @@ class World:
         """
 
         # Step all the obstacles
-        # TODO setup controllers
-        for obstacle in self.map.obstacles:
-            obstacle.step_motion(dt)
+        self.map.step_motion(dt)
 
         for robot, controller in zip(self.robots, self.controllers):
             if self.idx == 0:

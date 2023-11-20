@@ -25,8 +25,21 @@ class SpatialMap(Map):
 
         self.initial_obstacles.append(obstacle.copy())
 
+    def step_motion(self, dt):
+        for obstacle_id in range(len(self.obstacles)):
+            obstacle = self.obstacles[obstacle_id]
+            bounding_box = obstacle.polygon.get_bounding_box()
+            obstacle.step_motion(dt)
+            self.obstacles_index.delete(obstacle_id, bounding_box)
+            self.obstacles_index.delete(obstacle_id, obstacle.polygon.get_bounding_box())
+
     def reset_map(self):
-        pass
+
+        self.obstacles = []
+        for obstacle in self.initial_obstacles:
+            bounds = obstacle.polygon.get_bounding_box()
+            self.obstacles_index.insert(len(self.obstacles), bounds)
+            self.obstacles.append(obstacle)
 
     def query_region(self, region: Polygon):
 
