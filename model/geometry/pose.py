@@ -34,6 +34,15 @@ class Pose:
     def __iter__(self):
         return iter([self.x, self.y, self.theta])
 
+    def __len__(self):
+        return 3
+
+    def as_point(self):
+        return Point(self.x, self.y)
+
+    def as_tuple(self):
+        return self.x, self.y
+
     def copy(self):
         return Pose(self.x, self.y, self.theta)
 
