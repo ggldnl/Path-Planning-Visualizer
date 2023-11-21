@@ -101,8 +101,9 @@ class MapBuilder:
         self.params_dictionary['goal_max_dist'] = goal_max_dist
         return self
 
-    def set_type(self, map_type: Literal['standard', 'spacial']):
+    def set_type(self, map_type: Literal['standard', 'spatial']):
         self.map_type = map_type
+        return self
 
     def build(self):
 

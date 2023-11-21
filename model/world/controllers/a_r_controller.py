@@ -1,21 +1,23 @@
 import heapq
 import math
 
+from model.geometry.point import Point
 from model.world.robot.robot import Robot
 
 
 class AStarController:
-    def __init__(self, goal, robot: Robot):
+    def __init__(self, map, robot: Robot):
         self.path = []
-        self.start = robot.current_pose  # todo check if needed
+        self.start = robot.current_pose.as_tuple()  # todo check if needed
         self.step_size = 0.1
 
         self.open_set = []  # nodes to be explored.
         self.closed_set = set()  # explored nodes
         self.came_from = {}
         self.g_score = {self.start: 0}  # cost of getting from the start node to a given node
+        self.map = map
         self.f_score = {self.start: self.heuristic(self.start,
-                                                   goal)}  # total cost of getting from the start node to the goal node through a given node
+                                                   self.map.goal)}  # total cost of getting from the start node to the goal node through a given node
 
         heapq.heappush(self.open_set, (self.f_score[self.start], self.start))
 
@@ -23,7 +25,7 @@ class AStarController:
         # Euclidean distance as heuristic
         return math.hypot(node2[0] - node1[0], node2[1] - node1[1])
 
-    def reconstruct_path(self, map, current):
+    def reconstruct_path(self, current):
         path = [current]
         while current in self.came_from:
             current = self.came_from[current]
@@ -33,20 +35,21 @@ class AStarController:
         self.closed_set = set()  # explored nodes
         self.came_from = {}
         self.g_score = {self.start: 0}  # cost of getting from the start node to a given node
-        self.f_score = {self.start: self.heuristic(self.start, map.goal)}
+        self.f_score = {self.start: self.heuristic(self.start, self.map.goal)}
         return self.path if isinstance(self.path, list) else list(self.path)
 
-    def search(self, map):
+    def search(self):
         while self.open_set:
             current_f_score, current = heapq.heappop(self.open_set)
 
-            if current == tuple(map.goal):
-                return self.reconstruct_path(map, current)
+            if current == tuple(self.map.goal):
+                print('Eureka!')
+                return self.reconstruct_path(current)
 
             self.closed_set.add(current)
 
-            for neighbor in map.get_neighbors(node=current,
-                                              step_size=self.step_size):
+            for neighbor in self.map.get_neighbors(node=current,
+                                                   step_size=self.step_size):
                 if neighbor in self.closed_set:
                     continue
 
@@ -54,30 +57,17 @@ class AStarController:
                 if tentative_g_score >= self.g_score.get(neighbor, float('inf')):
                     continue
 
-                if self.is_collision(map, current, neighbor):
+                if self.is_collision(current, neighbor):
                     continue
 
                 self.came_from[neighbor] = current
                 self.g_score[neighbor] = tentative_g_score
-                self.f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, map.goal)
+                self.f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, self.map.goal)
 
                 if neighbor not in [item[1] for item in self.open_set]:
                     heapq.heappush(self.open_set, (self.f_score[neighbor], neighbor))
 
         return None  # Path not found
 
-    def is_collision(self, map, node1, node2):
-        return map.is_obstacle(node1, node2)
-
-    '''
-    def update_goal(self, new_goal):
-        self.goal = new_goal
-        self.f_score[self.goal] = self.g_score[self.goal] + self.heuristic(self.goal, self.goal)
-
-    def update_start(self, new_start):
-        self.start = new_start
-        self.g_score[self.start] = 0
-        self.f_score[self.start] = self.heuristic(self.start, self.goal)
-
-        heapq.heappush(self.open_set, (self.f_score[self.start], self.start))
-    '''
+    def is_collision(self, node1, node2):
+        return self.map.check_collision(node1, node2)
