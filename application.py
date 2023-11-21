@@ -34,7 +34,6 @@ import numpy as np
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
 from model.exceptions.collision_exception import CollisionException
-from model.geometry.point import Point
 from model.world.controllers.a_r_controller import AStarController
 # Import scripts
 from scripts.frame import Frame
@@ -45,7 +44,6 @@ from model.world.color_palette import *
 from model.world.robot.URDF_parser import URDFParser
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.world.robot.robots.cobalt.cobalt import Cobalt
-from model.world.controllers.a_star_controller import AStarController
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -128,8 +126,8 @@ def generate_data() -> Iterator[str]:
 
         # Main loop
         global running, stepping
-        # running = False
-        # stepping = True
+        running = False
+        stepping = True
         while True:
 
             if running or stepping:
@@ -269,7 +267,7 @@ def simulation_control():
                 robot.angular_velocity = angular_velocity
 
         if 'random_map' in data:
-            world.map.get_map(world.robots)
+            world.map.generate(world.robots)
             running = False
             stepping = True
 
@@ -356,6 +354,6 @@ if __name__ == "__main__":
     # controller = None
     # world.add_robot(robot, controller)
     robot = Cobalt()
-    controller = AStarController(world.map.goal, robot)
+    controller = AStarController(world.map, robot)
     world.add_robot(robot, controller)
     application.run(host="0.0.0.0", port=5000, threaded=True)

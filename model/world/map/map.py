@@ -6,6 +6,7 @@ import random
 
 # Model
 from model.geometry.rectangle import Rectangle
+from model.geometry.segment import Segment
 from model.world.map.obstacle import Obstacle
 from model.geometry.point import Point
 from model.geometry.circle import Circle
@@ -128,8 +129,8 @@ class Map:
         goal_dist_range = self.goal_max_dist - self.goal_min_dist
         dist = self.goal_min_dist + (random.random() * goal_dist_range)
         phi = -pi + (random.random() * 2 * pi)
-        x = dist * sin(phi)
-        y = dist * cos(phi)
+        x = int(dist * sin(phi))  # Round x to an integer
+        y = int(dist * cos(phi))  # Round y to an integer
         goal = Point(x, y)
 
         # Generate a proximity test geometry for the goal
