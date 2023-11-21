@@ -43,6 +43,17 @@ class Pose:
     def as_tuple(self):
         return self.x, self.y
 
+    def __str__(self):
+        return f"Pose(x={self.x}, y={self.y}, theta={self.theta})"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if isinstance(other, Pose):
+            return self.x == other.x and self.y == other.y and self.theta == other.theta
+        return False
+
     def copy(self):
         return Pose(self.x, self.y, self.theta)
 

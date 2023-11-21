@@ -86,7 +86,8 @@ class Polygon(Shape):
     def to_dict(self):
         return {'points': [point.to_dict() for point in self.points]}
 
-    def get_bounding_box(self):
+    @property
+    def bounds(self):
         """
         Returns the bounding box of the polygon.
         """
@@ -267,6 +268,9 @@ class Polygon(Shape):
     def __str__(self):
         point_str = ', '.join(str(point) for point in self.points)
         return f"Polygon(points=[{point_str}])"
+
+    def __repr__(self):
+        return self.__str__()
 
     def __getitem__(self, item):
 

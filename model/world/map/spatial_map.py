@@ -69,27 +69,10 @@ class SpatialMap(Map):
                 return True
         return False
 
-    def get_neighbors(self, node, step_size=1, decimal_places=1):
-        if len(node) == 3:
-            x, y, z = node
-        elif len(node) == 2:
-            x, y = node
-        neighbors = [
-            (round(x - step_size, decimal_places), round(y, decimal_places)),
-            (round(x + step_size, decimal_places), round(y, decimal_places)),
-            (round(x, decimal_places), round(y - step_size, decimal_places)),
-            (round(x, decimal_places), round(y + step_size, decimal_places)),
-            (round(x - step_size, decimal_places), round(y - step_size, decimal_places)),
-            (round(x + step_size, decimal_places), round(y - step_size, decimal_places)),
-            (round(x - step_size, decimal_places), round(y + step_size, decimal_places)),
-            (round(x + step_size, decimal_places), round(y + step_size, decimal_places)),
-        ]
-        return neighbors
-
     def query_region(self, region: Polygon):
         # Assuming region is a Polygon representing the query region
         result = []
-        for obj_id in self._obstacles_tree.intersection(region.get_bounding_box()):
+        for obj_id in self._obstacles_tree.intersection(region.bounds):
 
             # Check if the actual geometry intersects with the query region
             if check_intersection(region, self.get_polygon(obj_id)):

@@ -21,7 +21,6 @@ class Segment:
     def copy(self):
         return Segment(self.start.copy(), self.end.copy())
 
-
     def __getitem__(self, item):
         if item == 0:
             return self.start

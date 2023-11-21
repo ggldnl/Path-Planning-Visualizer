@@ -35,6 +35,7 @@ from flask import Flask, Response, render_template, request, stream_with_context
 
 from model.exceptions.collision_exception import CollisionException
 from model.world.controllers.a_r_controller import AStarController
+from model.world.controllers.dummy_controller import DummyController
 # Import scripts
 from scripts.frame import Frame
 
@@ -121,9 +122,6 @@ def generate_data() -> Iterator[str]:
 
         logger.info("Client %s connected", client_ip)
 
-        # Dictionary containing the data to dump
-        json_data = {}
-
         # Main loop
         global running, stepping
         running = False
@@ -160,44 +158,20 @@ def generate_data() -> Iterator[str]:
                         if show_sensors:
                             frame.add_polygons([sensor.polygon for sensor in robot.sensors], sensor_color_alert_0)
 
-                        """
-                        # Add the path
-                        if show_path:
-                            frame.add_lines()
-                    
-                        # Add the controller path
-                        # Boh
-                        """
-
                     # Add the obstacles to the frame (we can change color for moving and steady obstacles)
-
-                    # steady_obstacles = [
-                    # obstacle.polygon for obstacle in world.map_legacy.current_obstacles if obstacle.vel == (0, 0, 0)
-                    # ]
-                    # moving_obstacles = [
-                    # obstacle.polygon for obstacle in world.map_legacy.current_obstacles if obstacle.vel != (0, 0, 0)
-                    # ]
-                    # frame.add_polygons(steady_obstacles, '#8B000066')
-                    # frame.add_polygons(moving_obstacles, '#8B000066')
-
                     frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], obstacle_fill_color)
 
                     # Add the start and the goal points to the frame
                     frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, goal_fill_color)
 
-                    # Dump the data
-                    json_data = frame.to_json()
-
                     if stepping:
                         stepping = False
 
-                    yield f"data:{json_data}\n\n"
+                    # Dump the data
+                    yield f"data:{frame.to_json()}\n\n"
+
+                    # Wait
                     time.sleep(UPDATE_FREQUENCY)
-
-                    # Check for collisions; if the case, stop
-                    world.apply_physics()
-
-                    # world.search()
 
                 except CollisionException:
                     running = False
@@ -310,9 +284,10 @@ def simulation_control():
                 new_y = y + step_size * np.sin(theta)
                 delta_x = new_x - x
                 delta_y = new_y - y
-                new_theta = np.arctan2(delta_y, delta_x)
 
-                robot.target_pose = (new_x, new_y, new_theta)
+                robot.target_pose.x = new_x
+                robot.target_pose.y = new_y
+                robot.target_pose.theta = np.arctan2(delta_y, delta_x)
 
             elif dir == 'down':
 
@@ -329,13 +304,13 @@ def simulation_control():
 
                 new_theta = theta + step_size
                 new_theta = new_theta % (2 * np.pi)
-                robot.target_pose = (x, y, new_theta)
+                robot.target_pose.theta = new_theta
 
             elif dir == 'right':
 
                 new_theta = theta - step_size
                 new_theta = new_theta % (2 * np.pi)
-                robot.target_pose = (x, y, new_theta)
+                robot.target_pose.theta = new_theta
 
             print(f'Received [{dir}]: new target pose: {world.robots[0].target_pose}')
 
@@ -347,13 +322,16 @@ def simulation_control():
 
 
 if __name__ == "__main__":
-    # Create the robot
 
+    # Test with robot parsed from a URDF
     # robot_polygons = URDFParser.parse('./model/world/robot/robots/R2D2/R2D2.urdf')
     # robot = DifferentialDriveRobot(robot_polygons)
     # controller = None
     # world.add_robot(robot, controller)
+
+    # Test with Cobalt
     robot = Cobalt()
-    controller = AStarController(world.map, robot)
+    controller = AStarController(robot, world.map, step_size=1)
+    # controller = DummyController(robot, world.map)
     world.add_robot(robot, controller)
     application.run(host="0.0.0.0", port=5000, threaded=True)

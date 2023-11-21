@@ -1,0 +1,2 @@
+class EmptyPathException(Exception):
+    pass

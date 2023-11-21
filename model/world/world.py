@@ -20,7 +20,7 @@ class World:
         self.controllers = []
 
         # Initialize the map_legacy
-        self.map = MapBuilder().set_obs_moving_count(20).set_obs_steady_count(20).build()
+        self.map = MapBuilder().set_type('standard').set_obs_moving_count(20).set_obs_steady_count(20).build()
 
         # TODO bug: map is generated before we add robots; we can add robots over obstacles
         self.map.generate(self.robots)
@@ -35,6 +35,7 @@ class World:
 
     def reset_robots(self):
         for robot in self.robots:
+            # TODO fix this
             robot.pose.x = 0
             robot.pose.y = 0
             robot.pose.z = 0
@@ -46,15 +47,24 @@ class World:
 
         dt = self.dt
 
-        """
-        for controller in self.controllers:
-            controller.step_motion(self.map_legacy)
-        """
-
         # Step all the obstacles
         self.map.step_motion(dt)
 
         for robot, controller in zip(self.robots, self.controllers):
+
+            # Scan the map, recompute path if current path is obstructed
+            controller.step()
+
+            # Get the next target point (could be the same as before if the robot hasn't reached it yet)
+            next = controller.next()
+            if next is not None:
+                robot.target_pose = next
+
+            # Update the robot making it follow the path
+            robot.step_motion(dt)
+
+        """
+        for robot, controller in zip(self.robots, self.controllers_legacy):
             if self.idx == 0:
                 break
             # TODO path.
@@ -75,10 +85,7 @@ class World:
                     robot.target_pose = (next_pose[0], next_pose[1], new_theta)
             robot.step_motion(dt)
         self.idx += 1
-
-        # print(self.map.obstacles[0].polygon)
-        # print(self.map.obstacles[0].pose)
-        # print()
+        """
 
         # Apply physics interactions
         # self._apply_physics()
@@ -86,7 +93,7 @@ class World:
         # Increment world time
         self.world_time += dt
 
-    def apply_physics(self):
+    def _apply_physics(self):
         self._detect_collisions()
 
     def _detect_collisions(self):

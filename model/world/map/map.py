@@ -4,6 +4,7 @@ from abc import abstractmethod
 from math import pi, sin, cos
 import random
 
+from model.geometry.polygon import Polygon
 # Model
 from model.geometry.rectangle import Rectangle
 from model.geometry.segment import Segment
@@ -207,6 +208,42 @@ class Map:
         self._add_obstacles(moving_obstacles)
         self._add_obstacles(steady_obstacles)
         self.current_goal = goal
+
+    def get_neighbors(self, point, step_size=1, decimal_places=1):
+
+        neighbors = []
+
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if not (i == 0 and j == 0):
+
+                    neighbor = Point(point.x + i * step_size, point.y + j * step_size)
+
+                    """
+                    # Create a buffer around the point
+                    n = 6
+                    buffer_points = []
+                    for k in range(n):
+                        buffer_points.append(
+                            Point(point.x + step_size * cos(k * 2 * pi / n), point.y + step_size * sin(k * 2 * pi / n))
+                        )
+                    buffer = Polygon(buffer_points)
+    
+                    dangerous_obstacles_ids = self.query_region(buffer)
+                    if len(dangerous_obstacles_ids) == 0:
+                        neighbors.append(neighbor)
+                    """
+
+                    neighbors.append(neighbor)
+
+        return neighbors
+
+    @abstractmethod
+    def query_region(self, region):
+        """
+        Returns all the obstacles in the region polygon
+        """
+        pass
 
     @abstractmethod
     def step_motion(self, dt):

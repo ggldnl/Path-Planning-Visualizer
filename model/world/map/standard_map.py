@@ -20,7 +20,8 @@ class StandardMap(Map):
         self.initial_obstacles.append(obstacle.copy())
 
     def step_motion(self, dt):
-        pass
+        for obstacle in self.obstacles:
+            obstacle.step_motion(dt)
 
     def reset_map(self):
         self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
@@ -28,7 +29,7 @@ class StandardMap(Map):
     def query_region(self, region):
         result = []
         for i in range(len(self.obstacles)):
-            if check_intersection(region, self.obstacles[i]):
+            if check_intersection(region, self.obstacles[i].polygon):
                 result.append(i)
         return result
 
@@ -65,21 +66,3 @@ class StandardMap(Map):
         self.obstacles = obstacles
         self.initial_obstacles = [obstacle.copy() for obstacle in self.obstacles]
         print('Map updated!')
-
-
-    def get_neighbors(self, node, step_size=1, decimal_places=1):
-        if len(node) == 3:
-            x, y, z = node
-        elif len(node) == 2:
-            x, y = node
-        neighbors = [
-            (round(x - step_size, decimal_places), round(y, decimal_places)),
-            (round(x + step_size, decimal_places), round(y, decimal_places)),
-            (round(x, decimal_places), round(y - step_size, decimal_places)),
-            (round(x, decimal_places), round(y + step_size, decimal_places)),
-            (round(x - step_size, decimal_places), round(y - step_size, decimal_places)),
-            (round(x + step_size, decimal_places), round(y - step_size, decimal_places)),
-            (round(x - step_size, decimal_places), round(y + step_size, decimal_places)),
-            (round(x + step_size, decimal_places), round(y + step_size, decimal_places)),
-        ]
-        return neighbors

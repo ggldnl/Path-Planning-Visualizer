@@ -1,55 +1,86 @@
 import heapq
-import math
 
-from model.geometry.point import Point
-from model.world.robot.robot import Robot
+from model.world.controllers.controller import Controller
 
 
-class AStarController:
-    def __init__(self, map, robot: Robot):
-        self.path = []
-        self.start = robot.current_pose.as_tuple()  # todo check if needed
-        self.step_size = 0.1
+class Node:
 
-        self.open_set = []  # nodes to be explored.
-        self.closed_set = set()  # explored nodes
+    def __init__(self, point, score):
+        self.point = point
+        self.score = score
+
+    def __str__(self):
+        return f'Node({self.point}, score={self.score})'
+
+    def __lt__(self, other):
+        return self.score < other.score
+
+
+class AStarController(Controller):
+
+    def __init__(self, robot, map, step_size=1):
+
+        super().__init__(robot, map)
+
+        self.step_size = step_size
+
+        self.start = robot.current_pose.as_point()
+
+        self.open_set = []  # Nodes to be explored
+        self.closed_set = set()  # Explored nodes
+
+        # Dictionary containing {node: parent_node}
         self.came_from = {}
-        self.g_score = {self.start: 0}  # cost of getting from the start node to a given node
-        self.map = map
-        self.f_score = {self.start: self.heuristic(self.start,
-                                                   self.map.goal)}  # total cost of getting from the start node to the goal node through a given node
 
-        heapq.heappush(self.open_set, (self.f_score[self.start], self.start))
+        # Cost of getting from the start node to a given node: {point, cost}
+        self.g_score = {self.start: 0.0}
+
+        # Total cost of getting from the start node to the goal node through a given node
+        self.f_score = {self.start: self.heuristic(self.start, self.map.goal)}
+
+        # Push f_score and Point
+        heapq.heappush(self.open_set, Node(self.start, self.f_score[self.start]))
 
     def heuristic(self, node1, node2):
         # Euclidean distance as heuristic
-        return math.hypot(node2[0] - node1[0], node2[1] - node1[1])
+        # return math.hypot(node2[0] - node1[0], node2[1] - node1[1])
+        return node1.distance(node2)  # node1 and node2 are points and thus a built-in distance function
 
     def reconstruct_path(self, current):
+
+        # Reversely add the parent node to the path
         path = [current]
         while current in self.came_from:
             current = self.came_from[current]
             path.append(current)
-        self.path = path  # [::-1]
-        self.open_set = []  # nodes to be explored.
-        self.closed_set = set()  # explored nodes
+
+        # Exclude the current point from the array; this way the array only contains points the robot should reach
+        self.path = path[:-1]
+
+        # Reset data structures
+        self.open_set = []
+        self.closed_set = set()  # Contains POINTS of visited nodes (check against map.get_neighbors)
         self.came_from = {}
-        self.g_score = {self.start: 0}  # cost of getting from the start node to a given node
+        self.g_score = {self.start: 0.0}  # cost of getting from the start node to a given node
         self.f_score = {self.start: self.heuristic(self.start, self.map.goal)}
-        return self.path if isinstance(self.path, list) else list(self.path)
 
     def search(self):
-        while self.open_set:
-            current_f_score, current = heapq.heappop(self.open_set)
 
-            if current == tuple(self.map.goal):
-                print('Eureka!')
-                return self.reconstruct_path(current)
+        while self.open_set:
+
+            # print([str(node.point) for node in self.open_set])
+
+            node = heapq.heappop(self.open_set)
+            current = node.point
+
+            if current == self.map.goal:
+                self.reconstruct_path(current)
+                return
 
             self.closed_set.add(current)
 
-            for neighbor in self.map.get_neighbors(node=current,
-                                                   step_size=self.step_size):
+            for neighbor in self.map.get_neighbors(current, step_size=self.step_size):
+
                 if neighbor in self.closed_set:
                     continue
 
@@ -57,17 +88,12 @@ class AStarController:
                 if tentative_g_score >= self.g_score.get(neighbor, float('inf')):
                     continue
 
-                if self.is_collision(current, neighbor):
-                    continue
-
                 self.came_from[neighbor] = current
                 self.g_score[neighbor] = tentative_g_score
                 self.f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, self.map.goal)
 
-                if neighbor not in [item[1] for item in self.open_set]:
-                    heapq.heappush(self.open_set, (self.f_score[neighbor], neighbor))
-
-        return None  # Path not found
+                if neighbor not in self.open_set:
+                    heapq.heappush(self.open_set, Node(neighbor, self.f_score[neighbor]))
 
     def is_collision(self, node1, node2):
         return self.map.check_collision(node1, node2)

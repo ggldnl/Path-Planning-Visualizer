@@ -1,5 +1,5 @@
 from model.world.robot.robot import Robot
-from model.geometry.point import Point
+from model.geometry.pose import Pose
 
 import numpy as np
 
@@ -97,7 +97,7 @@ class DifferentialDriveRobot(Robot):
                     else:
                         current_y = target_y
 
-        self.current_pose = (current_x, current_y, current_theta)
+        self.current_pose = Pose(current_x, current_y, current_theta)
 
     def compute_odometry(self, dt):
 
