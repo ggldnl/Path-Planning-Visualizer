@@ -12,12 +12,12 @@ default_params = {
     "obs_max_height": 0.9,
     "obs_steady_count": 10,
     "obs_moving_count": 60,
-    "obs_min_lin_speed": -0.1,
-    "obs_max_lin_speed": 0.1,
-    "obs_min_ang_speed": -45,
-    "obs_max_ang_speed": 45,
-    "goal_min_dist": 2.0,
-    "goal_max_dist": 3.0,
+    "obs_min_lin_speed": -0.02,
+    "obs_max_lin_speed": 0.02,
+    "obs_min_ang_speed": -2.0,
+    "obs_max_ang_speed": 2.0,
+    "goal_min_dist": 3.0,
+    "goal_max_dist": 4.0,
     "min_goal_clearance": 0.1
 }
 
