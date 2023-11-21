@@ -24,7 +24,7 @@ class AStarController(Controller):
 
         self.step_size = step_size
 
-        self.start = robot.current_pose.as_point()
+        self.start = None
 
         self.open_set = []  # Nodes to be explored
         self.closed_set = set()  # Explored nodes
@@ -33,10 +33,25 @@ class AStarController(Controller):
         self.came_from = {}
 
         # Cost of getting from the start node to a given node: {point, cost}
-        self.g_score = {self.start: 0.0}
+        self.g_score = {}
 
         # Total cost of getting from the start node to the goal node through a given node
-        self.f_score = {self.start: self.heuristic(self.start, self.map.goal)}
+        self.f_score = {}
+
+        self.initialize()
+
+    def initialize(self):
+
+        self.start = self.robot.current_pose.as_point()
+
+        self.open_set = []
+        self.closed_set = set()
+
+        self.came_from = {}
+
+        self.g_score[self.start] = 0.0
+
+        self.f_score[self.start] = self.heuristic(self.start, self.map.goal)
 
         # Push f_score and Point
         heapq.heappush(self.open_set, Node(self.start, self.f_score[self.start]))
@@ -94,6 +109,10 @@ class AStarController(Controller):
 
                 if neighbor not in self.open_set:
                     heapq.heappush(self.open_set, Node(neighbor, self.f_score[neighbor]))
+
+    def reset(self):
+        self.path = []
+        self.initialize()
 
     def is_collision(self, node1, node2):
         return self.map.check_collision(node1, node2)

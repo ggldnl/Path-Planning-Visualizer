@@ -23,3 +23,6 @@ class DummyController(Controller):
             Point(1, 1),
             Point(0, 0)
         ]
+
+    def reset(self):
+        self.path = []

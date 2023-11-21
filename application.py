@@ -248,7 +248,6 @@ def simulation_control():
 
             # Reset robots and controllers
             for robot, controller in zip(world.robots, world.controllers):
-                # TODO when getting a new random map the robot should recover the path online
                 controller.reset()
 
             # Run the simulation

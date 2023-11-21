@@ -215,13 +215,17 @@ class Map:
 
     def get_neighbors(self, point, step_size=1, decimal_places=1):
 
+        # The point might not be exactly a vertex of a grid with size step_size
+        new_x = point.x // step_size * step_size
+        new_y = point.y // step_size * step_size
+
         neighbors = []
 
         for i in range(-1, 2):
             for j in range(-1, 2):
                 if not (i == 0 and j == 0):
 
-                    neighbor = Point(point.x + i * step_size, point.y + j * step_size)
+                    neighbor = Point(new_x + i * step_size, new_y + j * step_size)
 
                     """
                     # Create a buffer around the point

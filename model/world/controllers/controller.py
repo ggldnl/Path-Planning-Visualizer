@@ -25,12 +25,9 @@ class Controller:
     def step(self):
 
         if len(self.path) == 0 and not self.is_robot_near_goal():
-            # print('Searching...')
+            print('Searching...')
             self.search()
-            # print(f'Path found! {self.path}')
-
-    def reset(self):
-        self.path = []
+            print(f'Path found! {self.path}')
 
     def next(self):
         """
@@ -75,4 +72,11 @@ class Controller:
 
     @abstractmethod
     def search(self):
+        pass
+
+    @abstractmethod
+    def reset(self):
+        """
+        We may want to clean other structures too
+        """
         pass
