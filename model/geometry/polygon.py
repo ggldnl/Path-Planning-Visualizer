@@ -35,6 +35,10 @@ class Polygon(Shape):
         # Find the enclosing radius
         self.radius = self._find_radius()
 
+    @property
+    def bounds(self):
+        return self.get_bounding_box()
+
     @classmethod
     def generate_random_polygon(cls, num_sides, radius, noise=0.5):
 

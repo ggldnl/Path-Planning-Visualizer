@@ -13,7 +13,14 @@ class Segment:
         max_x = max(self.start.x, self.end.x)
         min_y = min(self.start.y, self.end.y)
         max_y = max(self.start.y, self.end.y)
-        return (min_x, min_y, max_x, max_y)
+        return min_x, min_y, max_x, max_y
+
+    def get_edges(self):
+        return [self.copy()]
+
+    def copy(self):
+        return Segment(self.start.copy(), self.end.copy())
+
 
     def __getitem__(self, item):
         if item == 0:
