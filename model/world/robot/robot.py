@@ -22,7 +22,7 @@ class Robot(metaclass=ABCMeta):
         self.estimated_pose = Pose(0, 0, 0)
 
         self.linear_velocity = 0.2  # m/s
-        self.angular_velocity = 0.005  # rad/s
+        self.angular_velocity = 1.0  # rad/s
 
         # Robot base consists of multiple polygons
         self.bodies = bodies
@@ -46,7 +46,7 @@ class Robot(metaclass=ABCMeta):
         self.motors = []
 
         # Define tolerance in translation/rotation
-        self.ROTATION_EPSILON = 5  # 5 deg
+        self.ROTATION_EPSILON = 0.2
 
     def add_sensor(self, sensor, pose):
 
