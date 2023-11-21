@@ -21,7 +21,6 @@ class Controller:
 
         # List of points to reach the goal
         self.path = []
-        self.idx = 0
 
     def step(self):
 
@@ -29,6 +28,9 @@ class Controller:
             # print('Searching...')
             self.search()
             # print(f'Path found! {self.path}')
+
+    def reset(self):
+        self.path = []
 
     def next(self):
         """
@@ -63,10 +65,10 @@ class Controller:
         return False
 
     def is_robot_near_goal(self):
-        return self.robot.current_pose.distance(self.map.current_goal) < self.EPS
+        return self.robot.current_pose.distance(self.map.goal) < self.EPS
 
     def is_robot_at_goal(self):
-        return self.robot.current_pose.as_point() == self.map.current_goal
+        return self.robot.current_pose.as_point() == self.map.goal
 
     def is_robot_at(self, point):
         return self.robot.current_pose.as_point() == point

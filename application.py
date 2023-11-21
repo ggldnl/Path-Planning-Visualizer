@@ -162,7 +162,7 @@ def generate_data() -> Iterator[str]:
                     frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], obstacle_fill_color)
 
                     # Add the start and the goal points to the frame
-                    frame.add_circle([world.map.current_goal.x, world.map.current_goal.y], 0.025, goal_fill_color)
+                    frame.add_circle([world.map.goal.x, world.map.goal.y], 0.025, goal_fill_color)
 
                     if stepping:
                         stepping = False
@@ -241,7 +241,17 @@ def simulation_control():
                 robot.angular_velocity = angular_velocity
 
         if 'random_map' in data:
+
+            # Clear the map and regenerate it
+            world.map.clear()
             world.map.generate(world.robots)
+
+            # Reset robots and controllers
+            for robot, controller in zip(world.robots, world.controllers):
+                # TODO when getting a new random map the robot should recover the path online
+                controller.reset()
+
+            # Run the simulation
             running = False
             stepping = True
 

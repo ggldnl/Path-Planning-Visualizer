@@ -81,16 +81,20 @@ class Map:
         self.obs_dist_range = self.obs_max_dist - self.obs_min_dist
 
         # Initial obstacles
-        self.initial_obstacles = None
+        self._initial_obstacles = []
 
         # Current obstacles
-        self.obstacles = None
+        self._obstacles = []
 
-        self.current_goal = None
+        self._current_goal = None
 
     @property
     def goal(self):
-        return self.current_goal
+        return self._current_goal
+
+    @property
+    def obstacles(self):
+        return self._obstacles
 
     @abstractmethod
     def _add_obstacle(self, obstacle):
@@ -207,7 +211,7 @@ class Map:
         # Update the obstacles and the goal
         self._add_obstacles(moving_obstacles)
         self._add_obstacles(steady_obstacles)
-        self.current_goal = goal
+        self._current_goal = goal
 
     def get_neighbors(self, point, step_size=1, decimal_places=1):
 
@@ -252,6 +256,10 @@ class Map:
 
     @abstractmethod
     def reset_map(self):
+        pass
+
+    @abstractmethod
+    def clear(self):
         pass
 
     def load_map(self, filename):

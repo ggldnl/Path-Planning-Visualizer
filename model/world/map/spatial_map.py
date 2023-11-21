@@ -1,10 +1,6 @@
-# Math
-from math import pi, sin, cos
-import random
 
-from model.geometry.intersection import check_intersection
 # Model
-from model.geometry.rectangle import Rectangle
+from model.geometry.intersection import check_intersection
 from model.geometry.segment import Segment
 from model.world.map.map import Map
 from model.world.map.obstacle import Obstacle
@@ -23,24 +19,8 @@ class SpatialMap(Map):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Current obstacle position
-        self._obstacles = []
+        # Current obstacles position
         self._obstacles_tree = index.Index()
-
-        # Initial obstacle position
-        self._initial_obstacles = []
-
-    @property
-    def goal(self):
-        return self.current_goal
-
-    @property
-    def obstacles(self):
-        return self._obstacles
-
-    @obstacles.setter
-    def obstacles(self, obstacle):
-        self._obstacles = obstacle
 
     def _add_obstacle(self, obstacle):
         self._obstacles_tree.insert(len(self._obstacles), obstacle.polygon.bounds)
@@ -82,17 +62,22 @@ class SpatialMap(Map):
 
     def get_polygon(self, obj_id):
         # Retrieve the polygon geometry based on its identifier
-        return self.obstacles[obj_id].polygon
+        return self._obstacles[obj_id].polygon
+
+    def clear(self):
+        self._obstacles = []
+        self._initial_obstacles = []
+        self._obstacles_tree = index.Index()
 
     def save_as_pickle(self, filename):
         with open(filename, "wb") as file:
             pickle.dump(self._initial_obstacles, file)
-            pickle.dump(self.current_goal, file)
+            pickle.dump(self._current_goal, file)
 
     def save_as_json(self, filename):
         data = {
             "initial_obstacles": [obstacle.to_dict() for obstacle in self._initial_obstacles],
-            "current_goal": self.current_goal.to_dict()
+            "current_goal": self._current_goal.to_dict()
         }
 
         with open(filename, "w") as file:
@@ -105,7 +90,7 @@ class SpatialMap(Map):
         with open(filename, "rb") as file:
             self._initial_obstacles = pickle.load(file)
             self._obstacles = [obstacle.copy() for obstacle in self._initial_obstacles]
-            self.current_goal = pickle.load(file)
+            self._current_goal = pickle.load(file)
 
     def load_map_from_json_file(self, filename):
         with open(filename, 'rb') as file:
@@ -113,11 +98,11 @@ class SpatialMap(Map):
             self.load_map_from_json_data(data)
 
     def load_map_from_json_data(self, data):
-        self.current_goal = Point.from_dict(data['current_goal'])
+        self._current_goal = Point.from_dict(data['current_goal'])
 
         # reset the current obstacle if present
         self._obstacles = []
-        self._obstacle_tree = index.Index()
+        self._obstacles_tree = index.Index()
 
         obstacle_data = data['initial_obstacles']
         for obstacle_dictionary in obstacle_data:
