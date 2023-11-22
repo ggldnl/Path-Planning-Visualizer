@@ -141,17 +141,12 @@ def generate_data() -> Iterator[str]:
                     # Add the robot to the frame
                     for robot, controller in zip(world.robots, world.controllers):
 
+                        # Add the path to the frame
                         if show_path:
-                            if controller.path:
+                            for segment in controller.draw_path:
+                                frame.add_line(segment.start, segment.end, 1, path_color)
 
-                                points = [[x, y] for x, y in controller.path]
-
-                                # robot_x, robot_y, _ = robot.current_pose
-                                # frame.add_line([robot_x, robot_y], points[-1], 1, '#ff0000')
-
-                                for i in range(1, len(points)):
-                                    frame.add_line(points[i - 1], points[i], 1, path_color)
-
+                        # Add the robot to the frame
                         frame.add_polygons(robot.bodies, default_robot_fill_color, default_robot_border_color)
 
                         # Add sensors if the option is enabled
@@ -218,6 +213,7 @@ def simulation_control():
             elif data['status'] == 'reset':
                 running = False
                 stepping = True
+                world.reset_robots()
                 world.map.reset_map()
 
         if 'obs_lin_speed' in data:

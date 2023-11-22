@@ -30,5 +30,5 @@
 - [ ] ~~add radar in gui to see sensors read from the robot~~
 - [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
 - [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
-- [ ] make the robot follow the shortest angle
-- [ ] remove linalg/utils and incorporate their methods inside geometry
+- [x] make the robot follow the shortest angle
+- [x] remove linalg/utils and incorporate their methods inside geometry
