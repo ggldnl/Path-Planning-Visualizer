@@ -1,6 +1,5 @@
 from abc import abstractmethod
 
-from model.geometry.segment import Segment
 from model.geometry.pose import Pose
 
 from model.exceptions.empty_path_exception import EmptyPathException
@@ -24,7 +23,8 @@ class Controller:
 
     def step(self):
 
-        if len(self.path) == 0 and not self.is_robot_near_goal():
+        if ((len(self.path) == 0 and not self.is_robot_near_goal())
+                or self.is_path_obstructed()):
             print('Searching...')
             self.search()
             print(f'Path found! {self.path}')
@@ -54,10 +54,7 @@ class Controller:
 
     def is_path_obstructed(self):
         for i in range(1, len(self.path)):
-            segment = Segment(self.path[i - 1], self.path[i])
-            bbox = segment.bounds
-            dangerous_obstacle_ids = self.map.query_region(bbox)
-            if len(dangerous_obstacle_ids) > 0:
+            if self.map.check_collision(self.path[i - 1], self.path[i]):
                 return True
         return False
 

@@ -3,15 +3,11 @@ from abc import abstractmethod
 # Math
 from math import pi, sin, cos
 import random
-
-from model.geometry.polygon import Polygon
 # Model
 from model.geometry.rectangle import Rectangle
-from model.geometry.segment import Segment
 from model.world.map.obstacle import Obstacle
 from model.geometry.point import Point
 from model.geometry.circle import Circle
-from model.geometry.pose import Pose
 from model.geometry.intersection import check_intersection
 
 # Serialization
@@ -226,6 +222,9 @@ class Map:
                 if not (i == 0 and j == 0):
 
                     neighbor = Point(new_x + i * step_size, new_y + j * step_size)
+                    if self.check_collision(point, neighbor):
+                        continue
+                    neighbors.append(neighbor)
 
                     """
                     # Create a buffer around the point
@@ -245,6 +244,13 @@ class Map:
                     neighbors.append(neighbor)
 
         return neighbors
+
+    @abstractmethod
+    def check_collision(self, point1, point2):
+        """
+        Returns all the obstacles in the region polygon
+        """
+        pass
 
     @abstractmethod
     def query_region(self, region):

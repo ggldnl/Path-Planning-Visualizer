@@ -20,7 +20,7 @@ class World:
         self.controllers = []
 
         # Initialize the map_legacy
-        self.map = MapBuilder().set_type('standard').set_obs_moving_count(20).set_obs_steady_count(20).build()
+        self.map = MapBuilder().set_type('spatial').set_obs_moving_count(20).set_obs_steady_count(20).build()
 
         # TODO bug: map is generated before we add robots; we can add robots over obstacles
         self.map.generate(self.robots)
@@ -46,7 +46,6 @@ class World:
         """
 
         dt = self.dt
-
         # Step all the obstacles
         self.map.step_motion(dt)
 
@@ -63,32 +62,8 @@ class World:
             # Update the robot making it follow the path
             robot.step_motion(dt)
 
-        """
-        for robot, controller in zip(self.robots, self.controllers_legacy):
-            if self.idx == 0:
-                break
-            # TODO path.
-            if self.idx == 1:
-                # path = controller.search()
-                #pass
-                path = controller.search(self.map)
-                print(path)
-            if controller.path:
-                print(controller.path)
-                if robot.is_at_target():
-                    next_pose = controller.path.pop()
-                    new_x = next_pose[0]
-                    new_y = next_pose[1]
-                    delta_x = new_x - robot.current_pose[0]
-                    delta_y = new_y - robot.current_pose[1]
-                    new_theta = np.rad2deg(np.arctan2(delta_y, delta_x))
-                    robot.target_pose = (next_pose[0], next_pose[1], new_theta)
-            robot.step_motion(dt)
-        self.idx += 1
-        """
-
         # Apply physics interactions
-        # self._apply_physics()
+        self._apply_physics()
 
         # Increment world time
         self.world_time += dt

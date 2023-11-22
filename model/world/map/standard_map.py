@@ -67,3 +67,12 @@ class StandardMap(Map):
         self._obstacles = obstacles
         self._initial_obstacles = [obstacle.copy() for obstacle in self._obstacles]
         print('Map updated!')
+
+    def check_collision(self, point1, point2):
+
+        line = Segment(point1, point2)
+        for obstacle_id in range(len(self._obstacles)):
+            if check_intersection(line, self.get_polygon(obstacle_id)):
+                return True
+        return False
+
