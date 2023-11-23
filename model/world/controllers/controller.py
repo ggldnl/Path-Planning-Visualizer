@@ -23,8 +23,8 @@ class Controller:
 
     def step(self):
 
-        if ((len(self.path) == 0 and not self.is_robot_near_goal())
-                or self.is_path_obstructed()):
+        if (len(self.path) == 0 and not self.is_robot_near_goal()):
+                #or self.is_path_obstructed()):
             print('Searching...')
             self.search()
             print(f'Path found! {self.path}')
@@ -77,11 +77,11 @@ class Controller:
 
     @abstractmethod
     def search(self):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def reset(self):
         """
         We may want to clean other structures too
         """
-        pass
+        raise NotImplementedError

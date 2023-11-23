@@ -54,12 +54,10 @@ class RRTController(Controller):
         if np.random.random() > goal_sample_rate:
             x = np.random.uniform(0 + delta, 20 - delta)
             y = np.random.uniform(0 + delta, 20 - delta)
+            x = x // self.step_size * self.step_size
+            y = y // self.step_size * self.step_size
         else:
             x, y = self.map.goal
-
-        # Round the coordinates to the nearest multiple of self.step_size
-        x = round(x / self.step_size) * self.step_size
-        y = round(y / self.step_size) * self.step_size
 
         return Node((x, y))
 
@@ -72,20 +70,22 @@ class RRTController(Controller):
         dist = min(self.step_size, dist)
         new_x = node_start.x + dist * math.cos(theta)
         new_y = node_start.y + dist * math.sin(theta)
+        new_y = new_y // self.step_size * self.step_size
+        new_x = new_x // self.step_size * self.step_size
         node_new = Node((new_x, new_y))
         node_new.parent = node_start
 
         return node_new
 
     def extract_path(self, node_end):
-        path = [Point(self.map.goal[0], self.map.goal[1])]
+        self.path = [Point(self.map.goal[0], self.map.goal[1])]
         node_now = node_end
 
         while node_now.parent is not None:
             node_now = node_now.parent
-            path.append(Point(node_now.x, node_now.y))
+            self.path.append(Point(node_now.x, node_now.y))
 
-        return path
+        return
 
     def distance_to_goal(self, node):
         return math.hypot(node.x - self.map.goal[0], node.y - self.map.goal[1])
