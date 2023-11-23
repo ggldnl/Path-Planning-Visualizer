@@ -27,17 +27,7 @@ class Robot(metaclass=ABCMeta):
         # Robot base consists of multiple polygons
         self.bodies = bodies
 
-        # The polygon is the outline of the entire robot. It will
-        # serve to check collisions
-        points = []
-        for body in bodies:
-            for point in body.points:
-                points.append(point.to_array())
-
-        # Take only the outermost among them
-        hull = ConvexHull(points)
-        outermost_points = [points[i] for i in hull.vertices]
-        self.outline = Polygon(outermost_points)
+        self._compute_outline()
 
         # Sensor objects
         self.sensors = []
@@ -47,6 +37,33 @@ class Robot(metaclass=ABCMeta):
 
         # Define tolerance in translation/rotation
         self.ROTATION_EPSILON = 0.2
+
+    def _compute_outline(self):
+        # The polygon is the outline of the entire robot. It will
+        # serve to check for collisions
+        points = []
+        for body in self.bodies:
+            for point in body.points:
+                points.append(point.to_array())
+
+        # Take only the outermost among them
+        hull = ConvexHull(points)
+        outermost_points = [points[i] for i in hull.vertices]
+        self.outline = Polygon(outermost_points)
+
+    def reset(self, pose):
+
+        x_diff = self.current_pose.x - pose.x
+        y_diff = self.current_pose.x - pose.y
+
+        self.previous_pose = pose
+        self.current_pose = pose
+        self.target_pose = pose
+
+        for body in self.bodies:
+            body.polygon.translate(x_diff, y_diff)
+
+        self._compute_outline()
 
     def add_sensor(self, sensor, pose):
 
