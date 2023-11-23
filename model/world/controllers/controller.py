@@ -21,9 +21,6 @@ class Controller:
         # List of points to reach the goal
         self.path = []
 
-        # List of segments to draw
-        self.draw_list = []
-
     def step(self):
 
         if ((len(self.path) == 0 and not self.is_robot_near_goal())
