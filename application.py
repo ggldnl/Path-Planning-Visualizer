@@ -36,6 +36,7 @@ from flask import Flask, Response, render_template, request, stream_with_context
 from model.exceptions.collision_exception import CollisionException
 from model.world.controllers.a_r_controller import AStarController
 from model.world.controllers.dummy_controller import DummyController
+
 # Import scripts
 from scripts.frame import Frame
 
@@ -45,6 +46,7 @@ from model.world.color_palette import *
 from model.world.robot.URDF_parser import URDFParser
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.world.robot.robots.cobalt.cobalt import Cobalt
+from model.geometry.pose import Pose
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -70,6 +72,9 @@ running = False
 # stepping == True when the step button is pressed and then
 # it is set to False after one iteration
 stepping = True
+
+# automatically restart the planning sequence when the map is reset
+autostart = True
 
 # Boolean controlling whether to show the respective elements
 show_trace = False
@@ -143,8 +148,9 @@ def generate_data() -> Iterator[str]:
 
                         # Add the path to the frame
                         if show_path:
-                            for segment in controller.draw_path:
-                                frame.add_line(segment.start, segment.end, 1, path_color)
+
+                            for segment in controller.get_draw_list():
+                                frame.add_line(segment.start.to_array(), segment.end.to_array(), 1, path_color)
 
                         # Add the robot to the frame
                         frame.add_polygons(robot.bodies, default_robot_fill_color, default_robot_border_color)
@@ -200,6 +206,7 @@ def simulation_control():
     global running, stepping
     global show_trace, show_sensors, show_path
     global update_robot
+    global autostart
 
     if data:
 
@@ -211,8 +218,14 @@ def simulation_control():
             elif data['status'] == 'step':
                 stepping = True
             elif data['status'] == 'reset':
+
                 running = False
                 stepping = True
+
+                if autostart:
+                    running = True
+                    stepping = False
+
                 world.reset_robots()
                 world.map.reset_map()
 
@@ -244,11 +257,16 @@ def simulation_control():
 
             # Reset robots and controllers
             for robot, controller in zip(world.robots, world.controllers):
+                # TODO fix this for multiple robots -> reset to initial position
                 controller.reset()
 
             # Run the simulation
             running = False
             stepping = True
+
+            if autostart:
+                running = True
+                stepping = False
 
         if 'load' in data:
             file_content = data['load']
