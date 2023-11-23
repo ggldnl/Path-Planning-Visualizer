@@ -1,4 +1,5 @@
-path_color = '#ff0000'
+path_color = '#8b000099'
+neighbor_color = '#8b000066'
 
 default_robot_border_color = '#006400FF'
 default_robot_fill_color = '#00640066'

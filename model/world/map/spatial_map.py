@@ -60,10 +60,6 @@ class SpatialMap(Map):
 
         return result
 
-    def get_polygon(self, obj_id):
-        # Retrieve the polygon geometry based on its identifier
-        return self._obstacles[obj_id].polygon
-
     def clear(self):
         self._obstacles = []
         self._initial_obstacles = []

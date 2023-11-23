@@ -212,8 +212,8 @@ class Map:
     def get_neighbors(self, point, step_size=1, decimal_places=1):
 
         # The point might not be exactly a vertex of a grid with size step_size
-        new_x = point.x // step_size * step_size
-        new_y = point.y // step_size * step_size
+        new_x = round(point.x / step_size) * step_size
+        new_y = round(point.y / step_size) * step_size
 
         neighbors = []
 
@@ -226,24 +226,11 @@ class Map:
                         continue
                     neighbors.append(neighbor)
 
-                    """
-                    # Create a buffer around the point
-                    n = 6
-                    buffer_points = []
-                    for k in range(n):
-                        buffer_points.append(
-                            Point(point.x + step_size * cos(k * 2 * pi / n), point.y + step_size * sin(k * 2 * pi / n))
-                        )
-                    buffer = Polygon(buffer_points)
-    
-                    dangerous_obstacles_ids = self.query_region(buffer)
-                    if len(dangerous_obstacles_ids) == 0:
-                        neighbors.append(neighbor)
-                    """
-
-                    neighbors.append(neighbor)
-
         return neighbors
+
+    def get_polygon(self, obj_id):
+        # Retrieve the polygon geometry based on its identifier
+        return self._obstacles[obj_id].polygon
 
     @abstractmethod
     def check_collision(self, point1, point2):

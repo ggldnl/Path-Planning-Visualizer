@@ -36,7 +36,7 @@ from flask import Flask, Response, render_template, request, stream_with_context
 from model.exceptions.collision_exception import CollisionException
 from model.world.controllers.a_r_controller import AStarController
 from model.world.controllers.dummy_controller import DummyController
-from model.world.controllers.rrt import RRTController
+from model.world.controllers.rrt_controller import RRTController
 # Import scripts
 from scripts.frame import Frame
 
@@ -80,6 +80,7 @@ autostart = True
 show_trace = False
 show_sensors = False
 show_path = False
+show_neighbors = True
 
 # TODO read this!
 # Boolean to update only the robot (some of its attributes needs to be shown or hidden).
@@ -152,6 +153,12 @@ def generate_data() -> Iterator[str]:
                             for segment in controller.get_draw_list():
                                 frame.add_line(segment.start.to_array(), segment.end.to_array(), 1, path_color)
 
+                        if show_neighbors:
+
+                            point = robot.current_pose.as_point()
+                            for neighbor in world.map.get_neighbors(point):
+                                frame.add_circle(neighbor.to_array(), 0.025, neighbor_color)
+
                         # Add the robot to the frame
                         frame.add_polygons(robot.bodies, default_robot_fill_color, default_robot_border_color)
 
@@ -204,7 +211,7 @@ def simulation_control():
 
     # Reference the global boolean control variables
     global running, stepping
-    global show_trace, show_sensors, show_path
+    global show_trace, show_sensors, show_path, show_neighbors
     global update_robot
     global autostart
 
@@ -285,6 +292,8 @@ def simulation_control():
                 show_trace = not show_trace
             if flag == 'sensors':
                 show_sensors = not show_sensors
+            if flag == 'neighbors':
+                show_neighbors = not show_neighbors
             if flag == 'path':
                 show_path = not show_path
 
@@ -355,7 +364,7 @@ if __name__ == "__main__":
     # Test with Cobalt
     robot = Cobalt()
     controller = AStarController(robot, world.map, step_size=1)
-    controller = RRTController(robot, world.map, step_size=1, goal_sample_rate=0.05, iter_max=8000)
+    # controller = RRTController(robot, world.map, step_size=1, goal_sample_rate=0.05, iter_max=8000)
 
     # controller = DummyController(robot, world.map)
     world.add_robot(robot, controller)

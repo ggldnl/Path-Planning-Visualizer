@@ -70,6 +70,64 @@ class Polygon(Shape):
         return cls(points)
 
     @classmethod
+    def get_segment_buffer(cls, segment, left_margin, right_margin):
+
+        if left_margin < 0:
+            raise ValueError(f"Left margin should be a positive number, {left_margin} was given instead.")
+
+        if right_margin < 0:
+            raise ValueError(f"Right margin should be a positive number, {right_margin} was given instead.")
+
+        A = segment.start
+        B = segment.end
+
+        AB = B - A
+
+        # Compute the squared magnitude of AB
+        mag_squared = AB.x ** 2 + AB.y ** 2
+
+        # Avoid division by zero by checking if mag_squared is non-zero
+        if mag_squared == 0:
+            raise ValueError("Segment has zero length.")
+
+        # Compute the unit vector u_AB
+        u_AB = AB / np.sqrt(mag_squared)
+
+        # Compute the normal vector n_AB
+        n_AB = Point(-u_AB.y, u_AB.x)
+
+        # Compute the vertices of the buffer
+        C = A + left_margin * n_AB
+        D = B + left_margin * n_AB
+        E = B - right_margin * n_AB
+        F = A - right_margin * n_AB
+
+        # Create a polygon from the four corners of the rectangle
+        buffer = Polygon([C, D, E, F, C])
+
+        return buffer
+
+    @classmethod
+    def get_point_buffer(cls, point, margin, num_points=4):
+        """
+        Returns the buffer of a point. The buffer of a point is by default a square around it
+        """
+
+        if margin < 0:
+            raise ValueError(f"Margin should be a positive number, {margin} was given instead.")
+
+        if num_points < 0:
+            raise ValueError(f"Number of point for the buffer should be a positive number, {num_points} was given instead.")
+
+        points = []
+        for i in range(num_points):
+            points.append(
+                Point(point.x + margin * np.cos(i * 2 * np.pi / num_points), point.y + margin * np.sin(i * 2 * np.pi / num_points))
+            )
+
+        return Polygon(points)
+
+    @classmethod
     def from_dict(cls, dictionary):
 
         # point_list = json.loads(dictionary['points'], object_hook=lambda d: Point(d['x'], d['y']))
@@ -86,8 +144,7 @@ class Polygon(Shape):
     def to_dict(self):
         return {'points': [point.to_dict() for point in self.points]}
 
-    @property
-    def bounds(self):
+    def get_bounding_box(self):
         """
         Returns the bounding box of the polygon.
         """
