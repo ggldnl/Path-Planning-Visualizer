@@ -36,7 +36,7 @@ from flask import Flask, Response, render_template, request, stream_with_context
 from model.exceptions.collision_exception import CollisionException
 from model.world.controllers.a_r_controller import AStarController
 from model.world.controllers.dummy_controller import DummyController
-
+from model.world.controllers.rrt import RRTController
 # Import scripts
 from scripts.frame import Frame
 
@@ -355,6 +355,8 @@ if __name__ == "__main__":
     # Test with Cobalt
     robot = Cobalt()
     controller = AStarController(robot, world.map, step_size=1)
+    controller = RRTController(robot, world.map, step_size=1, goal_sample_rate=0.05, iter_max=8000)
+
     # controller = DummyController(robot, world.map)
     world.add_robot(robot, controller)
     application.run(host="0.0.0.0", port=5000, threaded=True)
