@@ -1,5 +1,6 @@
 from model.world.map.map import Map
 from model.geometry.point import Point
+from model.geometry.segment import Segment
 from model.world.map.obstacle import Obstacle
 from model.geometry.intersection import check_intersection
 
