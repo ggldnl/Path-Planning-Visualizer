@@ -35,10 +35,7 @@ class World:
 
     def reset_robots(self):
         for robot in self.robots:
-            # TODO fix this
-            robot.pose.x = 0
-            robot.pose.y = 0
-            robot.pose.z = 0
+            robot.reset()
 
     def step(self):
         """
@@ -63,7 +60,7 @@ class World:
             robot.step_motion(dt)
 
         # Apply physics interactions
-        self._apply_physics()
+        # self._apply_physics()
 
         # Increment world time
         self.world_time += dt

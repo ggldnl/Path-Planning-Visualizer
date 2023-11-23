@@ -1,5 +1,8 @@
 import heapq
 
+from model.geometry.segment import Segment
+from model.geometry.point import Point
+
 from model.world.controllers.controller import Controller
 
 
@@ -114,5 +117,7 @@ class AStarController(Controller):
         self.path = []
         self.initialize()
 
-    def is_collision(self, node1, node2):
-        return self.map.check_collision(node1, node2)
+    def get_draw_list(self):
+        # For A* the segments we need to draw are the segments in self.path
+        return ([Segment(self.path[i - 1], self.path[i]) for i in range(1, len(self.path))] +
+                [Segment(Point(self.robot.current_pose.x, self.robot.current_pose.y), Point(self.robot.target_pose.x, self.robot.target_pose.y))])

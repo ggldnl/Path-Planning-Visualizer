@@ -2,9 +2,9 @@ from abc import abstractmethod
 
 from model.geometry.pose import Pose
 
-from model.exceptions.empty_path_exception import EmptyPathException
-
 import numpy as np
+
+from model.exceptions.empty_path_exception import EmptyPathException
 
 
 class Controller:
@@ -21,6 +21,9 @@ class Controller:
         # List of points to reach the goal
         self.path = []
 
+        # List of segments to draw
+        self.draw_list = []
+
     def step(self):
 
         if ((len(self.path) == 0 and not self.is_robot_near_goal())
@@ -28,6 +31,14 @@ class Controller:
             print('Searching...')
             self.search()
             print(f'Path found! {self.path}')
+
+    @abstractmethod
+    def get_draw_list(self):
+        """
+        Add to the draw_list everything that should be drawn on screen. This can be the path (A*) or the entire
+        tree (RRT, RRT*, ...)
+        """
+        pass
 
     def next(self):
         """

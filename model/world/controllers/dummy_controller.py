@@ -1,6 +1,7 @@
 from model.world.controllers.controller import Controller
 
 from model.geometry.point import Point
+from model.geometry.segment import Segment
 
 
 class DummyController(Controller):
@@ -26,3 +27,7 @@ class DummyController(Controller):
 
     def reset(self):
         self.path = []
+
+    def populate_draw_list(self):
+        # For A* the segments we need to draw are the segments in self.path
+        self.draw_list = [Segment(self.path[i - 1], self.path[i]) for i in range(1, len(self.path))]
