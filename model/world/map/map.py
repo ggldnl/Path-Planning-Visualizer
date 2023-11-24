@@ -37,8 +37,9 @@ class Map:
                  # Goal parameters
                  goal_min_dist,
                  goal_max_dist,
+                 min_goal_clearance,
 
-                 min_goal_clearance
+                 discretization_step
                  ):
 
         # Set parameters
@@ -75,6 +76,8 @@ class Map:
         self.obs_width_range = self.obs_max_width - self.obs_min_width
         self.obs_height_range = self.obs_max_height - self.obs_min_height
         self.obs_dist_range = self.obs_max_dist - self.obs_min_dist
+
+        self.discretization_step = discretization_step
 
         # Initial obstacles
         self._initial_obstacles = []
@@ -209,19 +212,19 @@ class Map:
         self._add_obstacles(steady_obstacles)
         self._current_goal = goal
 
-    def get_neighbors(self, point, step_size=1, decimal_places=1):
+    def get_neighbors(self, point, include_current=True):
 
         # The point might not be exactly a vertex of a grid with size step_size
-        new_x = round(point.x / step_size) * step_size
-        new_y = round(point.y / step_size) * step_size
+        new_x = round(point.x / self.discretization_step) * self.discretization_step
+        new_y = round(point.y / self.discretization_step) * self.discretization_step
 
         neighbors = []
 
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if not (i == 0 and j == 0):
+                if not (i == 0 and j == 0) or include_current:
 
-                    neighbor = Point(new_x + i * step_size, new_y + j * step_size)
+                    neighbor = Point(new_x + i * self.discretization_step, new_y + j * self.discretization_step)
                     if self.check_collision(point, neighbor):
                         continue
                     neighbors.append(neighbor)

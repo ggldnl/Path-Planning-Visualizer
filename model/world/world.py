@@ -20,7 +20,7 @@ class World:
         self.controllers = []
 
         # Initialize the map_legacy
-        self.map = MapBuilder().set_type('spatial').set_obs_moving_count(1).set_obs_steady_count(40).build()
+        self.map = MapBuilder().set_type('spatial').set_obs_moving_count(20).set_obs_steady_count(40).build()
 
         # TODO bug: map is generated before we add robots; we can add robots over obstacles
         self.map.generate(self.robots)
@@ -48,16 +48,17 @@ class World:
 
         for robot, controller in zip(self.robots, self.controllers):
 
-            # Scan the map, recompute path if current path is obstructed
+            # Scan the map, compute path, ...
             controller.step()
 
-            # Get the next target point (could be the same as before if the robot hasn't reached it yet)
-            next = controller.next()
-            if next is not None:
+            if controller.has_path():
+
+                # Get the next target point (could be the same as before if the robot hasn't reached it yet)
+                next = controller.next()
                 robot.target_pose = next
 
-            # Update the robot making it follow the path
-            robot.step_motion(dt)
+                # Update the robot making it follow the path
+                robot.step_motion(dt)
 
         # Apply physics interactions
         # self._apply_physics()

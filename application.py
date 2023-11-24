@@ -46,7 +46,9 @@ from model.world.color_palette import *
 from model.world.robot.URDF_parser import URDFParser
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.world.robot.robots.cobalt.cobalt import Cobalt
-from model.geometry.pose import Pose
+from model.geometry.point import Point
+from model.geometry.segment import Segment
+from model.geometry.polygon import Polygon
 
 # Configure the logger
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -80,7 +82,7 @@ autostart = True
 show_trace = False
 show_sensors = False
 show_path = False
-show_neighbors = True
+show_data_structures = True
 
 # TODO read this!
 # Boolean to update only the robot (some of its attributes needs to be shown or hidden).
@@ -149,15 +151,29 @@ def generate_data() -> Iterator[str]:
 
                         # Add the path to the frame
                         if show_path:
+                            path = controller.path
+                            if len(path) > 0:
+                                frame.add_line(robot.current_pose.as_point().to_array(), path[0].to_array(), 1, path_color)
+                                for i in range(1, len(path)):
+                                    frame.add_line(path[i-1].to_array(), path[i].to_array(), 1, path_color)
 
-                            for segment in controller.get_draw_list():
-                                frame.add_line(segment.start.to_array(), segment.end.to_array(), 1, path_color)
-
-                        if show_neighbors:
-
-                            point = robot.current_pose.as_point()
-                            for neighbor in world.map.get_neighbors(point):
-                                frame.add_circle(neighbor.to_array(), 0.025, neighbor_color)
+                        if show_data_structures:
+                            for structure in controller.get_draw_list():
+                                if isinstance(structure, Point):
+                                    # frame.add_circle([structure.x, structure.y], 0.025, path_color)
+                                    tile = Polygon([
+                                        Point(structure.x - world.map.discretization_step / 2,
+                                              structure.y + world.map.discretization_step / 2),
+                                        Point(structure.x - world.map.discretization_step / 2,
+                                              structure.y - world.map.discretization_step / 2),
+                                        Point(structure.x + world.map.discretization_step / 2,
+                                              structure.y - world.map.discretization_step / 2),
+                                        Point(structure.x + world.map.discretization_step / 2,
+                                              structure.y + world.map.discretization_step / 2),
+                                    ])
+                                    frame.add_polygon(tile, tile_color)
+                                elif isinstance(structure, Segment):
+                                    frame.add_line(structure.start.to_array(), structure.end.to_array(), 1, path_color)
 
                         # Add the robot to the frame
                         frame.add_polygons(robot.bodies, default_robot_fill_color, default_robot_border_color)
@@ -211,7 +227,7 @@ def simulation_control():
 
     # Reference the global boolean control variables
     global running, stepping
-    global show_trace, show_sensors, show_path, show_neighbors
+    global show_trace, show_sensors, show_path, show_data_structures
     global update_robot
     global autostart
 
@@ -292,8 +308,8 @@ def simulation_control():
                 show_trace = not show_trace
             if flag == 'sensors':
                 show_sensors = not show_sensors
-            if flag == 'neighbors':
-                show_neighbors = not show_neighbors
+            if flag == 'data_structures':
+                show_data_structures = not show_data_structures
             if flag == 'path':
                 show_path = not show_path
 
@@ -363,9 +379,10 @@ if __name__ == "__main__":
 
     # Test with Cobalt
     robot = Cobalt()
-    controller = AStarController(robot, world.map, step_size=1)
-    # controller = RRTController(robot, world.map, step_size=1, goal_sample_rate=0.05, iter_max=8000)
 
+    controller = AStarController(robot, world.map)
+    # controller = RRTController(robot, world.map, step_size=1, goal_sample_rate=0.05, iter_max=8000)
     # controller = DummyController(robot, world.map)
+
     world.add_robot(robot, controller)
     application.run(host="0.0.0.0", port=5000, threaded=True)

@@ -15,17 +15,18 @@ class Node:
     def __str__(self):
         return f'Node({self.point}, score={self.score})'
 
+    def __repr__(self):
+        return self.__str__()
+
     def __lt__(self, other):
         return self.score < other.score
 
 
 class AStarController(Controller):
 
-    def __init__(self, robot, map, step_size=1):
+    def __init__(self, robot, map):
 
         super().__init__(robot, map)
-
-        self.step_size = step_size
 
         self.start = None
 
@@ -40,6 +41,8 @@ class AStarController(Controller):
 
         # Total cost of getting from the start node to the goal node through a given node
         self.f_score = {}
+
+        self.draw_list = []
 
         self.initialize()
 
@@ -73,7 +76,7 @@ class AStarController(Controller):
             path.append(current)
 
         # Exclude the current point from the array; this way the array only contains points the robot should reach
-        self.path = path[:-1]
+        self.path = path[::-1]
 
         # Reset data structures
         self.open_set = []
@@ -84,9 +87,7 @@ class AStarController(Controller):
 
     def search(self):
 
-        while self.open_set:
-
-            # print([str(node.point) for node in self.open_set])
+        if self.open_set:
 
             node = heapq.heappop(self.open_set)
             current = node.point
@@ -97,7 +98,7 @@ class AStarController(Controller):
 
             self.closed_set.add(current)
 
-            for neighbor in self.map.get_neighbors(current, step_size=self.step_size):
+            for neighbor in self.map.get_neighbors(current):
 
                 if neighbor in self.closed_set:
                     continue
@@ -113,11 +114,13 @@ class AStarController(Controller):
                 if neighbor not in self.open_set:
                     heapq.heappush(self.open_set, Node(neighbor, self.f_score[neighbor]))
 
+                    # The draw_list for A* will contain all the points in the open_set
+                    self.draw_list.append(neighbor)
+
     def reset(self):
         self.path = []
+        self.draw_list = []
         self.initialize()
 
     def get_draw_list(self):
-        # For A* the segments we need to draw are the segments in self.path
-        return ([Segment(self.path[i - 1], self.path[i]) for i in range(1, len(self.path))] +
-                [Segment(Point(self.robot.current_pose.x, self.robot.current_pose.y), Point(self.robot.target_pose.x, self.robot.target_pose.y))])
+        return self.draw_list

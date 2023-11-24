@@ -10,24 +10,36 @@ class DummyController(Controller):
 
         super().__init__(robot, map)
 
-    def search(self):
-
-        # Do nothing: the dummy controller always return the same path. We only reset the path
-
         # Zig zag
-        self.path = [
-            Point(3, 0),
-            Point(3, 1),
-            Point(2, 0),
-            Point(2, 1),
-            Point(1, 0),
+        self.path_backup = [
+
+            # Describe a square and go back to the starting point
+            Point(0, 0),
+            Point(0, 1),
             Point(1, 1),
-            Point(0, 0)
+            Point(1, 0),
+            Point(0, 0),
+
+            # Go to the goal
+            self.map.goal.copy(),
         ]
+        self.idx = 0
+
+    def search(self):
+        print('Searching...')
+        if not self.has_path():
+            # Do nothing: the dummy controller always return the same path. We only reset the path
+            self.path.append(self.path_backup[self.idx])
+            print(f'Adding {self.path[self.idx]} to ne path')
+            self.idx += 1
+        else:
+            self.idx = 0
 
     def reset(self):
+        # Nothing to reset, the path is emptied one point at a time once the robot reaches it
         self.path = []
+        self.path_backup[-1] = self.map.goal.copy()
+        self.idx = 0
 
-    def populate_draw_list(self):
-        # For A* the segments we need to draw are the segments in self.path
-        self.draw_list = [Segment(self.path[i - 1], self.path[i]) for i in range(1, len(self.path))]
+    def get_draw_list(self):
+        return self.map.get_neighbors(self.robot.current_pose.as_point())

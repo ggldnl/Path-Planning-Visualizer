@@ -18,7 +18,8 @@ default_params = {
     "obs_max_ang_speed": 2.0,
     "goal_min_dist": 4.0,
     "goal_max_dist": 6.0,
-    "min_goal_clearance": 0.1
+    "min_goal_clearance": 0.1,
+    "discretization_step": 0.5
 }
 
 
@@ -100,6 +101,10 @@ class MapBuilder:
         self.params_dictionary['goal_min_dist'] = goal_min_dist
         self.params_dictionary['goal_max_dist'] = goal_max_dist
         return self
+
+    def set_discretization_step(self, discretization_step):
+        self._check_non_negative(discretization_step, strict=True)
+        self.params_dictionary['discretization_step'] = discretization_step
 
     def set_type(self, map_type: Literal['standard', 'spatial']):
         self.map_type = map_type
