@@ -105,6 +105,7 @@ class MapBuilder:
     def set_discretization_step(self, discretization_step):
         self._check_non_negative(discretization_step, strict=True)
         self.params_dictionary['discretization_step'] = discretization_step
+        return self
 
     def set_type(self, map_type: Literal['standard', 'spatial']):
         self.map_type = map_type
