@@ -81,7 +81,7 @@ autostart = True
 # Boolean controlling whether to show the respective elements
 show_trace = False
 show_sensors = False
-show_path = False
+show_path = True
 show_data_structures = True
 
 # TODO read this!
@@ -380,8 +380,8 @@ if __name__ == "__main__":
     # Test with Cobalt
     robot = Cobalt()
 
-    controller = AStarController(robot, world.map)
-    # controller = RRTController(robot, world.map, step_size=1, goal_sample_rate=0.05, iter_max=8000)
+    # controller = AStarController(robot, world.map)
+    controller = RRTController(robot, world.map, goal_sample_rate=0.05)
     # controller = DummyController(robot, world.map)
 
     world.add_robot(robot, controller)

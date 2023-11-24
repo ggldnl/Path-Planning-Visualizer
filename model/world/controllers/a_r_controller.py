@@ -24,9 +24,9 @@ class Node:
 
 class AStarController(Controller):
 
-    def __init__(self, robot, map):
+    def __init__(self, robot, map, iterations=1):
 
-        super().__init__(robot, map)
+        super().__init__(robot, map, iterations)
 
         self.start = None
 
@@ -85,7 +85,7 @@ class AStarController(Controller):
         self.g_score = {self.start: 0.0}  # cost of getting from the start node to a given node
         self.f_score = {self.start: self.heuristic(self.start, self.map.goal)}
 
-    def search(self):
+    def _search(self):
 
         if self.open_set:
 
@@ -98,7 +98,7 @@ class AStarController(Controller):
 
             self.closed_set.add(current)
 
-            for neighbor in self.map.get_neighbors(current):
+            for neighbor in self.map.get_neighbors(current, include_current=False):
 
                 if neighbor in self.closed_set:
                     continue

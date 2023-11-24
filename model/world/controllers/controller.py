@@ -9,10 +9,11 @@ from model.exceptions.empty_path_exception import EmptyPathException
 
 class Controller:
 
-    def __init__(self, robot, map):
+    def __init__(self, robot, map, iterations):
 
         self.robot = robot
         self.map = map
+        self.iterations = iterations
 
         # Range from the next target point in which the robot must recompute the path
         # (rerun the path planning algorithm)
@@ -65,8 +66,12 @@ class Controller:
         delta_y = new_y - current_y
         return Pose(new_x, new_y, np.arctan2(delta_y, delta_x))
 
-    @abstractmethod
     def search(self):
+        for _ in range(0, self.iterations):
+            self._search()
+
+    @abstractmethod
+    def _search(self):
         """
         Single step of the path planning loop.
         """
