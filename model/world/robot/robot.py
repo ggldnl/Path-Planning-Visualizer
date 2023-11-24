@@ -21,7 +21,7 @@ class Robot(metaclass=ABCMeta):
         # Odometry
         self.estimated_pose = Pose(0, 0, 0)
 
-        self.linear_velocity = 0.2  # m/s
+        self.linear_velocity = 0.4  # m/s
         self.angular_velocity = 1.0  # rad/s
 
         # Robot base consists of multiple polygons
