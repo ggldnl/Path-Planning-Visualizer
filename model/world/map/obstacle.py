@@ -51,6 +51,12 @@ class Obstacle:
         vel = tuple(dictionary['vel'])
         return Obstacle(polygon, vel)
 
+    def __str__(self):
+        return f'Obstacle {self.polygon.points}'
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class RectangularObstacle(Obstacle):
 
