@@ -238,7 +238,8 @@ class Map:
     @abstractmethod
     def check_collision(self, point1, point2):
         """
-        Returns all the obstacles in the region polygon
+        Given two points on the map, implements the logic with which we check if
+        the second point is reachable by the first
         """
         pass
 

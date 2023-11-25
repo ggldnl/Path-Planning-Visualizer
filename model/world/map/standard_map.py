@@ -1,6 +1,7 @@
 from model.world.map.map import Map
 from model.geometry.point import Point
 from model.geometry.segment import Segment
+from model.geometry.polygon import Polygon
 from model.world.map.obstacle import Obstacle
 from model.geometry.intersection import check_intersection
 
@@ -70,10 +71,11 @@ class StandardMap(Map):
         print('Map updated!')
 
     def check_collision(self, point1, point2):
-
-        line = Segment(point1, point2)
+        # line = Segment(point1, point2)
+        # buffer = Polygon.get_segment_buffer(line, self.discretization_step, self.discretization_step)
+        buffer = Polygon.get_point_buffer(point2, self.discretization_step)
         for obstacle_id in range(len(self._obstacles)):
-            if check_intersection(line, self.get_polygon(obstacle_id)):
+            if check_intersection(buffer, self.get_polygon(obstacle_id)):
                 return True
         return False
 

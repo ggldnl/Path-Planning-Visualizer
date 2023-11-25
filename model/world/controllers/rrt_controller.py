@@ -37,7 +37,7 @@ class RRTController(Controller):
 
     def _search(self):
 
-        if not self.has_path():
+        if not self.has_path() and not self.is_robot_at_goal():
 
             if self.current_iteration < self.max_iterations:
 
@@ -108,6 +108,7 @@ class RRTController(Controller):
         self.path = []
         self.vertex = [Node(self.robot.current_pose.as_point())]
         self.draw_list = []
+        self.current_iteration = 0
 
     def get_distance_and_angle(self, node_start, node_end):
         dx = node_end.x - node_start.x

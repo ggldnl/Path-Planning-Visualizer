@@ -380,8 +380,8 @@ if __name__ == "__main__":
     # Test with Cobalt
     robot = Cobalt()
 
-    # controller = AStarController(robot, world.map)
-    controller = RRTController(robot, world.map, goal_sample_rate=0.05)
+    controller = AStarController(robot, world.map, iterations=1)
+    # controller = RRTController(robot, world.map, goal_sample_rate=0.05)
     # controller = DummyController(robot, world.map)
 
     world.add_robot(robot, controller)
