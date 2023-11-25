@@ -12,11 +12,8 @@ export function drawLine(ctx, p1, p2, pixelOrigin, pixelScale, color, width) {
     var y2_2 = pixelOrigin.y - p2[1] * pixelScale;
 
     ctx.moveTo(x1_2, y1_2);
-
     ctx.lineTo(x2_2, y2_2);
-
     ctx.stroke();
-
     ctx.closePath();
 }
 
@@ -27,6 +24,7 @@ function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
+    ctx.closePath();
 }
 
 export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, fillColor, borderColor=null) {
