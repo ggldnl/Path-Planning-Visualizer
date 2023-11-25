@@ -16,6 +16,8 @@ export function drawLine(ctx, p1, p2, pixelOrigin, pixelScale, color, width) {
     ctx.lineTo(x2_2, y2_2);
 
     ctx.stroke();
+
+    ctx.closePath();
 }
 
 function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
