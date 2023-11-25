@@ -27,12 +27,13 @@ function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
     ctx.closePath();
 }
 
-export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, fillColor, borderColor=null) {
+export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, lineWidth, fillColor, borderColor=null) {
 
     // Position of the circle in the new coordinate frame
     var x = pixelOrigin.x + relativePos[0] * pixelScale;
     var y = pixelOrigin.y - relativePos[1] * pixelScale;
 
+    ctx.lineWidth = lineWidth;
     ctx.beginPath();
     ctx.arc(x, y, radius * pixelScale, 0, 2 * Math.PI);
 
@@ -156,10 +157,13 @@ export function drawGrid(
     }
 }
 
-export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, borderColor=null) {
+export function drawPolygon(ctx, points, pixelOrigin, pixelScale, lineWidth, fillColor, borderColor=null) {
+
+    console.log("Line width: ", lineWidth);
 
     if (points.length > 0) {
         ctx.lineJoin = 'round';
+        ctx.lineWidth = lineWidth;
         ctx.beginPath();
 
         // First point
@@ -192,8 +196,9 @@ export function drawPolygon(ctx, points, pixelOrigin, pixelScale, fillColor, bor
     }
 }
 
-export function drawCircumscribedPolygon(ctx, x, y, radius, sides, filLColor, borderColor=null) {
+export function drawCircumscribedPolygon(ctx, x, y, radius, lineWidth, sides, filLColor, borderColor=null) {
     ctx.lineJoin = 'round';
+    ctx.lineWidth = lineWidth;
     ctx.beginPath();
     const angleStep = (2 * Math.PI) / sides;
     ctx.moveTo(x + radius * Math.cos(0), y + radius * Math.sin(0));

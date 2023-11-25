@@ -8,34 +8,36 @@ class Frame:
     def clear(self):
         self.draw_list = []
 
-    def add_circle(self, pos, radius, fill_color, border_color=None):
+    def add_circle(self, pos, radius, line_width, fill_color, border_color=None):
         self.draw_list.append(
             {
                 "type": "circle",
                 "pos": pos,
                 "radius": radius,
+                "line_width": line_width,
                 "fill_color": fill_color,
                 "border_color": fill_color if border_color is None else border_color
             }
         )
 
-    def add_circles(self, pos, radius, fill_color, border_color=None):
+    def add_circles(self, pos, radius, line_width, fill_color, border_color=None):
         for p, r in zip(pos, radius):
-            self.add_circle(p, r, fill_color, border_color)
+            self.add_circle(p, r, line_width, fill_color, border_color)
 
-    def add_polygon(self, polygon, fill_color, border_color=None):
+    def add_polygon(self, polygon, line_width, fill_color, border_color=None):
         self.draw_list.append(
             {
                 "type": "polygon",
                 "points": polygon.to_point_array(),
+                "line_width": line_width,
                 "fill_color": fill_color,
                 "border_color": fill_color if border_color is None else border_color
             }
         )
 
-    def add_polygons(self, polygons, fill_color, border_color=None):
+    def add_polygons(self, polygons, line_width, fill_color, border_color=None):
         for polygon in polygons:
-            self.add_polygon(polygon, fill_color, border_color)
+            self.add_polygon(polygon, line_width, fill_color, border_color)
 
     def add_line(self, p1, p2, line_width, fill_color, border_color=None):
         self.draw_list.append(
