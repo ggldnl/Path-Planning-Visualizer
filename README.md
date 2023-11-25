@@ -32,3 +32,5 @@
 - [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
 - [x] make the robot follow the shortest angle
 - [x] remove linalg/utils and incorporate their methods inside geometry
+- [ ] solve bug in frontend drawing lines
+- [x] debug rrt, the robot goes back to start after reaching goal
