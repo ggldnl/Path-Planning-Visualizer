@@ -103,6 +103,14 @@ class Map:
         for obstacle in obstacles:
             self._add_obstacle(obstacle)
 
+    def enable_moving_obstacles(self):
+        for idx in range(len(self._obstacles)):
+            self._obstacles[idx].vel = self._initial_obstacles[idx].vel
+
+    def disable_moving_obstacles(self):
+        for obstacle in self._obstacles:
+            obstacle.vel = (0, 0, 0)
+
     def _generate_random_obstacle(self):
 
         # Generate dimensions
