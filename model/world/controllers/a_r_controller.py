@@ -1,7 +1,5 @@
 import heapq
 
-from model.geometry.segment import Segment
-from model.geometry.point import Point
 
 from model.world.controllers.controller import Controller
 
