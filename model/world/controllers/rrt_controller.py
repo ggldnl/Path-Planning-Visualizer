@@ -3,6 +3,7 @@ import numpy as np
 
 from model.geometry.point import Point
 from model.geometry.segment import Segment
+from model.geometry.polygon import Polygon
 from model.world.controllers.controller import Controller
 
 
@@ -25,18 +26,19 @@ class Node:
 
 class RRTController(Controller):
 
-    def __init__(self, robot, map, goal_sample_rate=None, max_iterations=8000, iterations=1):
+    def __init__(self, robot, map, goal_sample_rate=0.05, max_iterations=8000, iterations=1):
         super().__init__(robot, map, iterations)
 
-        if goal_sample_rate is None:
-            self.goal_sample_rate = map.min_goal_clearance
-        else:
-            self.goal_sample_rate = goal_sample_rate
+        # Percentage with which we use the goal as new point
+        self.goal_sample_rate = goal_sample_rate
 
         self.vertex = [Node(robot.current_pose.as_point())]
         self.draw_list = []
         self.max_iterations = max_iterations
         self.current_iteration = 0
+
+        # Disable moving obstacles for the map
+        self.map.disable_moving_obstacles()
 
     def _search(self):
 
@@ -50,11 +52,10 @@ class RRTController(Controller):
                 node_near = self.nearest_neighbor(self.vertex, node_rand)
                 node_new = self.new_state(node_near, node_rand)
 
-                if node_new:  # and not self.is_path_obstructed(node_near, node_new):
+                if node_new and not self.check_collision(node_near, node_new):
                     self.vertex.append(node_new)
                     dist = self.distance_to_goal(node_new)
 
-                    # TODO self.map.discretization_step or self.map.min_goal_clearance/self.goal_sample_rate?
                     if dist <= self.map.discretization_step:  # and not self.is_path_obstructed(node_new, self.map.goal):
                         return self.extract_path(node_new)
 
@@ -62,13 +63,12 @@ class RRTController(Controller):
                     self.draw_list.append(Segment(node_new.point, node_new.parent.point))
 
     def generate_random_node(self):
-
         if np.random.random() > self.goal_sample_rate:
-            x = np.random.uniform(-self.map.obs_max_dist, self.map.obs_max_dist)
-            y = np.random.uniform(-self.map.obs_max_dist, self.map.obs_max_dist)
-            x = round(x / self.map.discretization_step) * self.map.discretization_step
-            y = round(y / self.map.discretization_step) * self.map.discretization_step
+            # 95% (by default) of the time, select a random point in space
+            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
         else:
+            # 5% (by default) of the time, select the goal
             x, y = self.map.goal
 
         return Node((x, y))
@@ -102,11 +102,15 @@ class RRTController(Controller):
     def distance_to_goal(self, node):
         return math.hypot(node.x - self.map.goal[0], node.y - self.map.goal[1])
 
-    """
-    def is_path_obstructed(self, node_start, node_end):
-        line_segment = Segment((node_start.x, node_start.y), (node_end.x, node_end.y))
-        return self.map.check_collision(line_segment.start, line_segment.end)
-    """
+    def check_collision(self, start, end):
+        """
+        Check if there is an obstacle between the two nodes
+        """
+        line = Segment(start.point, end.point)
+        buffer = Polygon.get_segment_buffer(line, left_margin=self.map.discretization_step, right_margin=self.map.discretization_step)
+        intersecting_obstacles_ids = self.map.query_region(buffer)
+        print(f'Checking collision between {start.point} and {end.point}: {intersecting_obstacles_ids}')
+        return len(intersecting_obstacles_ids) > 0
 
     def reset(self):
         self.path = []
