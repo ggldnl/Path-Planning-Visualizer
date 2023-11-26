@@ -32,9 +32,21 @@ class RRTController(Controller):
         # Percentage with which we use the goal as new point
         self.goal_sample_rate = goal_sample_rate
 
+        self.max_iterations = max_iterations
+
         self.vertex = [Node(robot.current_pose.as_point())]
         self.draw_list = []
-        self.max_iterations = max_iterations
+
+        self.current_iteration = 0
+
+        # Disable moving obstacles for the map
+        self.initialize()
+
+    def initialize(self):
+
+        self.path = []
+        self.vertex = [Node(self.robot.current_pose.as_point())]
+        self.draw_list = []
         self.current_iteration = 0
 
         # Disable moving obstacles for the map
@@ -113,10 +125,7 @@ class RRTController(Controller):
         return len(intersecting_obstacles_ids) > 0
 
     def reset(self):
-        self.path = []
-        self.vertex = [Node(self.robot.current_pose.as_point())]
-        self.draw_list = []
-        self.current_iteration = 0
+        self.initialize()
 
     def get_distance_and_angle(self, node_start, node_end):
         dx = node_end.x - node_start.x
