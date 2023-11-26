@@ -5,8 +5,6 @@ from model.geometry.point import Point
 from model.geometry.segment import Segment
 from model.world.controllers.controller import Controller
 
-np.random.seed()
-
 
 class Node:
     def __init__(self, coordinates):
