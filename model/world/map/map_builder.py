@@ -18,7 +18,7 @@ default_params = {
     "obs_max_ang_speed": 2.0,
     "goal_min_dist": 4.0,
     "goal_max_dist": 6.0,
-    "min_goal_clearance": 0.1,
+    "min_goal_clearance": 0.5,
     "discretization_step": 0.5
 }
 
