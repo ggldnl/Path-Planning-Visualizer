@@ -159,8 +159,6 @@ export function drawGrid(
 
 export function drawPolygon(ctx, points, pixelOrigin, pixelScale, lineWidth, fillColor, borderColor=null) {
 
-    console.log("Line width: ", lineWidth);
-
     if (points.length > 0) {
         ctx.lineJoin = 'round';
         ctx.lineWidth = lineWidth;
