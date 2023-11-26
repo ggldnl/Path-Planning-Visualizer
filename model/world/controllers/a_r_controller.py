@@ -26,9 +26,6 @@ class AStarController(Controller):
 
         super().__init__(robot, map, iterations)
 
-        # Disable moving obstacles for the map
-        self.map.disable_moving_obstacles()
-
         self.start = None
 
         self.open_set = []  # Nodes to be explored
@@ -48,6 +45,9 @@ class AStarController(Controller):
         self.initialize()
 
     def initialize(self):
+
+        # Disable moving obstacles for the map
+        self.map.disable_moving_obstacles()
 
         self.start = self.robot.current_pose.as_point()
 
