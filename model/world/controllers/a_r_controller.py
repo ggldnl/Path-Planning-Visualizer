@@ -62,6 +62,8 @@ class AStarController(Controller):
         # Push f_score and Point
         heapq.heappush(self.open_set, Node(self.start, self.f_score[self.start]))
 
+        print(f'Initialization done: {self.open_set}')
+
     def heuristic(self, node1, node2):
         # Euclidean distance as heuristic
         # return math.hypot(node2[0] - node1[0], node2[1] - node1[1])
@@ -93,8 +95,7 @@ class AStarController(Controller):
             current = node.point
 
             if current == self.map.goal:
-                self.reconstruct_path(current)
-                return
+                return self.reconstruct_path(current)
 
             self.closed_set.add(current)
 
@@ -120,6 +121,8 @@ class AStarController(Controller):
     def reset(self):
         self.path = []
         self.draw_list = []
+        self.g_score = {}
+        self.f_score = {}
         self.initialize()
 
     def get_draw_list(self):
