@@ -11,7 +11,7 @@ default_params = {
     "obs_min_height": 0.4,
     "obs_max_height": 0.9,
     "obs_steady_count": 10,
-    "obs_moving_count": 60,
+    "obs_moving_count": 10,
     "obs_min_lin_speed": -0.02,
     "obs_max_lin_speed": 0.02,
     "obs_min_ang_speed": -2.0,
