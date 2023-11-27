@@ -40,6 +40,11 @@ window.onload = function () {
         height: height
     }
 
+    // Count the FPS
+    let fps = 0;
+    let frameCount = 0;
+    let startTime;
+
     // Function to draw the canvas content
     function drawScreen() {
 
@@ -49,7 +54,7 @@ window.onload = function () {
         }
 
         // Draw the grid
-        drawGrid(ctx, pixelOffset, scale, screenSize, textOffset, backgroundColor, axisColor, gridColor, textColor);
+        drawGrid(ctx, pixelOffset, scale, screenSize, textOffset, backgroundColor, axisColor, gridColor, textColor, fps, pps);
 
         // Draw the contents of the frame
         for (const shape of frame.drawList) {
@@ -60,6 +65,28 @@ window.onload = function () {
                 drawCircle(ctx, shape['pos'], pixelOrigin, scale, shape['radius'], shape['lineWidth'], shape['fillColor'], shape['borderColor']);
             else if (type == 'line')
                 drawLine(ctx, shape['p1'], shape['p2'], pixelOrigin, scale, shape['fillColor'], shape['lineWidth']);
+        }
+
+        // FPS handling
+
+        frameCount ++;
+
+        // Check if a second has passed
+        const currentTime = performance.now();
+        if (!startTime) {
+            startTime = currentTime;
+        }
+
+        const elapsedSeconds = (currentTime - startTime) / 1000;
+
+        if (elapsedSeconds >= 0.5) {
+            // Calculate FPS
+            fps = frameCount / elapsedSeconds;
+            fps = fps.toFixed(2);
+
+            // Reset frame count and start time for the next second
+            frameCount = 0;
+            startTime = currentTime;
         }
 
         requestAnimationFrame(drawScreen);
@@ -79,7 +106,7 @@ window.onload = function () {
     obstacles_speed_slider.addEventListener("input", function() {
         const obstacles_speed = obstacles_speed_slider.value;
     });
-    */
+    */frame
 
     // Resize canvas when the window is resized
     window.onresize = function () {
@@ -108,6 +135,11 @@ window.onload = function () {
         }
     };
 
+    // Count the FPS
+    let pps = 0;
+    let packetCount = 0;
+    let packets_startTime;
+
     // Event handling
     source.onmessage = function (event) {
 
@@ -125,6 +157,28 @@ window.onload = function () {
                 frame.addCircleFromDict(item)
             else if (type == 'line')
                 frame.addLineFromDict(item)
+        }
+
+        // pps (packets per second) handling
+
+        packetCount ++;
+
+        // Check if a second has passed
+        const packets_currentTime = performance.now();
+        if (!packets_startTime) {
+            packets_startTime = packets_currentTime;
+        }
+
+        const packets_elapsedSeconds = (packets_currentTime - packets_startTime) / 1000;
+
+        if (packets_elapsedSeconds >= 0.5) {
+            // Calculate pps
+            pps = packetCount / packets_elapsedSeconds;
+            pps = pps.toFixed(2);
+
+            // Reset frame count and start time for the next second
+            packetCount = 0;
+            packets_startTime = packets_currentTime;
         }
     }
 

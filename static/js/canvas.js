@@ -60,7 +60,9 @@ export function drawGrid(
         backgroundColor,
         axisColor,
         gridColor,
-        textClor
+        textClor,
+        fps=null,
+        pps=null
     ) {
 
     ctx.clearRect(0, 0, screenSize.width, screenSize.height);
@@ -154,6 +156,22 @@ export function drawGrid(
                 );
             }
         }
+    }
+
+    if (fps != null) {
+        ctx.fillText(
+            fps.toString() + ' FPS',
+            screenSize.width - 80,
+            20
+        )
+    }
+
+    if (pps != null) {
+        ctx.fillText(
+            pps.toString() + ' PPS',
+            screenSize.width - 80,
+            40
+        )
     }
 }
 
