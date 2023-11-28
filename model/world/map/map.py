@@ -159,10 +159,9 @@ class Map:
         """
         goal_test_geometry = Circle(x, y, r)
 
+        """
         # Generate a proximity test geometry for the starting point
         r = self.obs_min_dist
-
-        """
         n = 6
         start_test_geometry = []
         for i in range(n):
@@ -170,12 +169,17 @@ class Map:
                 Point(x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n))
             )
         start_test_geometry = Polygon(start_test_geometry)
-        # start_test_geometry = Circle(Point(0, 0), r)
+        # start_test_geometry = Circle(0, 0, r)
         """
-        start_test_geometry = Circle(0, 0, r)
 
         # test_geometries contains the robots and the goal
-        test_geometries = [r.outline for r in robots] + [goal_test_geometry, start_test_geometry]
+        robot_test_geometries = [Circle(r.current_pose.x, r.current_pose.y, self.obs_min_dist) for r in robots]
+
+        # TODO fix this, bug reported above
+        if len(robot_test_geometries) == 0:
+            robot_test_geometries.append(Circle(0, 0, self.obs_min_dist))
+
+        test_geometries = robot_test_geometries + [goal_test_geometry]
 
         # Generate obstacles
         moving_obstacles = []
