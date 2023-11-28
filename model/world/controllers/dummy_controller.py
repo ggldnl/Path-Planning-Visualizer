@@ -6,10 +6,16 @@ from model.geometry.segment import Segment
 
 class DummyController(Controller):
 
-    def __init__(self, robot, map):
+    def __init__(self, robot, map, iterations=1, discretization_step=0.2):
 
-        super().__init__(robot, map)
+        super().__init__(robot, map, iterations, discretization_step)
 
+        self.path_backup = []
+        self.idx = 0
+
+        self._init()
+
+    def _init(self):
         # Zig zag
         self.path_backup = [
 
@@ -25,8 +31,7 @@ class DummyController(Controller):
         ]
         self.idx = 0
 
-    def search(self):
-        print('Searching...')
+    def _search(self):
         if not self.has_path():
             # Do nothing: the dummy controller always return the same path. We only reset the path
             self.path.append(self.path_backup[self.idx])
@@ -34,12 +39,3 @@ class DummyController(Controller):
             self.idx += 1
         else:
             self.idx = 0
-
-    def reset(self):
-        # Nothing to reset, the path is emptied one point at a time once the robot reaches it
-        self.path = []
-        self.path_backup[-1] = self.map.goal.copy()
-        self.idx = 0
-
-    def get_draw_list(self):
-        return self.map.get_neighbors(self.robot.current_pose.as_point())

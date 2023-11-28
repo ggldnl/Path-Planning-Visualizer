@@ -33,14 +33,18 @@ import numpy as np
 # Flask imports
 from flask import Flask, Response, render_template, request, stream_with_context, jsonify
 
-from model.exceptions.collision_exception import CollisionException
-from model.world.controllers.a_r_controller import AStarController
-from model.world.controllers.dummy_controller import DummyController
-from model.world.controllers.rrt_controller import RRTController
 # Import scripts
 from scripts.frame import Frame
 
 # Import stuff from the model
+from model.exceptions.collision_exception import CollisionException
+
+from model.world.controllers.a_star_controller import AStarController
+from model.world.controllers.dummy_controller import DummyController
+from model.world.controllers.rrt_controller import RRTController
+from model.world.controllers.rrt_star_controller import RRTStarController
+from model.world.controllers.dynamic_rrt_controller import DynamicRRTController
+
 from model.world.world import World
 from model.world.color_palette import *
 from model.world.robot.URDF_parser import URDFParser
@@ -58,7 +62,7 @@ logger = logging.getLogger(__name__)
 application = Flask(__name__, template_folder='template')
 
 # Initialize a random number generator
-# random.seed()
+np.random.seed(0)
 
 # ---------------------------- defining some stuff --------------------------- #
 
@@ -158,35 +162,28 @@ def generate_data() -> Iterator[str]:
                                     frame.add_line(path[i-1].to_array(), path[i].to_array(), 1, path_color)
 
                         if show_data_structures:
-                            for structure in controller.get_draw_list():
-                                if isinstance(structure, Point):
-                                    # frame.add_circle([structure.x, structure.y], 0.025, path_color)
-                                    tile = Polygon([
-                                        Point(structure.x - world.map.discretization_step / 2,
-                                              structure.y + world.map.discretization_step / 2),
-                                        Point(structure.x - world.map.discretization_step / 2,
-                                              structure.y - world.map.discretization_step / 2),
-                                        Point(structure.x + world.map.discretization_step / 2,
-                                              structure.y - world.map.discretization_step / 2),
-                                        Point(structure.x + world.map.discretization_step / 2,
-                                              structure.y + world.map.discretization_step / 2),
-                                    ])
-                                    frame.add_polygon(tile, tile_color)
+                            for structure in controller.draw_list:
+                                if isinstance(structure, Polygon):
+                                    frame.add_polygon(structure, 0, tile_color, 'transparent')
                                 elif isinstance(structure, Segment):
                                     frame.add_line(structure.start.to_array(), structure.end.to_array(), 1, path_color)
+                                elif isinstance(structure, Point):
+                                    frame.add_circle(structure.to_array(), 0.01, 0.25, path_color)
 
                         # Add the robot to the frame
-                        frame.add_polygons(robot.bodies, default_robot_fill_color, default_robot_border_color)
+                        robot_fill_color = robot.fill_color if robot.fill_color is not None else default_robot_fill_color
+                        robot_border_color = robot.border_color if robot.border_color is not None else default_robot_border_color
+                        frame.add_polygons(robot.bodies, 0.25, robot_fill_color, robot_border_color)
 
                         # Add sensors if the option is enabled
                         if show_sensors:
-                            frame.add_polygons([sensor.polygon for sensor in robot.sensors], sensor_color_alert_0)
+                            frame.add_polygons([sensor.polygon for sensor in robot.sensors], 0.25, sensor_color_alert_0)
 
                     # Add the obstacles to the frame (we can change color for moving and steady obstacles)
-                    frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], obstacle_fill_color)
+                    frame.add_polygons([obstacle.polygon for obstacle in world.map.obstacles], 0.25, obstacle_fill_color)
 
                     # Add the start and the goal points to the frame
-                    frame.add_circle([world.map.goal.x, world.map.goal.y], 0.025, goal_fill_color)
+                    frame.add_circle([world.map.goal.x, world.map.goal.y], 0.025, 0.25, goal_fill_color)
 
                     if stepping:
                         stepping = False
@@ -228,7 +225,6 @@ def simulation_control():
     # Reference the global boolean control variables
     global running, stepping
     global show_trace, show_sensors, show_path, show_data_structures
-    global update_robot
     global autostart
 
     if data:
@@ -313,9 +309,6 @@ def simulation_control():
             if flag == 'path':
                 show_path = not show_path
 
-            # TODO update the robot (cascading) when one of these checkboxes is ticked
-            update_robot = True
-
         if 'direction' in data:
 
             # TODO for now, only the first robot can be controlled with the arrow keys.
@@ -379,10 +372,16 @@ if __name__ == "__main__":
 
     # Test with Cobalt
     robot = Cobalt()
-
-    controller = AStarController(robot, world.map, iterations=1)
+    # controller = AStarController(robot, world.map, iterations=2, discretization_step=0.2)
     # controller = RRTController(robot, world.map, goal_sample_rate=0.05)
+    controller = RRTStarController(robot, world.map, goal_sample_rate=0.05, discretization_step=0.5, max_iterations=2000)
+    # controller = DynamicRRTController(robot, world.map, goal_sample_rate=0.05, discretization_step=0.2)
     # controller = DummyController(robot, world.map)
 
     world.add_robot(robot, controller)
+
+    # robot2 = Cobalt()
+    # controller2 = AStarController(robot2, world.map, iterations=2, discretization_step=0.2)
+    # world.add_robot(robot2, controller2)
+
     application.run(host="0.0.0.0", port=5000, threaded=True)

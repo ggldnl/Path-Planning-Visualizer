@@ -36,6 +36,19 @@ class StandardMap(Map):
                 result.append(i)
         return result
 
+    def query(self, bounds):
+        """
+        Add some junk just to keep this version of the map compatible, it is too slow and we can't use it anyway
+        """
+        min_x, min_y, max_x, max_y = bounds
+        return self.query_region(Polygon([
+            Point(min_x, min_y),
+            Point(min_x, max_y),
+            Point(max_x, max_y),
+            Point(max_x, min_y)
+        ]))
+
+
     def save_as_pickle(self, filename):
         with open(filename, "wb") as file:
             pickle.dump(self._initial_obstacles, file)
@@ -70,6 +83,7 @@ class StandardMap(Map):
         self._initial_obstacles = [obstacle.copy() for obstacle in self._obstacles]
         print('Map updated!')
 
+    """
     def check_collision(self, point1, point2):
         # line = Segment(point1, point2)
         # buffer = Polygon.get_segment_buffer(line, self.discretization_step, self.discretization_step)
@@ -78,4 +92,4 @@ class StandardMap(Map):
             if check_intersection(buffer, self.get_polygon(obstacle_id)):
                 return True
         return False
-
+    """

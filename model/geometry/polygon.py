@@ -88,7 +88,7 @@ class Polygon(Shape):
 
         # Avoid division by zero by checking if mag_squared is non-zero
         if mag_squared == 0:
-            raise ValueError("Segment has zero length.")
+            raise ValueError(f"Segment {segment} has zero length.")
 
         # Compute the unit vector u_AB
         u_AB = AB / np.sqrt(mag_squared)

@@ -6,8 +6,8 @@ import numpy as np
 
 class DifferentialDriveRobot(Robot):
 
-    def __init__(self, bodies, wheelbase, motors=None):
-        super().__init__('Differential Drive Robot', bodies, motors)
+    def __init__(self, bodies, wheelbase, motors=None, fill_color=None, border_color=None):
+        super().__init__('Differential Drive Robot', bodies, motors, fill_color, border_color)
         self.wheelbase = wheelbase
 
     def apply_dynamics(self, dt):

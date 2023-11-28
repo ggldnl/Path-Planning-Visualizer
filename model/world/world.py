@@ -20,7 +20,7 @@ class World:
         self.controllers = []
 
         # Initialize the map_legacy
-        self.map = MapBuilder().set_type('spatial').set_discretization_step(0.2).set_obs_moving_count(20).set_obs_steady_count(40).build()
+        self.map = MapBuilder().set_type('spatial').set_discretization_step(0.2).set_obs_moving_count(15).set_obs_steady_count(15).build()
 
         # TODO bug: map is generated before we add robots; we can add robots over obstacles
         self.map.generate(self.robots)

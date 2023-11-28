@@ -45,6 +45,7 @@ class SpatialMap(Map):
             self._obstacles_tree.insert(len(self._obstacles), bounds)
             self._obstacles.append(obstacle)
 
+    """
     def check_collision(self, node1, node2):
         # line = Segment(node1, node2)
         # line_buffer = Polygon.get_segment_buffer(line, self.discretization_step, self.discretization_step)
@@ -53,6 +54,7 @@ class SpatialMap(Map):
             if check_intersection(buffer, self.get_polygon(obstacle_id)):
                 return True
         return False
+    """
 
     def query_region(self, region: Polygon):
         # Assuming region is a Polygon representing the query region
@@ -64,6 +66,9 @@ class SpatialMap(Map):
                 result.append(obj_id)
 
         return result
+
+    def query(self, bounds):
+        return self._obstacles_tree.intersection(bounds)
 
     def clear(self):
         self._obstacles = []

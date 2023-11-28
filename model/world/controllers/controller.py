@@ -1,6 +1,9 @@
 from abc import abstractmethod
 
 from model.geometry.pose import Pose
+from model.geometry.point import Point
+from model.geometry.segment import Segment
+from model.geometry.polygon import Polygon
 
 import numpy as np
 
@@ -9,11 +12,12 @@ from model.exceptions.empty_path_exception import EmptyPathException
 
 class Controller:
 
-    def __init__(self, robot, map, iterations):
+    def __init__(self, robot, map, iterations, discretization_step):
 
         self.robot = robot
         self.map = map
         self.iterations = iterations
+        self.discretization_step = discretization_step
 
         # Range from the next target point in which the robot must recompute the path
         # (rerun the path planning algorithm)
@@ -22,6 +26,17 @@ class Controller:
         # List of points to reach the goal
         self.path = []
 
+        # Search based algorithms work by discretizing the map into a grid and using nodes.
+        # We can define a set containing all the nodes already generated to avoid cluttering
+        # the open set of the search based algorithms by adding the same node multiple times.
+        # Sampling based algorithms will not use this set
+        self.generated_neighbors = set()
+
+        # List of objects that should be drawn on screen. This could be a list of
+        # expanded nodes for search-based algorithms or a list of segments representing the
+        # branches of a tree for sampling-based algorithms.
+        self.draw_list = []
+
     def step(self):
         """
         Does one step of the search loop, regardless of whether the path is obstructed or something else
@@ -29,6 +44,20 @@ class Controller:
         path planning with moving obstacles).
         """
         self.search()
+
+    # TODO add path smoothing to the step routine
+    def path_smoothing(self):
+        """
+        Used to smooth paths to eliminate unnecessary detours
+        """
+        start = self.path[0]
+        idx = 0
+        for i in range(len(self.path), 0, -1):
+            point = self.path[-1]
+            if not self.check_collision(start, point):
+                idx = i
+                break
+        self.path = self.path[0] + self.path[idx:]
 
     def has_path(self):
         """
@@ -78,26 +107,63 @@ class Controller:
         raise NotImplementedError
 
     @abstractmethod
-    def reset(self):
+    def _init(self):
         """
-        We might want to clean other structures too.
+        We might want to initialize other algorithm-specific data structures too.
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def get_draw_list(self):
+    def reset(self):
         """
-        Return a list of objects that should be drawn on screen. This could be a list of
-        expanded nodes for search-based algorithms or a list of segments representing the
-        branches of a tree for sampling-based algorithms.
+        Reset the controller
         """
-        pass
+        self.path = []
+        self.generated_neighbors = set()
+        self.draw_list = []
 
-    def is_path_obstructed(self):
-        for i in range(1, len(self.path)):
-            if self.map.check_collision(self.path[i - 1], self.path[i]):
-                return True
-        return False
+        # Algorithm specific reset
+        self._init()
+
+    def get_neighbors(self, point, include_current=False):
+
+        # The point might not be exactly a vertex of a grid with size discretization_step
+        new_x = round(point.x / self.discretization_step) * self.discretization_step
+        new_y = round(point.y / self.discretization_step) * self.discretization_step
+
+        neighbors = []
+
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if not (i == 0 and j == 0) or include_current:
+
+                    # Generate neighbor coordinates
+                    neighbor_x = new_x + i * self.discretization_step
+                    neighbor_y = new_y + j * self.discretization_step
+
+                    # Round them to match the grid
+                    neighbor_x = round(neighbor_x / self.discretization_step) * self.discretization_step
+                    neighbor_y = round(neighbor_y / self.discretization_step) * self.discretization_step
+
+                    neighbor = Point(neighbor_x, neighbor_y)
+
+                    if neighbor in self.generated_neighbors:
+                        continue
+
+                    if self.check_collision(point, neighbor):
+                        continue
+
+                    neighbors.append(neighbor)
+
+        return neighbors
+
+    def check_collision(self, start, end):
+        """
+        Check if there is an obstacle between the two points
+        """
+        line = Segment(start, end)
+        buffer = Polygon.get_segment_buffer(line, left_margin=self.discretization_step, right_margin=self.discretization_step)
+        intersecting_obstacles_ids = self.map.query_region(buffer)
+        return len(intersecting_obstacles_ids) > 0
 
     def is_robot_near_goal(self):
         return self.robot.current_pose.distance(self.map.goal) < self.EPS

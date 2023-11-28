@@ -18,6 +18,13 @@ class Circle(Shape):
                 self.pose.x + self.radius,
                 self.pose.y + self.radius)
 
+    @classmethod
+    def get_segment_buffer(cls, segment, margin=None):
+        center = segment.midpoint()
+        if margin is None:
+            margin = len(segment) / 2
+        return Circle(center.x, center.y, margin)
+
     def project(self, axis):
         center_proj = self.pose.x * axis.x + self.pose.y * axis.y
         return center_proj + self.radius, center_proj - self.radius

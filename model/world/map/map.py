@@ -220,25 +220,6 @@ class Map:
         self._add_obstacles(steady_obstacles)
         self._current_goal = goal
 
-    def get_neighbors(self, point, include_current=True):
-
-        # The point might not be exactly a vertex of a grid with size step_size
-        new_x = round(point.x / self.discretization_step) * self.discretization_step
-        new_y = round(point.y / self.discretization_step) * self.discretization_step
-
-        neighbors = []
-
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if not (i == 0 and j == 0) or include_current:
-
-                    neighbor = Point(new_x + i * self.discretization_step, new_y + j * self.discretization_step)
-                    if self.check_collision(point, neighbor):
-                        continue
-                    neighbors.append(neighbor)
-
-        return neighbors
-
     def get_polygon(self, obj_id):
         # Retrieve the polygon geometry based on its identifier
         return self._obstacles[obj_id].polygon
@@ -256,6 +237,10 @@ class Map:
         """
         Returns all the obstacles in the region polygon
         """
+        pass
+
+    @abstractmethod
+    def query(self, bounds):
         pass
 
     @abstractmethod

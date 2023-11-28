@@ -1,5 +1,7 @@
 import heapq
 
+from model.geometry.point import Point
+from model.geometry.polygon import Polygon
 
 from model.world.controllers.controller import Controller
 
@@ -22,11 +24,9 @@ class Node:
 
 class AStarController(Controller):
 
-    def __init__(self, robot, map, iterations=1):
+    def __init__(self, robot, map, iterations=1, discretization_step=0.2):
 
-        super().__init__(robot, map, iterations)
-
-        self.start = None
+        super().__init__(robot, map, iterations, discretization_step)
 
         self.open_set = []  # Nodes to be explored
         self.closed_set = set()  # Explored nodes
@@ -40,32 +40,31 @@ class AStarController(Controller):
         # Total cost of getting from the start node to the goal node through a given node
         self.f_score = {}
 
-        self.draw_list = []
+        self._init()
 
-        self.initialize()
-
-    def initialize(self):
-
-        # Disable moving obstacles for the map
-        self.map.disable_moving_obstacles()
+    def _init(self):
 
         self.start = self.robot.current_pose.as_point()
 
-        self.open_set = []
-        self.closed_set = set()
+        self.open_set = []  # Nodes to be explored
+        self.closed_set = set()  # Explored nodes
 
         self.came_from = {}
 
-        self.g_score[self.start] = 0.0
+        # Cost of getting from the start node to a given node: {point, cost}
+        self.g_score = {self.start: 0.0}
 
-        self.f_score[self.start] = self.heuristic(self.start, self.map.goal)
+        # Total cost of getting from the start node to the goal node through a given node
+        self.f_score = {self.start: self.heuristic(self.start, self.map.goal)}
 
         # Push f_score and Point
         heapq.heappush(self.open_set, Node(self.start, self.f_score[self.start]))
 
-        print(f'Initialization done: {self.open_set}')
+        # Disable moving obstacles for the map
+        self.map.disable_moving_obstacles()
 
-    def heuristic(self, node1, node2):
+    @staticmethod
+    def heuristic(node1, node2):
         # Euclidean distance as heuristic
         # return math.hypot(node2[0] - node1[0], node2[1] - node1[1])
         return node1.distance(node2)  # node1 and node2 are points and thus a built-in distance function
@@ -100,7 +99,9 @@ class AStarController(Controller):
 
             self.closed_set.add(current)
 
-            for neighbor in self.map.get_neighbors(current, include_current=False):
+            for neighbor in self.get_neighbors(current):
+
+                self.generated_neighbors.add(neighbor)
 
                 if neighbor in self.closed_set:
                     continue
@@ -117,14 +118,14 @@ class AStarController(Controller):
                     heapq.heappush(self.open_set, Node(neighbor, self.f_score[neighbor]))
 
                     # The draw_list for A* will contain all the points in the open_set
-                    self.draw_list.append(neighbor)
-
-    def reset(self):
-        self.path = []
-        self.draw_list = []
-        self.g_score = {}
-        self.f_score = {}
-        self.initialize()
-
-    def get_draw_list(self):
-        return self.draw_list
+                    tile = Polygon([
+                        Point(neighbor.x - self.discretization_step / 2,
+                              neighbor.y + self.discretization_step / 2),
+                        Point(neighbor.x - self.discretization_step / 2,
+                              neighbor.y - self.discretization_step / 2),
+                        Point(neighbor.x + self.discretization_step / 2,
+                              neighbor.y - self.discretization_step / 2),
+                        Point(neighbor.x + self.discretization_step / 2,
+                              neighbor.y + self.discretization_step / 2),
+                    ])
+                    self.draw_list.append(tile)

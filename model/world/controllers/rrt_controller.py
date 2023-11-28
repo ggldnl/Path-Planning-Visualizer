@@ -1,4 +1,3 @@
-import math
 import numpy as np
 
 from model.geometry.point import Point
@@ -23,33 +22,43 @@ class Node:
     def distance(self, other_node):
         return self.point.distance(other_node.point)
 
+    def __str__(self):
+        return f'Node({self.point})'
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class RRTController(Controller):
 
-    def __init__(self, robot, map, goal_sample_rate=0.05, max_iterations=8000, iterations=1):
-        super().__init__(robot, map, iterations)
+    def __init__(self,
+                 robot,
+                 map,
+                 goal_sample_rate=0.05,
+                 max_iterations=8000,
+                 iterations=1,
+                 discretization_step=0.2
+                 ):
+
+        #  We use the discretization step to build a buffer for each segment and check intersections
+        super().__init__(robot, map, iterations, discretization_step)
 
         # Percentage with which we use the goal as new point
         self.goal_sample_rate = goal_sample_rate
 
+        # Maximum number of iterations (time constraint)
         self.max_iterations = max_iterations
 
-        self.vertex = [Node(robot.current_pose.as_point())]
-        self.draw_list = []
+        self._init()
 
-        self.current_iteration = 0
+    def _init(self):
 
-        # Disable moving obstacles for the map
-        self.initialize()
-
-    def initialize(self):
-
-        self.path = []
         self.vertex = [Node(self.robot.current_pose.as_point())]
-        self.draw_list = []
+        self.edges = []
+
         self.current_iteration = 0
 
-        # Disable moving obstacles for the map
+        # Disable moving obstacles until the path isn't found
         self.map.disable_moving_obstacles()
 
     def _search(self):
@@ -61,17 +70,18 @@ class RRTController(Controller):
                 self.current_iteration += 1
 
                 node_rand = self.generate_random_node()
-                node_near = self.nearest_neighbor(self.vertex, node_rand)
+                node_near = self.nearest_neighbor(node_rand)
                 node_new = self.new_state(node_near, node_rand)
 
-                if node_new and not self.check_collision(node_near, node_new):
+                if node_new and not self.check_collision(node_near.point, node_new.point):
                     self.vertex.append(node_new)
                     dist = self.distance_to_goal(node_new)
 
-                    if dist <= self.map.discretization_step:  # and not self.is_path_obstructed(node_new, self.map.goal):
+                    if dist <= self.map.discretization_step:
                         return self.extract_path(node_new)
 
                     # Add the branches to the draw_list
+                    self.draw_list.append(node_new.point)
                     self.draw_list.append(Segment(node_new.point, node_new.parent.point))
 
     def generate_random_node(self):
@@ -85,15 +95,15 @@ class RRTController(Controller):
 
         return Node((x, y))
 
-    def nearest_neighbor(self, node_list, n):
-        return min(node_list, key=lambda nd: nd.distance(n))
+    def nearest_neighbor(self, n):
+        return min(self.vertex, key=lambda nd: nd.distance(n))
 
     def new_state(self, node_start, node_end):
         dist, theta = self.get_distance_and_angle(node_start, node_end)
 
         dist = min(self.map.discretization_step, dist)
-        new_x = node_start.x + dist * math.cos(theta)
-        new_y = node_start.y + dist * math.sin(theta)
+        new_x = node_start.x + dist * np.cos(theta)
+        new_y = node_start.y + dist * np.sin(theta)
         new_y = round(new_y / self.map.discretization_step, 2) * self.map.discretization_step
         new_x = round(new_x / self.map.discretization_step, 2) * self.map.discretization_step
         node_new = Node((new_x, new_y))
@@ -112,25 +122,10 @@ class RRTController(Controller):
         self.path = self.path[::-1]
 
     def distance_to_goal(self, node):
-        return math.hypot(node.x - self.map.goal[0], node.y - self.map.goal[1])
+        return node.point.distance(self.map.goal)
 
-    def check_collision(self, start, end):
-        """
-        Check if there is an obstacle between the two nodes
-        """
-        line = Segment(start.point, end.point)
-        buffer = Polygon.get_segment_buffer(line, left_margin=self.map.discretization_step, right_margin=self.map.discretization_step)
-        intersecting_obstacles_ids = self.map.query_region(buffer)
-        print(f'Checking collision between {start.point} and {end.point}: {intersecting_obstacles_ids}')
-        return len(intersecting_obstacles_ids) > 0
-
-    def reset(self):
-        self.initialize()
-
-    def get_distance_and_angle(self, node_start, node_end):
+    @staticmethod
+    def get_distance_and_angle(node_start, node_end):
         dx = node_end.x - node_start.x
         dy = node_end.y - node_start.y
-        return node_start.distance(node_end), math.atan2(dy, dx)
-
-    def get_draw_list(self):
-        return self.draw_list
+        return node_start.distance(node_end), np.arctan2(dy, dx)

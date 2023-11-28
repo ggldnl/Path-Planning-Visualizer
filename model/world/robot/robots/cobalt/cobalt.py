@@ -9,7 +9,7 @@ from model.world.sensors.proximity_sensor import ProximitySensor
 
 class Cobalt(DifferentialDriveRobot):
 
-    def __init__(self):
+    def __init__(self, fill_color=None, border_color=None):
 
         # Build the base
 
@@ -80,7 +80,7 @@ class Cobalt(DifferentialDriveRobot):
         # Define the wheelbase
         wheelbase = 0.035 * 2
 
-        super().__init__(bodies, wheelbase)
+        super().__init__(bodies, wheelbase, fill_color, border_color)
 
         # Add the sensors
         left_sensor = ProximitySensor('left_sensor', 0.04, np.pi/6)

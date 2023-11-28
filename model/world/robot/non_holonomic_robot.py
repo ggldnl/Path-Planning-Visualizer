@@ -5,8 +5,8 @@ import numpy as np
 
 class NonHolonomicRobot(Robot):
 
-    def __init__(self, bodies, motors=None):
-        super().__init__('Non Holonomic Robot', bodies, motors)
+    def __init__(self, bodies, motors=None, fill_color=None, border_color=None):
+        super().__init__('Non Holonomic Robot', bodies, motors, fill_color, border_color)
 
     def apply_dynamics(self, dt):
 

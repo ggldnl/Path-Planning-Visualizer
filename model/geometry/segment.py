@@ -43,6 +43,9 @@ class Segment:
     def __iter__(self):
         return iter([self.start, self.end])
 
+    def midpoint(self):
+        return Point((self.start.x + self.end.x) / 2, (self.start.y + self.end.y) / 2)
+
     def normal(self):
         """
         Compute the normal vector of the segment
@@ -80,3 +83,12 @@ class Segment:
             return self.end
         else:
             return Point(x1 + t * dx, y1 + t * dy)
+
+    def __str__(self):
+        return f'Segment {self.start} - {self.end}'
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        return self.start.distance(self.end)

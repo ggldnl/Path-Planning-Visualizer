@@ -8,10 +8,14 @@ from model.geometry.pose import Pose
 
 class Robot(metaclass=ABCMeta):
 
-    def __init__(self, name, bodies, motors=None):
+    def __init__(self, name, bodies, motors=None, fill_color=None, border_color=None):
 
         # Name of the robot
         self.name = name
+
+        # Accents, if any
+        self.fill_color = fill_color
+        self.border_color = border_color
 
         # Robot starts at the origin
         self.previous_pose = Pose(0, 0, 0)  # theta = 0 -> robot headed on positive x
