@@ -9,28 +9,28 @@
     $ conda env create -f environment.yml
     $ conda activate robot_simulator
 
+## Algorithms
+
+```
+Search-based Planning
+├── Breadth-First Searching (BFS)
+├── Depth-First Searching (DFS)
+├── Best-First Searching
+└── A*
+Sampling-based Planning
+├── RRT
+├── Dynamic-RRT
+└── RRT*
+```
+
 ## TODO
 
-- [x] write URDF for cobalt
-- [x] define environment
-- [ ] remove annoying checkbox (upper left corner) that loads before the rest of the page 
-- [ ] redefine communication between backend and frontend (make it lighter)
-- [x] replace buttons with radio buttons for controller and planner menus
-- [x] highlight the current choice in controller and planner menus
-- [x] disable the planner menu if the current planner is joystick
-- [ ] update documentation
-- [ ] add save capabilities
-- [x] add load capabilities
-- [ ] ~~add sensors support to URDF parser~~
-- [ ] fix inverted angles in link origin (URDF parser)
-- [x] scale the map to match real world measures
-- [ ] move from current, complex, translation and scale logic to
-    translate() and scale() on sort of a contextManager object in javascript
-- [ ] add typing and input checking
-- [ ] ~~add radar in gui to see sensors read from the robot~~
-- [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
-- [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
-- [x] make the robot follow the shortest angle
-- [x] remove linalg/utils and incorporate their methods inside geometry
-- [ ] solve bug in frontend drawing lines
-- [x] debug rrt, the robot goes back to start after reaching goal
+- [ ] Introduce new frontend and polling mechanism to allow the frontend to poll the server for data
+- [ ] Update documentation
+- [ ] Add save capabilities
+- [x] Add load capabilities
+- [ ] Fix inverted angles in link origin (URDF parser)
+- [ ] Add typing and input checking
+- [ ] Provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
+- [ ] Interact with obstacles on mouse click (accelerate them, stop them, ...) 
+- [ ] CRUCIAL to refactor search algorithm and introduce a class hierarchy to share code (e.g. nodes, drawing geometry production method, ...)
