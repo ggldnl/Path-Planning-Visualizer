@@ -45,6 +45,7 @@ class DynamicRRTController(Controller):
     def __init__(self,
                  robot,
                  map,
+                 step_len=0.2,
                  goal_sample_rate=0.05,
                  waypoint_sample_rate=0.05,
                  max_iterations=8000,
@@ -66,6 +67,8 @@ class DynamicRRTController(Controller):
 
         # The obstacles are disabled until the first path is found
         self.moving_obstacles_enabled = False
+
+        self.step_len = step_len
 
         # Start and goal nodes
         self.start = None
@@ -93,6 +96,26 @@ class DynamicRRTController(Controller):
         self.moving_obstacles_enabled = False
 
     def _search(self):
+
+        """
+        This will do for now, I will refactor everything in the controller module
+
+        if not has_path():
+            if has_waypoints():
+                step_replan()
+            else:
+                step_plan()
+        else:
+            # Has path
+            if is_path_valid():
+                # Remove invalid branches that are not in the path
+                trim()
+            else:
+                # Path is invalid, stop robot and recompute it
+                trim()
+                path = []
+        """
+
 
         if not self.has_path() and not self.is_robot_at_goal():
 
@@ -134,6 +157,7 @@ class DynamicRRTController(Controller):
 
             # Add the branches to the draw_list
             self.draw_list.append(Segment(node_new.point, node_new.parent.point))
+            self.draw_list.append(node_new.point)
 
     def _step_replan(self):
 
@@ -154,6 +178,7 @@ class DynamicRRTController(Controller):
 
             # Add the branches to the draw_list
             self.draw_list.append(Segment(node_new.point, node_new.parent.point))
+            self.draw_list.append(node_new.point)
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
