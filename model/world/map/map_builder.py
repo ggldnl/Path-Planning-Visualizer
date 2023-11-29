@@ -19,7 +19,7 @@ default_params = {
     "goal_min_dist": 4.0,
     "goal_max_dist": 6.0,
     "min_goal_clearance": 0.5,
-    "discretization_step": 0.5
+    "discretization_step": 0.2
 }
 
 

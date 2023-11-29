@@ -228,13 +228,11 @@ class Map:
         # Retrieve the polygon geometry based on its identifier
         return self._obstacles[obj_id].polygon
 
+    """
     @abstractmethod
-    def check_collision(self, point1, point2):
-        """
-        Given two points on the map, implements the logic with which we check if
-        the second point is reachable by the first
-        """
+    def check_collision(self, start, end, buffer_size):
         pass
+    """
 
     @abstractmethod
     def query_region(self, region):

@@ -46,14 +46,15 @@ class SpatialMap(Map):
             self._obstacles.append(obstacle)
 
     """
-    def check_collision(self, node1, node2):
-        # line = Segment(node1, node2)
-        # line_buffer = Polygon.get_segment_buffer(line, self.discretization_step, self.discretization_step)
-        buffer = Polygon.get_point_buffer(node2, self.discretization_step)
-        for obstacle_id in self._obstacles_tree.intersection(buffer.bounds):
-            if check_intersection(buffer, self.get_polygon(obstacle_id)):
-                return True
-        return False
+    def check_collision(self, start, end, buffer_size=-1):
+
+        if buffer_size == -1:
+            buffer_size = self.discretization_step
+
+        line = Segment(start, end)
+        buffer = Polygon.get_segment_buffer(line, left_margin=buffer_size/2, right_margin=buffer_size/2)
+        intersecting_obstacles_ids = self.query_region(buffer)
+        return len(intersecting_obstacles_ids) > 0
     """
 
     def query_region(self, region: Polygon):

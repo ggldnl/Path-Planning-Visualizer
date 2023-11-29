@@ -3,7 +3,7 @@ import heapq
 from model.geometry.point import Point
 from model.geometry.polygon import Polygon
 
-from model.world.controllers.controller import Controller
+from model.controllers_legacy.controller import Controller
 
 
 class Node:

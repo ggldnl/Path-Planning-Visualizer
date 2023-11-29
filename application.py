@@ -39,17 +39,15 @@ from scripts.frame import Frame
 # Import stuff from the model
 from model.exceptions.collision_exception import CollisionException
 
-from model.world.controllers.best_first_search_controller import BestFirstSearchController
-from model.world.controllers.a_star_controller import AStarController
-from model.world.controllers.dummy_controller import DummyController
-from model.world.controllers.rrt_controller import RRTController
-from model.world.controllers.rrt_star_controller import RRTStarController
-from model.world.controllers.dynamic_rrt_controller import DynamicRRTController
+from model.controllers.search_based.best_first_search import BestFirstSearch
+from model.controllers.search_based.breadth_first_search import BreadthFirstSearch
+from model.controllers.search_based.a_star_search import AStarSearch
+from model.controllers.sampling_based.rrt_search import RRT
+from model.controllers.sampling_based.rrt_star_search import RRTStar
+from model.controllers.controller import Controller
 
 from model.world.world import World
 from model.world.color_palette import *
-from model.world.robot.URDF_parser import URDFParser
-from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.world.robot.robots.cobalt.cobalt import Cobalt
 from model.geometry.point import Point
 from model.geometry.segment import Segment
@@ -156,14 +154,14 @@ def generate_data() -> Iterator[str]:
 
                         # Add the path to the frame
                         if show_path:
-                            path = controller.path
+                            path = controller.search_algorithm.path
                             if len(path) > 0:
                                 frame.add_line(robot.current_pose.as_point().to_array(), path[0].to_array(), 1, path_color)
                                 for i in range(1, len(path)):
                                     frame.add_line(path[i-1].to_array(), path[i].to_array(), 1, path_color)
 
                         if show_data_structures:
-                            for structure in controller.draw_list:
+                            for structure in controller.search_algorithm.draw_list:
                                 if isinstance(structure, Polygon):
                                     frame.add_polygon(structure, 0, tile_color, 'transparent')
                                 elif isinstance(structure, Segment):
@@ -275,7 +273,7 @@ def simulation_control():
             world.map.clear()
             world.map.generate(world.robots)
 
-            # Reset robots and controllers
+            # Reset robots and controllers_legacy
             for robot, controller in zip(world.robots, world.controllers):
                 # TODO fix this for multiple robots -> reset to initial position
                 controller.reset()
@@ -383,7 +381,15 @@ if __name__ == "__main__":
 
     # controller = RRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05)
     # controller = RRTStarController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, max_iterations=2000)
-    controller = DynamicRRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, waypoint_sample_rate=0.5)
+    # controller = DynamicRRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, waypoint_sample_rate=0.5)
+
+    # search_algorithm = BestFirstSearch(world.map, robot.current_pose.as_point())
+    # search_algorithm = BreadthFirstSearch(world.map, robot.current_pose.as_point())
+    # search_algorithm = AStarSearch(world.map, robot.current_pose.as_point())
+    # search_algorithm = RRT(world.map, robot.current_pose.as_point())
+    search_algorithm = RRTStar(world.map, robot.current_pose.as_point())
+
+    controller = Controller(robot, search_algorithm)
 
     world.add_robot(robot, controller)
 
