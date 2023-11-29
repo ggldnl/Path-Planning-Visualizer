@@ -31,6 +31,11 @@ class Node:
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return self.x == other.x and self.y == other.y
+
 
 class Edge(Segment):
 
@@ -116,27 +121,35 @@ class DynamicRRTController(Controller):
                 path = []
         """
 
-
         if not self.has_path() and not self.is_robot_at_goal():
 
-            if self.current_iteration < self.max_iterations:
-
-                self.current_iteration += 1
+            if not self.has_waypoints():
+                print(f'Planning step...')
                 self._step_plan()
+            else:  # Has waypoints
+                print(f'Replanning step...')
+                self._step_replan()
 
-        elif self.has_path():
+        else:  # Has path
 
+            print(f'Robot has a path: {self.path}')
+
+            # Enable moving obstacles
             if not self.moving_obstacles_enabled:
                 self.map.enable_moving_obstacles()
                 self.moving_obstacles_enabled = True
 
+            print(f'Edges: {self.edges}')
             self.invalidate()
-            if self.is_path_invalid():
-                self.trim()
-                print(f'{self.waypoints}')
-                # self._step_replan()
-            else:
-                self.trim()
+            self.trim()
+
+            if not self.is_path_invalid():
+                self.path = []
+
+        print()
+
+    def has_waypoints(self):
+        return len(self.waypoints) > 0
 
     def _step_plan(self):
 
@@ -144,7 +157,7 @@ class DynamicRRTController(Controller):
         node_near = self.nearest_neighbor(node_rand)
         node_new = self.new_state(node_near, node_rand)
 
-        if node_new and not self.check_collision(node_near.point, node_new.point):
+        if node_new and (node_new.point == self.map.goal or not self.check_collision(node_near.point, node_new.point)):
             self.nodes.append(node_new)
             self.edges.append(Edge(node_near, node_new))
             dist = self.distance_to_goal(node_new)
@@ -165,7 +178,9 @@ class DynamicRRTController(Controller):
         node_near = self.nearest_neighbor(node_rand)
         node_new = self.new_state(node_near, node_rand)
 
-        if node_new and not self.check_collision(node_near.point, node_new.point):
+        print(f'Attempting to add edge {node_near} - {node_new} (from waypoints: {node_new in self.waypoints})')
+
+        if node_new and (node_new.point == self.map.goal or node_new in self.waypoints or not self.check_collision(node_near.point, node_new.point)):
             self.nodes.append(node_new)
             self.edges.append(Edge(node_near, node_new))
             dist = self.distance_to_goal(node_new)
