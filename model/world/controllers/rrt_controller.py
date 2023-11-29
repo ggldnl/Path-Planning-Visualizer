@@ -36,6 +36,7 @@ class RRTController(Controller):
                  map,
                  goal_sample_rate=0.05,
                  max_iterations=8000,
+                 step_len=0.5,
                  iterations=1,
                  discretization_step=0.2
                  ):
@@ -48,6 +49,8 @@ class RRTController(Controller):
 
         # Maximum number of iterations (time constraint)
         self.max_iterations = max_iterations
+
+        self.step_len = step_len
 
         self._init()
 
@@ -77,7 +80,7 @@ class RRTController(Controller):
                     self.vertex.append(node_new)
                     dist = self.distance_to_goal(node_new)
 
-                    if dist <= self.map.discretization_step:
+                    if dist <= self.step_len:
                         return self.extract_path(node_new)
 
                     # Add the branches to the draw_list
@@ -89,6 +92,8 @@ class RRTController(Controller):
             # 95% (by default) of the time, select a random point in space
             x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
             y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+
+        # Goal bias
         else:
             # 5% (by default) of the time, select the goal
             x, y = self.map.goal
@@ -101,11 +106,13 @@ class RRTController(Controller):
     def new_state(self, node_start, node_end):
         dist, theta = self.get_distance_and_angle(node_start, node_end)
 
-        dist = min(self.map.discretization_step, dist)
+        dist = min(self.step_len, dist)
         new_x = node_start.x + dist * np.cos(theta)
         new_y = node_start.y + dist * np.sin(theta)
-        new_y = round(new_y / self.map.discretization_step, 2) * self.map.discretization_step
-        new_x = round(new_x / self.map.discretization_step, 2) * self.map.discretization_step
+
+        # new_y = round(new_y / self.search_step, 2) * self.search_step
+        # new_x = round(new_x / self.search_step, 2) * self.search_step
+
         node_new = Node((new_x, new_y))
         node_new.parent = node_start
 

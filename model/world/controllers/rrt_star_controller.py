@@ -49,6 +49,7 @@ class RRTStarController(Controller):
                  robot,
                  map,
                  goal_sample_rate=0.05,
+                 step_len=0.2,
                  search_radius=0.5,
                  max_iterations=8000,
                  iterations=4,
@@ -65,6 +66,7 @@ class RRTStarController(Controller):
         self.max_iterations = max_iterations
 
         self.search_radius = search_radius
+        self.step_len = step_len
 
         self._init()
 
@@ -190,12 +192,12 @@ class RRTStarController(Controller):
     def new_state(self, node_start, node_end):
         dist, theta = self.get_distance_and_angle(node_start, node_end)
 
-        dist = min(self.discretization_step, dist)
+        dist = min(self.step_len, dist)
         new_x = node_start.x + dist * np.cos(theta)
         new_y = node_start.y + dist * np.sin(theta)
 
-        # new_y = round(new_y / self.discretization_step) * self.discretization_step
-        # new_x = round(new_x / self.discretization_step) * self.discretization_step
+        # new_y = round(new_y / self.step_len) * self.step_len
+        # new_x = round(new_x / self.step_len) * self.step_len
 
         node_new = Node(Point(new_x, new_y))
         node_new.parent = node_start
