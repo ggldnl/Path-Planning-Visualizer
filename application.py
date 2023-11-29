@@ -39,6 +39,7 @@ from scripts.frame import Frame
 # Import stuff from the model
 from model.exceptions.collision_exception import CollisionException
 
+from model.world.controllers.best_first_search_controller import BestFirstSearchController
 from model.world.controllers.a_star_controller import AStarController
 from model.world.controllers.dummy_controller import DummyController
 from model.world.controllers.rrt_controller import RRTController
@@ -372,11 +373,17 @@ if __name__ == "__main__":
 
     # Test with Cobalt
     robot = Cobalt()
-    # controller = AStarController(robot, world.map, iterations=2, discretization_step=0.2)
-    # controller = RRTController(robot, world.map, goal_sample_rate=0.05)
-    controller = RRTStarController(robot, world.map, goal_sample_rate=0.05, discretization_step=0.5, max_iterations=2000)
-    # controller = DynamicRRTController(robot, world.map, goal_sample_rate=0.05, discretization_step=0.2)
+
+    # Controller pool
+
     # controller = DummyController(robot, world.map)
+
+    # controller = BestFirstSearchController(robot, world.map, iterations=2, discretization_step=0.2)
+    # controller = AStarController(robot, world.map, iterations=2, discretization_step=0.2)
+
+    # controller = RRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05)
+    # controller = RRTStarController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, max_iterations=2000)
+    controller = DynamicRRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, waypoint_sample_rate=0.5)
 
     world.add_robot(robot, controller)
 
