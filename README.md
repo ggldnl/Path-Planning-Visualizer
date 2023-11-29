@@ -34,3 +34,4 @@ Sampling-based Planning
 - [ ] Provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
 - [ ] Interact with obstacles on mouse click (accelerate them, stop them, ...) 
 - [ ] CRUCIAL to refactor search algorithm and introduce a class hierarchy to share code (e.g. nodes, drawing geometry production method, ...)
+- [ ] Add missing search algorithms
