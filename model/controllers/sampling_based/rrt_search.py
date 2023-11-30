@@ -13,7 +13,7 @@ class RRT(SamplingBased):
                  start=Point(0, 0),
                  boundary=0.2,
                  max_iterations=8000,
-                 step_length=0.5,
+                 step_length=0.2,
                  goal_sample_rate=0.05,
                  ):
 
@@ -41,7 +41,7 @@ class RRT(SamplingBased):
 
     def step(self):
 
-        if self.current_iteration < self.max_iterations:
+        if self.current_iteration < self.max_iterations and not self.has_terminated():
 
             self.current_iteration += 1
 
