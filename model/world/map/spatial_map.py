@@ -28,15 +28,13 @@ class SpatialMap(Map):
         self._initial_obstacles.append(obstacle.copy())
 
     def step_motion(self, dt):
-        try:
-            for obstacle_id in range(len(self._obstacles)):
-                obstacle = self._obstacles[obstacle_id]
-                bounds = obstacle.polygon.bounds
-                obstacle.step_motion(dt)
-                self._obstacles_tree.delete(obstacle_id, bounds)
-                self._obstacles_tree.insert(obstacle_id, obstacle.polygon.bounds)
-        except:
-            print(f'({len(self._obstacles)}) {self._obstacles}')
+        # TODO spatial map is not thread safe, flask requires multi threading
+        for obstacle_id in range(len(self._obstacles)):
+            obstacle = self._obstacles[obstacle_id]
+            bounds = obstacle.polygon.bounds
+            obstacle.step_motion(dt)
+            self._obstacles_tree.delete(obstacle_id, bounds)
+            self._obstacles_tree.insert(obstacle_id, obstacle.polygon.bounds)
 
     def reset_map(self):
         self._obstacles = []
