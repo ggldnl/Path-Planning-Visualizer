@@ -57,9 +57,7 @@ class RRT(SamplingBased):
                     return self.extract_path(node_new)
 
                 # Update drawing list
-                geom_segment, geom_point = self.get_view(node_new.parent.point, node_new.point)
-                self.draw_list.append(geom_segment)
-                self.draw_list.append(geom_point)
+                self.update_draw_list(node_new)
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:

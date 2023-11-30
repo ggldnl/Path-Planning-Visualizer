@@ -14,8 +14,12 @@ class SamplingBased(SearchAlgorithm):
 
         super().__init__(map, start, boundary)
 
-    def get_view(self, parent_point, child_point):
-        return Segment(parent_point, child_point), child_point
+    def update_draw_list(self, node):
+        child_point = node.point
+        parent_point = node.parent.point if node.parent is not None else None
+        self.draw_list.append(child_point)
+        if parent_point is not None:
+            self.draw_list.append(Segment(parent_point, child_point))
 
     @abstractmethod
     def heuristic(self, point):

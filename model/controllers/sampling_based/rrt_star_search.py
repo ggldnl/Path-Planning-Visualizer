@@ -1,8 +1,8 @@
 from model.controllers.sampling_based_algorithm import SamplingBased
 from model.controllers.graph import Node
 
-from model.geometry.point import Point
 from model.geometry.segment import Segment
+from model.geometry.point import Point
 
 import numpy as np
 
@@ -65,7 +65,7 @@ class RRTStar(SamplingBased):
                     self.choose_parent(node_new, neighbor_index)
                     self.rewire(node_new, neighbor_index)
 
-                self.update_draw_list()
+                self.update_draw_list(None)
 
         else:
 
@@ -186,9 +186,11 @@ class RRTStar(SamplingBased):
             n = n.parent
         return cost
 
-    def update_draw_list(self):
+    def update_draw_list(self, placeholder):
+        # Overload the method to empty the draw_list first, getting rid of old segments.
+        # Placeholder is discarded
         self.draw_list = []
         for node in self.nodes:
-            self.draw_list.append(node.point)
             if node.parent is not None:
+                self.draw_list.append(node.point)
                 self.draw_list.append(Segment(node.parent.point, node.point))
