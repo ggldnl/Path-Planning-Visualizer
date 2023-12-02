@@ -12,23 +12,23 @@ class RRT(SamplingBased):
                  map,
                  start=Point(0, 0),
                  boundary=0.2,
+                 iterations=1,
                  max_iterations=8000,
                  step_length=0.2,
                  goal_sample_rate=0.05,
                  ):
 
-        self.max_iterations = max_iterations
         self.step_length = step_length
         self.goal_sample_rate = goal_sample_rate
-
+        self.max_iterations = max_iterations
         self.current_iteration = 0
 
-        super().__init__(map, start, boundary)
+        super().__init__(map, start, boundary, iterations)
 
     def heuristic(self, point):
         return 0
 
-    def init(self):
+    def pre_search(self):
 
         self.nodes = [Node(self.start)]
         self.edges = []
@@ -39,25 +39,34 @@ class RRT(SamplingBased):
 
         self.map.disable_moving_obstacles()
 
-    def step(self):
+    def step_search(self):
 
-        if self.current_iteration < self.max_iterations and not self.has_terminated():
+        self.current_iteration += 1
 
-            self.current_iteration += 1
+        node_rand = self.generate_random_node()
+        node_near = self.nearest_neighbor(node_rand)
+        node_new = self.new_state(node_near, node_rand)
 
-            node_rand = self.generate_random_node()
-            node_near = self.nearest_neighbor(node_rand)
-            node_new = self.new_state(node_near, node_rand)
+        if node_new and not self.check_collision(node_near.point, node_new.point):
+            self.nodes.append(node_new)
+            dist = self.distance_to_goal(node_new)
 
-            if node_new and not self.check_collision(node_near.point, node_new.point):
-                self.nodes.append(node_new)
-                dist = self.distance_to_goal(node_new)
+            if dist <= self.step_length:
+                self.extract_path(node_new)
 
-                if dist <= self.step_length:
-                    return self.extract_path(node_new)
+            # Update drawing list
+            self.update_draw_list(node_new)
 
-                # Update drawing list
-                self.update_draw_list(node_new)
+    def can_run(self):
+        """
+        Terminates when the goal is found or we exceed the number of iterations.
+        We don't have memory constraints, but we have time constraints specified in
+        number of iterations.
+        """
+        return not self.has_path() and self.current_iteration < self.max_iterations
+
+    def post_search(self):
+        return 0
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
@@ -98,10 +107,11 @@ class RRT(SamplingBased):
 
     def distance_to_goal(self, node):
         return node.point.distance(self.map.goal)
-    
-    def extract_path(self, node_end):
-        self.path = [Point(self.map.goal[0], self.map.goal[1])]
-        node_now = node_end
+
+    def extract_path(self, node):
+
+        self.path = [self.map.goal]
+        node_now = node
 
         while node_now.parent is not None:
             node_now = node_now.parent

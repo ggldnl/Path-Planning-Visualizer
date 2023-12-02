@@ -16,7 +16,7 @@ class SearchBased(SearchAlgorithm):
     yet expanded and avoid adding them multiple times to the open_set
     """
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2, discretization_step=0.2):
+    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
 
         # Side of the area that each node covers
         self.discretization_step = discretization_step
@@ -30,7 +30,7 @@ class SearchBased(SearchAlgorithm):
         # to avoid adding it twice to the open_set
         self.generated_neighbors = set()
 
-        super().__init__(map, start, boundary)
+        super().__init__(map, start, boundary, iterations)
 
     def get_view(self, point):
         tile = Polygon([

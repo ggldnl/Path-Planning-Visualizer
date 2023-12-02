@@ -39,7 +39,8 @@ class Map:
                  goal_max_dist,
                  min_goal_clearance,
 
-                 discretization_step
+                 discretization_step,
+                 boundaries
                  ):
 
         # Set parameters
@@ -78,6 +79,7 @@ class Map:
         self.obs_dist_range = self.obs_max_dist - self.obs_min_dist
 
         self.discretization_step = discretization_step
+        self.boundaries = boundaries
 
         # Initial obstacles
         self._initial_obstacles = []

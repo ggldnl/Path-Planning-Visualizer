@@ -20,6 +20,23 @@ class StandardMap(Map):
 
     def step_motion(self, dt):
         for obstacle in self._obstacles:
+
+            if self.boundaries:
+
+                # Try to compute the next pose
+                x, y, z = obstacle.polygon.pose
+                vx, vy, vz = obstacle.vel
+                lsm = obstacle.linear_speed_multiplier
+
+                new_x = x + vx * lsm * dt
+                new_y = y + vy * lsm * dt
+
+                if not -self.obs_max_dist <= new_x <= self.obs_max_dist:
+                    obstacle.vel = (-vx, vy, vz)
+
+                if not -self.obs_max_dist <= new_y <= self.obs_max_dist:
+                    obstacle.vel = (vx, -vy, vz)
+
             obstacle.step_motion(dt)
 
     def reset_map(self):

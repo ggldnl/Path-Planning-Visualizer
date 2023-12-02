@@ -5,10 +5,10 @@ from model.geometry.point import Point
 
 class BreadthFirstSearch(SearchBased):
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2, discretization_step=0.2):
-        super().__init__(map, start, boundary, discretization_step)
+    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
+        super().__init__(map, start, boundary, iterations, discretization_step)
 
-    def init(self):
+    def pre_search(self):
         self.path = []
         self.draw_list = []
         self.generated_neighbors = set()
@@ -16,23 +16,26 @@ class BreadthFirstSearch(SearchBased):
 
         self.map.disable_moving_obstacles()
 
-    def step(self):
-        if self.open_set:
-            current_node = self.open_set.pop(0)
+    def can_run(self):
+        return self.open_set and not self.has_path()
 
-            if current_node.point == self.map.goal:
-                # Goal reached, reconstruct the path
-                self.reconstruct_path(current_node)
-                return
+    def step_search(self):
 
-            # Expand the current node and add its neighbors to the frontier
-            neighbors = self.get_neighbors(current_node.point)
-            for neighbor in neighbors:
-                new_node = Node(neighbor, current_node)
-                self.open_set.append(new_node)
+        current_node = self.open_set.pop(0)
 
-                # Update the draw_list
-                self.draw_list.append(self.get_view(neighbor))
+        if current_node.point == self.map.goal:
+            # Goal reached, reconstruct the path
+            self.reconstruct_path(current_node)
+            return
+
+        # Expand the current node and add its neighbors to the frontier
+        neighbors = self.get_neighbors(current_node.point)
+        for neighbor in neighbors:
+            new_node = Node(neighbor, current_node)
+            self.open_set.append(new_node)
+
+            # Update the draw_list
+            self.draw_list.append(self.get_view(neighbor))
 
     def heuristic(self, point):
         pass

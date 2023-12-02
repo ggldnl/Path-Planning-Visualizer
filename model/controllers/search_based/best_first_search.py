@@ -8,10 +8,10 @@ from model.geometry.point import Point
 
 class BestFirstSearch(SearchBased):
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2):
-        super().__init__(map, start, boundary)
+    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
+        super().__init__(map, start, boundary, iterations, discretization_step)
 
-    def init(self):
+    def pre_search(self):
         self.path = []
         self.draw_list = []
         self.generated_neighbors = set()
@@ -23,26 +23,27 @@ class BestFirstSearch(SearchBased):
     def heuristic(self, point):
         return point.distance(self.map.goal)
 
-    def step(self):
+    def can_run(self):
+        return not self.open_set.empty() and not self.has_path()
 
-        if not self.open_set.empty():
+    def step_search(self):
 
-            _, current_node = self.open_set.get()
+        _, current_node = self.open_set.get()
 
-            if current_node.point == self.map.goal:
-                # Goal reached, reconstruct the path
-                self.reconstruct_path(current_node)
-                return
+        if current_node.point == self.map.goal:
+            # Goal reached, reconstruct the path
+            self.reconstruct_path(current_node)
+            return
 
-            # Expand the current node and add its neighbors to the frontier
-            neighbors = self.get_neighbors(current_node.point)
-            for neighbor in neighbors:
-                new_node = Node(neighbor, parent=current_node)
-                priority = self.heuristic(neighbor)
-                self.open_set.put((priority, new_node))
+        # Expand the current node and add its neighbors to the frontier
+        neighbors = self.get_neighbors(current_node.point)
+        for neighbor in neighbors:
+            new_node = Node(neighbor, parent=current_node)
+            priority = self.heuristic(neighbor)
+            self.open_set.put((priority, new_node))
 
-                # Update the draw_list
-                self.draw_list.append(self.get_view(neighbor))
+            # Update the draw_list
+            self.draw_list.append(self.get_view(neighbor))
 
     def reconstruct_path(self, goal_node):
         """

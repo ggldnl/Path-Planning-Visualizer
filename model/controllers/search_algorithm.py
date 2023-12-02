@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 
 from model.geometry.segment import Segment
@@ -7,16 +8,19 @@ from model.geometry.polygon import Polygon
 class SearchAlgorithm(ABC):
     """
     This interface will represent all the search algorithms. Every algorithm has an initial
-    phase in which data structures are set up and a search loop in which algorithm-specific
-    logic is repeatedly executed.
+    phase in which data structures are set up, a search loop in which algorithm-specific
+    logic is repeatedly executed to gather necessary information and a post loop phase
+    in which the gathered information is processed in order to produce the path.
 
-    sa.init()
-    while not sa.has_terminated():
-        sa.step()
+    sa = ConcreteSearchAlgorithm() (implements SearchAlgorithm, calls init to set up data structures)
 
+    sa.pre_search()
+    while sa.can_run():
+        sa.step_search()
+    sa.post_search()
     """
 
-    def __init__(self, map, start, boundary):
+    def __init__(self, map, start, boundary, iterations=1):
 
         # Map
         self.map = map
@@ -27,6 +31,9 @@ class SearchAlgorithm(ABC):
         # The path should be distant from each obstacle by at least self.boundary/2
         self.boundary = boundary
 
+        # Number of steps to execute each time (default = 1)
+        self.iterations = iterations
+
         # List of points from start (first) to goal (last)
         self.path = []
 
@@ -35,33 +42,19 @@ class SearchAlgorithm(ABC):
         # branches of a tree for sampling-based algorithms.
         self.draw_list = []
 
-        self.init()
+        # State variables
+        self.post_search_performed = False
 
-    @abstractmethod
-    def init(self):
-        """
-        Init the search algorithm by instantiating all the necessary data structures (at creation/reset time).
-        """
-        pass
+        # Perform the pre-search steps
+        self.pre_search()
 
     def reset(self):
         """
         Reset the search algorithm (alias for init).
         """
-        self.init()
-
-    @abstractmethod
-    def step(self):
-        """
-        Search step. Our world has an update loop in which the state of the system is advanced.
-        We leverage this (outer) loop to call the step() method of a controller. A controller
-        (check Controller class) has a search algorithm and is responsible for:
-        1. make progress computing the path one step at a time
-        2. talk to the robot by streaming the path (if found) or by making it hold its position
-        The controller can make one or more (to increase convergence speed) steps of the search
-        algorithm at a time.
-        """
-        pass
+        # State variables
+        self.post_search_performed = False
+        self.pre_search()
 
     def smooth(self):
         """
@@ -86,9 +79,142 @@ class SearchAlgorithm(ABC):
         intersecting_obstacles_ids = self.map.query_region(buffer)
         return len(intersecting_obstacles_ids) > 0
 
-    def has_terminated(self):
+    def has_path(self):
         """
-        Termination condition: if the path contains points and the last point is the goal,
-        then the path is complete and the robot can follow it.
+        Return True if the algorithm has found a path. A path is a list of points
+        that starts from the robot position and ends with the goal.
+        If the path contains points and the last point is the goal, then the path
+        is complete and the robot can follow it.
         """
         return len(self.path) > 0 and self.path[-1] == self.map.goal
+
+    def has_terminated(self):
+        """
+        True if the algorithm has terminated. In its basic form an algorithm
+        is finished when it cannot run anymore. This does not take into account
+        the fact that the algorith has found the path or not.
+        """
+        return not self.can_run()
+
+    @abstractmethod
+    def can_run(self):
+        """
+        Condition until which the search loop can go on. In some cases the search
+        loop will end when the first path is found (condition = path found or no
+        more resources) and in some other cases we should go on until termination
+        condition (the more we go on, the better is the outcome, like in RRT*).
+        """
+        pass
+
+    def pre_search(self):
+        """
+        Init the search algorithm by instantiating all the necessary data structures
+        (at creation/reset time) and make initial steps. This routine is called also
+        when the reset method is invoked.
+        """
+        pass
+
+    def post_search(self):
+        """
+        Steps to be performed after the search loop. Some algorithms have nothing to do
+        after the search loop, some others has to reconstruct the path, ...
+        """
+        return
+
+    @abstractmethod
+    def step_search(self):
+        """
+        Search step. Our world has an update loop in which the state of the system is advanced.
+        We leverage this (outer) loop to call the step() method of a controller. A controller
+        (check Controller class) has a search algorithm and is responsible for:
+        1. making progress computing the path one step at a time;
+        2. talking to the robot by streaming the path (if found) or by making it hold its position;
+        3. drawing on screen insights on what the search algorithm is doing;
+        """
+        pass
+
+    def step(self):
+        """
+        Step the search algorithm. The step is performed even if there is nothing more to do.
+        The initial step is performed at construction/reset time. This method calls the step_search
+        if the search loop has not ended yet and the post search only once if the loop has ended
+        and the post search has not been executed.
+        """
+        for _ in range(self.iterations):
+
+            # If the algorithm as not yet terminated (while search time/space remaining)
+            if self.can_run():
+
+                # Progress the search
+                self.step_search()
+
+                # Eventually, step_search will set the step_search_done flag to True
+                # and the step loop will end -> post_search
+
+            # Else, if the algorithm has terminated
+            else:
+
+                # Perform final steps only if we haven't exceeded time constraints
+                if not self.post_search_performed:
+                    self.post_search()
+                    self.post_search_performed = True
+
+        # At this point we either have a path or an empty list
+
+
+class TestSearchAlgorithm(SearchAlgorithm):
+    """
+    This test class aims to simulate the implementation of the SearchAlgorithm interface.
+    It goes on for #fake_iterations iterations and then draw a number in range [0, 1) at random:
+    if the number is < 0.2, it sets a path.
+    The termination condition is to find a path or to exit on time constraint violation.
+    """
+
+    def __init__(self, map, start, boundary=0.2, iterations=1, max_iterations=10):
+
+        self.max_iterations = max_iterations
+        self.current_iteration = 0
+        self.goal_found = False
+
+        super().__init__(map, start, boundary, iterations)
+
+    def can_run(self):
+        # Termination condition = goal found or times up
+        return not self.goal_found and self.current_iteration < self.max_iterations
+
+    def pre_search(self):
+        print('Pre search')
+
+    def step_search(self):
+
+        print('Searching...')
+        self.current_iteration += 1
+
+        n = random.random()
+        if n < 0.2:
+            print(f'Path found at iteration [{self.current_iteration}]')
+            self.path = [None]
+            self.goal_found = True
+
+    def post_search(self):
+        print('Post search')
+
+
+if __name__ == '__main__':
+
+    test_search_algorithm = TestSearchAlgorithm(None, None)
+
+    iteration = 0
+    iterations = 10
+
+    # Infinite loop
+    while iteration <= iterations:
+
+        test_search_algorithm.step()
+
+        """
+        if test_search_algorithm.has_terminated():
+            break
+        """
+
+        iteration += 1

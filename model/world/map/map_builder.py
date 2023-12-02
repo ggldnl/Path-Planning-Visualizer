@@ -19,7 +19,8 @@ default_params = {
     "goal_min_dist": 4.0,
     "goal_max_dist": 6.0,
     "min_goal_clearance": 0.5,
-    "discretization_step": 0.2
+    "discretization_step": 0.2,
+    "boundaries": True,
 }
 
 
@@ -109,6 +110,14 @@ class MapBuilder:
 
     def set_type(self, map_type: Literal['standard', 'spatial']):
         self.map_type = map_type
+        return self
+
+    def enable_boundaries(self):
+        self.params_dictionary['boundaries'] = True
+        return self
+
+    def disable_boundaries(self):
+        self.params_dictionary['boundaries'] = False
         return self
 
     def build(self):

@@ -9,13 +9,11 @@ import numpy as np
 
 class RRTStar(SamplingBased):
 
-    def heuristic(self, point):
-        return 0
-
     def __init__(self,
                  map,
                  start=Point(0, 0),
                  boundary=0.2,
+                 iterations=1,
                  step_length=0.2,
                  search_radius=0.5,
                  max_iterations=1000,
@@ -24,17 +22,17 @@ class RRTStar(SamplingBased):
 
         self.step_length = step_length
         self.search_radius = search_radius
-        self.max_iterations = max_iterations
         self.goal_sample_rate = goal_sample_rate
 
+        self.max_iterations = max_iterations
         self.current_iteration = 0
 
-        # Once the iterations stop we must find the goal. We search for it only once
-        self.searched_for_goal = False
+        super().__init__(map, start, boundary, iterations)
 
-        super().__init__(map, start, boundary)
+    def heuristic(self, point):
+        return 0
 
-    def init(self):
+    def pre_search(self):
 
         self.nodes = [Node(self.start)]
         self.edges = []
@@ -45,37 +43,34 @@ class RRTStar(SamplingBased):
 
         self.map.disable_moving_obstacles()
 
-    def step(self):
+    def step_search(self):
 
-        if self.current_iteration < self.max_iterations:
+        self.current_iteration += 1
 
-            self.current_iteration += 1
+        node_rand = self.generate_random_node()
+        node_near = self.nearest_neighbor(node_rand)
+        node_new = self.new_state(node_near, node_rand)
 
-            node_rand = self.generate_random_node()
-            node_near = self.nearest_neighbor(node_rand)
-            node_new = self.new_state(node_near, node_rand)
+        if node_new and not self.check_collision(node_near.point, node_new.point):
 
-            if node_new and not self.check_collision(node_near.point, node_new.point):
+            neighbor_index = self.find_neighborhood(node_new)
 
-                neighbor_index = self.find_neighborhood(node_new)
+            self.nodes.append(node_new)
 
-                self.nodes.append(node_new)
+            if neighbor_index:
+                self.choose_parent(node_new, neighbor_index)
+                self.rewire(node_new, neighbor_index)
 
-                if neighbor_index:
-                    self.choose_parent(node_new, neighbor_index)
-                    self.rewire(node_new, neighbor_index)
+            self.update_draw_list(None)
 
-                self.update_draw_list(None)
+    def post_search(self):
 
-        else:
+        index = self.search_goal_parent()
+        if index > 0:
+            self.extract_path(self.nodes[index])
 
-            if not self.searched_for_goal:
-
-                self.searched_for_goal = True
-
-                index = self.search_goal_parent()
-                if index > 0:
-                    self.extract_path(self.nodes[index])
+    def can_run(self):
+        return self.current_iteration < self.max_iterations
 
     def check_collision(self, point_start, point_end):
         if point_start == point_end:

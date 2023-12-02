@@ -32,6 +32,34 @@ class Controller:
         self.iterations = iterations
 
     def step(self):
+
+        # Step the search
+        self.search_algorithm.step()
+
+        # Handle the next pose
+        current_x, current_y, current_theta = self.robot.current_pose
+        target_x, target_y, target_theta = self.robot.current_pose
+
+        if self.has_path() and not self.is_robot_at_goal():
+
+            # Attempt to take the first available point in the path
+            current_target = self.search_algorithm.path[0]
+
+            # If the robot has reached the point
+            if self.is_robot_at(current_target):
+                # Remove it from the list
+                self.search_algorithm.path.pop(0)
+
+            target_x = current_target.x
+            target_y = current_target.y
+
+        delta_x = target_x - current_x
+        delta_y = target_y - current_y
+
+        # Add the orientation (keep the orientation of the robot while moving towards the goal)
+        return Pose(target_x, target_y, np.arctan2(delta_y, delta_x))
+
+    def old_step(self):
         """
         Does one step of the search loop, regardless of whether the path is obstructed or something else
         has happened: the actual path planning algorithm will account for this (that is why it is called
@@ -76,6 +104,9 @@ class Controller:
 
     def is_robot_at(self, point):
         return self.robot.current_pose.as_point() == point
+
+    def is_robot_at_goal(self):
+        return self.robot.current_pose.as_point() == self.search_algorithm.map.goal
 
     def has_path(self):
         return self.search_algorithm.has_terminated() and len(self.search_algorithm.path) > 0

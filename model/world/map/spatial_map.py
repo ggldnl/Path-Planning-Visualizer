@@ -32,7 +32,25 @@ class SpatialMap(Map):
         for obstacle_id in range(len(self._obstacles)):
             obstacle = self._obstacles[obstacle_id]
             bounds = obstacle.polygon.bounds
+
+            if self.boundaries:
+
+                # Try to compute the next pose
+                x, y, z = obstacle.polygon.pose
+                vx, vy, vz = obstacle.vel
+                lsm = obstacle.linear_speed_multiplier
+
+                new_x = x + vx * lsm * dt
+                new_y = y + vy * lsm * dt
+
+                if not -self.obs_max_dist <= new_x <= self.obs_max_dist:
+                    obstacle.vel = (-vx, vy, vz)
+
+                if not -self.obs_max_dist <= new_y <= self.obs_max_dist:
+                    obstacle.vel = (vx, -vy, vz)
+
             obstacle.step_motion(dt)
+
             self._obstacles_tree.delete(obstacle_id, bounds)
             self._obstacles_tree.insert(obstacle_id, obstacle.polygon.bounds)
 

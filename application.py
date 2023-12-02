@@ -44,6 +44,8 @@ from model.controllers.search_based.breadth_first_search import BreadthFirstSear
 from model.controllers.search_based.a_star_search import AStarSearch
 from model.controllers.sampling_based.rrt_search import RRT
 from model.controllers.sampling_based.rrt_star_search import RRTStar
+from model.controllers.sampling_based.dynamic_rrt_search import DynamicRRT
+from model.controllers.dummy_search import DummySearch
 from model.controllers.controller import Controller
 
 from model.world.world import World
@@ -375,19 +377,19 @@ if __name__ == "__main__":
     # Controller pool
 
     # controller = DummyController(robot, world.map)
-
     # controller = BestFirstSearchController(robot, world.map, iterations=2, discretization_step=0.2)
     # controller = AStarController(robot, world.map, iterations=2, discretization_step=0.2)
-
     # controller = RRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05)
     # controller = RRTStarController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, max_iterations=2000)
     # controller = DynamicRRTController(robot, world.map, step_len=0.2, goal_sample_rate=0.05, waypoint_sample_rate=0.5)
 
+    # search_algorithm = DummySearch(world.map, robot.current_pose.as_point())
     # search_algorithm = BestFirstSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = BreadthFirstSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = AStarSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = RRT(world.map, robot.current_pose.as_point())
-    search_algorithm = RRTStar(world.map, robot.current_pose.as_point())
+    # search_algorithm = RRTStar(world.map, robot.current_pose.as_point(), max_iterations=1000)
+    search_algorithm = DynamicRRT(world.map, robot.current_pose.as_point())
 
     controller = Controller(robot, search_algorithm)
 
