@@ -63,11 +63,11 @@ class SearchAlgorithm(ABC):
         start = self.path[0]
         idx = 0
         for i in range(len(self.path), 0, -1):
-            point = self.path[-1]
+            point = self.path[-i]
             if not self.check_collision(start, point):
                 idx = i
                 break
-        self.path = self.path[0] + self.path[idx:]
+        self.path = [self.path[0]] + self.path[idx:]
 
     def check_collision(self, start, end):
         """
