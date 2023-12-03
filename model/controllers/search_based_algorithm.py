@@ -65,24 +65,27 @@ class SearchBased(SearchAlgorithm):
                     neighbor_x = new_x + i * self.discretization_step
                     neighbor_y = new_y + j * self.discretization_step
 
-                    # Round them to match the grid
-                    neighbor_x = round(neighbor_x / self.discretization_step) * self.discretization_step
-                    neighbor_y = round(neighbor_y / self.discretization_step) * self.discretization_step
+                    if (-self.map.goal_max_dist <= neighbor_x <= self.map.goal_max_dist and
+                            -self.map.goal_max_dist <= neighbor_y <= self.map.goal_max_dist):
 
-                    neighbor = Point(neighbor_x, neighbor_y)
+                        # Round them to match the grid
+                        neighbor_x = round(neighbor_x / self.discretization_step) * self.discretization_step
+                        neighbor_y = round(neighbor_y / self.discretization_step) * self.discretization_step
 
-                    # Check if the node has previously been generated
-                    if neighbor in self.generated_neighbors:
-                        continue
+                        neighbor = Point(neighbor_x, neighbor_y)
 
-                    # Check if there is a collision
-                    if self.check_collision(point, neighbor):
-                        continue
+                        # Check if the node has previously been generated
+                        if neighbor in self.generated_neighbors:
+                            continue
 
-                    # Add to the list of nodes to return
-                    neighbors.append(neighbor)
+                        # Check if there is a collision
+                        if self.check_collision(point, neighbor):
+                            continue
 
-                    # Add to the generated_node set so that the next iteration will discard it
-                    self.generated_neighbors.add(neighbor)
+                        # Add to the list of nodes to return
+                        neighbors.append(neighbor)
+
+                        # Add to the generated_node set so that the next iteration will discard it
+                        self.generated_neighbors.add(neighbor)
 
         return neighbors
