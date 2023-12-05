@@ -30,7 +30,7 @@ class AStarSearch(SearchBased):
 
     def can_run(self):
         # Termination condition is that the highest priority element (nearest to the goal) is the goal itself
-        return not self.open_set.empty() and not self.open_set[0][1] == self.map.goal
+        return not self.open_set.empty() and not self.open_set.queue[0][1].point == self.map.goal
 
     def step_search(self):
 
@@ -56,7 +56,7 @@ class AStarSearch(SearchBased):
             self.draw_list.append(self.get_view(neighbor))
 
     def post_search(self):
-        self.reconstruct_path(self.open_set[0][1])
+        self.reconstruct_path(self.open_set.queue[0][1])
 
     def reconstruct_path(self, goal_node):
         # Reconstruct the path by backtracking through the parent pointers
