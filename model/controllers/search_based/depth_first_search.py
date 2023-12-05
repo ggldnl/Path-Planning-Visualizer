@@ -21,8 +21,7 @@ class DepthFirstSearch(SearchBased):
 
     def step_search(self):
 
-        current_node = self.open_set.pop()
-        print(f'Open set: {self.open_set}')
+        current_node = self.open_set.pop(-1)
 
         if current_node.point == self.map.goal:
             # Goal reached, reconstruct the path
@@ -38,11 +37,17 @@ class DepthFirstSearch(SearchBased):
             # Update the draw_list
             self.draw_list.append(self.get_view(neighbor))
 
+    # Uncomment to enable smoothing
+    """
     def post_search(self):
-        print(f'Before smoothing: {self.path}')
-        self.smooth()
-        print(f'After smoothing : {self.path}')
-        print(f'Has path: {self.has_path()}')
+        # self.smooth()
+        return 0
+
+    def check_collision(self, start, end):
+        if start == end:
+            return False
+        return super().check_collision(start, end)
+    """
 
     def heuristic(self, point):
         pass
