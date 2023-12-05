@@ -20,6 +20,10 @@ class Node:
     def __lt__(self, other):
         return self.cost + self.heuristic < other.cost + other.heuristic
 
+    def __hash__(self):
+        # Use the hash value of the point attribute
+        return hash(self.point)
+
 
 class Edge:
 
