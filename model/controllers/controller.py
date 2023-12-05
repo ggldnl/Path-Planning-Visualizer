@@ -40,7 +40,7 @@ class Controller:
         current_x, current_y, current_theta = self.robot.current_pose
         target_x, target_y, target_theta = self.robot.current_pose
 
-        if self.has_path() and not self.is_robot_at_goal():
+        if self.search_algorithm.has_path() and not self.is_robot_at_goal():
 
             # Attempt to take the first available point in the path
             current_target = self.search_algorithm.path[0]
@@ -108,8 +108,10 @@ class Controller:
     def is_robot_at_goal(self):
         return self.robot.current_pose.as_point() == self.search_algorithm.map.goal
 
+    """
     def has_path(self):
         return self.search_algorithm.has_terminated() and len(self.search_algorithm.path) > 0
+    """
 
     def reset(self):
         self.search_algorithm.start = self.robot.current_pose.as_point()
