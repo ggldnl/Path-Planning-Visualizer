@@ -21,6 +21,7 @@ class DynamicRRT(SamplingBased):
                  map,
                  start=Point(0, 0),
                  boundary=0.2,
+                 iterations=1,
                  step_length=0.2,
                  max_iterations=5000,
                  goal_sample_rate=0.05,
@@ -45,7 +46,7 @@ class DynamicRRT(SamplingBased):
         self.path_nodes = set()  # Nodes forming the path
         self.last_valid = None  # Points to the last valid point in the path
 
-        super().__init__(map, start, boundary)
+        super().__init__(map, start, boundary, iterations)
 
     def heuristic(self, point):
         return point.distance(self.map.goal)
