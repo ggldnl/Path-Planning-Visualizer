@@ -41,6 +41,7 @@ from model.exceptions.collision_exception import CollisionException
 
 from model.controllers.search_based.best_first_search import BestFirstSearch
 from model.controllers.search_based.breadth_first_search import BreadthFirstSearch
+from model.controllers.search_based.depth_first_search import DepthFirstSearch
 from model.controllers.search_based.a_star_search import AStarSearch
 from model.controllers.sampling_based.rrt_search import RRT
 from model.controllers.sampling_based.rrt_star_search import RRTStar
@@ -386,6 +387,7 @@ if __name__ == "__main__":
     # search_algorithm = DummySearch(world.map, robot.current_pose.as_point())
     # search_algorithm = BestFirstSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = BreadthFirstSearch(world.map, robot.current_pose.as_point())
+    # search_algorithm = DepthFirstSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = AStarSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = RRT(world.map, robot.current_pose.as_point())
     # search_algorithm = RRTStar(world.map, robot.current_pose.as_point(), max_iterations=1000)
