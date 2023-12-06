@@ -45,6 +45,7 @@ class DynamicRRT(SamplingBased):
         self.waypoints = []  # Cached nodes
         self.path_nodes = set()  # Nodes forming the path
         self.last_valid = None  # Points to the last valid point in the path
+        self.node_current = None  # Points to the current node (first element of the path)
 
         super().__init__(map, start, boundary, iterations)
 
@@ -113,32 +114,31 @@ class DynamicRRT(SamplingBased):
         if not self.planning_done:
             self.step_planning()
         else:
-            self.replanning()
+
+            self.node_current = ValidNode(self.path[0])
+
+            # Check if some edges are now invalid
+            self.invalidate_nodes()
+
+            if self.is_path_invalid():
+
+                # Disable moving obstacles in case they were disabled
+                self.moving_obstacles_status = False
+
+                # The path is invalid, we need to progressively find another path by calling replan at each step,
+                # but we also need to call trim once before the replan and to invalidate only part of the initial
+                # path. Trim will trim the invalid edges and set last_valid that is the last valid node of the
+                # path. Replan will then reconstruct the path starting from the goal and ending to last_valid.
+
+                # If last_valid does not exist, then the trim hasn't happened yet
+                if not self.last_valid:
+                    self.trim()
+                else:
+                    self.step_replanning()
 
         self.handle_moving_obstacles()
 
         # print('-' * 50)
-
-    def replanning(self):
-
-        # Check if some edges are now invalid
-        self.invalidate_nodes()
-
-        if self.is_path_invalid():
-
-            # Disable moving obstacles in case they were disabled
-            self.moving_obstacles_status = False
-
-            # The path is invalid, we need to progressively find another path by calling replan at each step,
-            # but we also need to call trim once before the replan and to invalidate only part of the initial
-            # path. Trim will trim the invalid edges and set last_valid that is the last valid node of the
-            # path. Replan will then reconstruct the path starting from the goal and ending to last_valid.
-
-            # If last_valid does not exist, then the trim hasn't happened yet
-            if not self.last_valid:
-                self.trim()
-            else:
-                self.step_replanning()
 
     def is_path_invalid(self):
         for node in self.waypoints:
@@ -319,7 +319,9 @@ class DynamicRRT(SamplingBased):
         self.path_nodes = {ValidNode(self.map.goal)}
         node_now = node_end
 
-        while node_now.parent is not None and node_now != self.last_valid:
+        print(f'Last valid: {self.last_valid}')
+        while node_now.parent is not None and node_now != self.last_valid and node_now != self.node_current:
+            print(f'{node_now} -> {node_now.parent}')
             node_now = node_now.parent
             self.path.append(node_now.point)
             self.path_nodes.add(node_now)
