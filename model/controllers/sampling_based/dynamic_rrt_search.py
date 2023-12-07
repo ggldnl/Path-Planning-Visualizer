@@ -146,10 +146,10 @@ class DynamicRRT(SamplingBased):
         """
         if self.moving_obstacles_status != self.moving_obstacles_status_before:
             if self.moving_obstacles_enabled:
-                print('Moving obstacles disabled')
+                # print('Moving obstacles disabled')
                 self.map.disable_moving_obstacles()
             else:
-                print('Moving obstacles enabled')
+                # print('Moving obstacles enabled')
                 self.map.enable_moving_obstacles()
             self.moving_obstacles_enabled = not self.moving_obstacles_enabled
             self.moving_obstacles_status_before = self.moving_obstacles_status
@@ -158,13 +158,13 @@ class DynamicRRT(SamplingBased):
 
         self.current_iteration += 1
 
-        print('Stepping search...')
-        print(f'Iteration   : {self.current_iteration}')
-        print(f'Has path    : {self.has_path()}')
-        print(f'Path        : {self.path}')
-        print(f'Waypoints   : {self.waypoints}')
-        print(f'Valid path  : {self.path.get_as_valid_string()}')
-        print(f'Path invalid: {self.is_path_invalid()}')
+        # print('Stepping search...')
+        # print(f'Iteration   : {self.current_iteration}')
+        # print(f'Has path    : {self.has_path()}')
+        # print(f'Path        : {self.path}')
+        # print(f'Waypoints   : {self.waypoints}')
+        # print(f'Valid path  : {self.path.get_as_valid_string()}')
+        # print(f'Path invalid: {self.is_path_invalid()}')
 
         if not self.planning_done:
             self.step_planning()
@@ -194,7 +194,7 @@ class DynamicRRT(SamplingBased):
         # Enable/disable moving obstacles
         self.handle_moving_obstacles()
 
-        print('-' * 50)
+        # print('-' * 50)
 
     def invalidate_path(self):
         """
@@ -202,7 +202,7 @@ class DynamicRRT(SamplingBased):
         """
         for i in range(1, len(self.path_nodes)):
             if self.check_collision(self.path_nodes[i-1].point, self.path_nodes[i].point):
-                print(f'Invalidating node: {self.path_nodes[i]}')
+                # print(f'Invalidating node: {self.path_nodes[i]}')
                 self.path_nodes[i].valid = False
 
     def propagate(self):
