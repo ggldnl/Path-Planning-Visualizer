@@ -1,8 +1,8 @@
 from abc import abstractmethod
 
 # Math
-from math import pi, sin, cos
-import random
+import numpy as np
+
 # Model
 from model.geometry.rectangle import Rectangle
 from model.world.map.obstacle import Obstacle
@@ -39,7 +39,9 @@ class Map:
                  goal_max_dist,
                  min_goal_clearance,
 
-                 discretization_step,
+                 obstacles_type,
+                 displacement_type,
+
                  boundaries
                  ):
 
@@ -78,7 +80,9 @@ class Map:
         self.obs_height_range = self.obs_max_height - self.obs_min_height
         self.obs_dist_range = self.obs_max_dist - self.obs_min_dist
 
-        self.discretization_step = discretization_step
+        self.obstacles_type = obstacles_type
+        self.displacement_type = displacement_type
+
         self.boundaries = boundaries
 
         # Initial obstacles
@@ -115,18 +119,34 @@ class Map:
 
     def _generate_random_obstacle(self):
 
+        # TODO implement other obstacle types
+
         # Generate dimensions
-        width = self.obs_min_width + (random.random() * self.obs_width_range)
-        height = self.obs_min_height + (random.random() * self.obs_height_range)
+        width = self.obs_min_width + (np.random.random() * self.obs_width_range)
+        height = self.obs_min_height + (np.random.random() * self.obs_height_range)
+
+        if self.displacement_type == 'gridlike':
+            width = round(width / 0.1) * 0.1
+            height = round(height / 0.1) * 0.1
 
         # Generate position
-        dist = self.obs_min_dist + (random.random() * self.obs_dist_range)
-        phi = -pi + (random.random() * 2 * pi)
-        x = dist * sin(phi)
-        y = dist * cos(phi)
+        dist = self.obs_min_dist + (np.random.random() * self.obs_dist_range)
+        phi = -np.pi + (np.random.random() * 2 * np.pi)
+        x = dist * np.sin(phi)
+        y = dist * np.cos(phi)
+
+        if self.displacement_type == 'gridlike':
+            x = round(x, 1)
+            y = round(y, 1)
 
         # Generate orientation
-        theta = random.random() * 360
+        if self.displacement_type == 'gridlike':
+            random_multiple = np.random.randint(0, 3)
+            theta = random_multiple * (np.pi / 2)
+        elif self.displacement_type == 'random':
+            theta = np.random.random() * 2 * np.pi - np.pi
+        else:
+            raise ValueError(f'Invalid displacement type: {self.displacement_type}')
 
         # We have a pose
         pose = (x, y, theta)
@@ -141,38 +161,15 @@ class Map:
 
         # Generate the goal
         goal_dist_range = self.goal_max_dist - self.goal_min_dist
-        dist = self.goal_min_dist + (random.random() * goal_dist_range)
-        phi = -pi + (random.random() * 2 * pi)
-        x = int(dist * sin(phi))  # Round x to an integer
-        y = int(dist * cos(phi))  # Round y to an integer
+        dist = self.goal_min_dist + (np.random.random() * goal_dist_range)
+        phi = -np.pi + (np.random.random() * 2 * np.pi)
+        x = int(dist * np.sin(phi))  # Round x to an integer
+        y = int(dist * np.cos(phi))  # Round y to an integer
         goal = Point(x, y)
 
         # Generate a proximity test geometry for the goal
         r = self.min_goal_clearance
-
-        """
-        n = 6
-        goal_test_geometry = []
-        for i in range(n):
-            goal_test_geometry.append(
-                Point(x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n))
-            )
-        goal_test_geometry = Polygon(goal_test_geometry)
-        """
         goal_test_geometry = Circle(x, y, r)
-
-        """
-        # Generate a proximity test geometry for the starting point
-        r = self.obs_min_dist
-        n = 6
-        start_test_geometry = []
-        for i in range(n):
-            start_test_geometry.append(
-                Point(x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n))
-            )
-        start_test_geometry = Polygon(start_test_geometry)
-        # start_test_geometry = Circle(0, 0, r)
-        """
 
         # test_geometries contains the robots and the goal
         robot_test_geometries = [Circle(r.current_pose.x, r.current_pose.y, self.obs_min_dist) for r in robots]
@@ -200,7 +197,19 @@ class Map:
             if not intersects:
 
                 obstacle = Obstacle(polygon)
-                obstacle.set_random_velocity_vector()
+
+                # Set velocity vector
+                obstacle.vel = (np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5))
+
+                if self.displacement_type == 'gridlike':
+                    vx = np.random.randint(0, 1) * np.random.uniform(-0.5, 0.5)
+                    vy = np.random.uniform(-0.5, 0.5)
+                    if vx != 0:
+                        vy = 0
+                    obstacle.vel = (vx, vy, 0)
+
+                # obstacle.set_random_velocity_vector()
+
                 moving_obstacles.append(obstacle)
 
         steady_obstacles = []
@@ -229,12 +238,6 @@ class Map:
     def get_polygon(self, obj_id):
         # Retrieve the polygon geometry based on its identifier
         return self._obstacles[obj_id].polygon
-
-    """
-    @abstractmethod
-    def check_collision(self, start, end, buffer_size):
-        pass
-    """
 
     @abstractmethod
     def query_region(self, region):

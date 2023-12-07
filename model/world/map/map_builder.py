@@ -19,7 +19,8 @@ default_params = {
     "goal_min_dist": 3.0,
     "goal_max_dist": 5.0,
     "min_goal_clearance": 0.5,
-    "discretization_step": 0.2,
+    "obstacles_type": 'rectangular',
+    "displacement_type": 'gridlike',
     "boundaries": True,
 }
 
@@ -30,6 +31,8 @@ class MapBuilder:
 
         self.params_dictionary = default_params
         self.map_type = 'standard'
+        self.obstacles_type = 'rectangular'
+        self.displacement_type = 'gridlike'
 
     @classmethod
     def _check_range(cls, a, b, min_distance=None):
@@ -103,13 +106,16 @@ class MapBuilder:
         self.params_dictionary['goal_max_dist'] = goal_max_dist
         return self
 
-    def set_discretization_step(self, discretization_step):
-        self._check_non_negative(discretization_step, strict=True)
-        self.params_dictionary['discretization_step'] = discretization_step
-        return self
-
     def set_type(self, map_type: Literal['standard', 'spatial']):
         self.map_type = map_type
+        return self
+
+    def set_obstacles_type(self, obstacles_type: Literal['triangle', 'rectangle', 'pentagon', 'random']):
+        self.params_dictionary["obstacles_type"] = obstacles_type
+        return self
+
+    def set_displacement_type(self, displacement_type: Literal['random', 'gridlike']):
+        self.params_dictionary["displacement_type"] = displacement_type
         return self
 
     def enable_boundaries(self):
@@ -128,3 +134,27 @@ class MapBuilder:
             map_arch = SpatialMap
 
         return map_arch(**self.params_dictionary)
+
+
+if __name__ == '__main__':
+
+    # Initialize the map
+    map = (MapBuilder()
+                .set_obs_moving_count(10)
+                .set_obs_steady_count(20)
+                .enable_boundaries()
+                .build())
+
+    # Initialize a robot
+    from model.world.robot.robots.cobalt.cobalt import Cobalt
+    robots = [Cobalt()]
+
+    map.generate(robots)
+
+    # Get the directory path of the current script and the map folder location
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    folder_dir = os.path.join(script_dir, 'maps')
+    output_file = os.path.join(folder_dir, 'map_1_gridlike_rectangle.json')
+
+    map.save_as_json(output_file)

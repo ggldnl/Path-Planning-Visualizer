@@ -19,18 +19,17 @@ class World:
         # Initialize lists of world objects
         self.controllers = []
 
-        # Initialize the map_legacy
+        # Initialize the map
         self.map = (MapBuilder()
                     .set_type('spatial')
-                    .set_discretization_step(0.2)
                     .set_obs_moving_count(5)
                     .set_obs_steady_count(15)
                     .enable_boundaries()
                     .build())
 
         # TODO bug: map is generated before we add robots; we can add robots over obstacles
-        self.map.generate(self.robots)
-        # self.map_legacy.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map_legacy/maps/map_test.json')
+        # self.map.generate(self.robots)
+        self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_1_gridlike_rectangle.json')
 
     def set_period(self, dt):
         self.dt = dt
