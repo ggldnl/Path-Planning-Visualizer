@@ -4,7 +4,6 @@ from model.controllers.graph import Edge
 
 from model.geometry.segment import Segment
 from model.geometry.point import Point
-from model.geometry.polygon import Polygon
 
 import numpy as np
 
@@ -14,8 +13,56 @@ class ValidNode(Node):
         super().__init__(point, parent, cost, heuristic)
         self.valid = valid
 
+    def __str__(self):
+        return f'Node ({self.point}, {"v" if self.valid else "n"})'
+
+
+class PathIterator:
+
+    def __init__(self, path=None):
+        if path is None:
+            self.path = []
+        else:
+            self.path = path
+
+    def set_path(self, path):
+        # print(f'PathIterator: path set -> {self.path}')
+        self.path = path
+
+    def __getitem__(self, item):
+        # print(f'PathIterator: returning element {item} -> [{self.path[item].point}]')
+        return self.path[item].point
+
+    def pop(self, item):
+        # print(f'PathIterator: popping element {item}')
+        self.path.pop(item)
+
+    def __len__(self):
+        return len(self.path)
+
+    def get_as_valid_string(self):
+        return ''.join(['v' if node.valid else '.' for node in self.path])
+
+    def __str__(self):
+        return self.path.__str__()
+
+    def __repr__(self):
+        return self.path.__repr__()
+
 
 class DynamicRRT(SamplingBased):
+    """
+    Dynamic RRT (RRT with basic replanning). This algorithm is a simple
+    RRT extension; once it finds a path, it stores the path in a backup
+    list (waypoints). If the path is disrupted by an obstacle, it needs
+    to be recomputed. The DynamicRRT recomputes the path by taking
+    nodes from the waypoints cache when recomputing the path with a
+    given probability. It has two phases: planning (finding the first path)
+    and replanning (update the path if it is invalid). The replanning
+    generates a path very similar to the previous one and this is the
+    reason why this algorithm is not so great in our use case (obstacles
+    moves on the plane, they don't pop up in random positions).
+    """
 
     def __init__(self,
                  map,
@@ -43,11 +90,22 @@ class DynamicRRT(SamplingBased):
         self.moving_obstacles_status_before = self.moving_obstacles_status
 
         self.waypoints = []  # Cached nodes
-        self.path_nodes = set()  # Nodes forming the path
+        self.path_nodes = []  # Nodes forming the path
         self.last_valid = None  # Points to the last valid point in the path
         self.node_current = None  # Points to the current node (first element of the path)
 
+        # Uniform with the interface (it expects the path to contain points)
+        self.path_iterator = PathIterator()
+
         super().__init__(map, start, boundary, iterations)
+
+    @property
+    def path(self):
+        return self.path_iterator
+
+    @path.setter
+    def path(self, new_path):
+        self.path_iterator.set_path(new_path)
 
     def heuristic(self, point):
         return point.distance(self.map.goal)
@@ -55,10 +113,10 @@ class DynamicRRT(SamplingBased):
     def pre_search(self):
 
         self.nodes = [ValidNode(self.start)]
-        self.edges = []
         self.waypoints = []
-        self.path_nodes = set()
+        self.path_nodes = []
         self.last_valid = None  # Points to the last valid point in the path
+        self.node_current = None
 
         self.current_iteration = 0
 
@@ -100,29 +158,25 @@ class DynamicRRT(SamplingBased):
 
         self.current_iteration += 1
 
-        # Enable/disable moving obstacles
-        self.handle_moving_obstacles()
-
-        # print('Stepping search...')
-        # print(f'Has path    : {self.has_path()}')
-        # print(f'Path        : {self.path}')
-        # print(f'Waypoints   : {self.waypoints}')
-        # print(f'Iteration   : {self.current_iteration}')
-        # print(f'Path invalid: {self.is_path_invalid()}')
-        # print()
+        print('Stepping search...')
+        print(f'Iteration   : {self.current_iteration}')
+        print(f'Has path    : {self.has_path()}')
+        print(f'Path        : {self.path}')
+        print(f'Waypoints   : {self.waypoints}')
+        print(f'Valid path  : {self.path.get_as_valid_string()}')
+        print(f'Path invalid: {self.is_path_invalid()}')
 
         if not self.planning_done:
             self.step_planning()
         else:
 
-            self.node_current = ValidNode(self.path[0])
+            self.invalidate_path()
 
-            # Check if some edges are now invalid
-            self.invalidate_nodes()
+            self.node_current = self.path[0]
 
             if self.is_path_invalid():
 
-                # Disable moving obstacles in case they were disabled
+                # Disable the obstacles
                 self.moving_obstacles_status = False
 
                 # The path is invalid, we need to progressively find another path by calling replan at each step,
@@ -132,106 +186,85 @@ class DynamicRRT(SamplingBased):
 
                 # If last_valid does not exist, then the trim hasn't happened yet
                 if not self.last_valid:
+                    # self.propagate()
                     self.trim()
                 else:
                     self.step_replanning()
 
+        # Enable/disable moving obstacles
         self.handle_moving_obstacles()
 
-        # print('-' * 50)
+        print('-' * 50)
 
-    def is_path_invalid(self):
-        for node in self.waypoints:
-            if not node.valid:
-                return True
-        return False
+    def invalidate_path(self):
+        """
+        For each node in the path and its parent (previous one), check if there is a collision in between
+        """
+        for i in range(1, len(self.path_nodes)):
+            if self.check_collision(self.path_nodes[i-1].point, self.path_nodes[i].point):
+                print(f'Invalidating node: {self.path_nodes[i]}')
+                self.path_nodes[i].valid = False
 
-    def trim(self):
+    def propagate(self):
         """
         If a node is invalid, cascading invalidate all its children
         """
+        for i in range(1, len(self.path_nodes)):
+            node = self.path_nodes[i]
+            if not node.valid:
+                for j in range(i, len(self.path_nodes)):
+                    self.path_nodes[j].valid = False
+                break
+
+    def trim(self):
+        """
+        1. Propagate invalid status to all the nodes that don't have a parent.
+        2. Find the first occurrence of an invalid node in the path and trim the rest.
+        The remaining, trimmed, nodes are used to create the waypoints list.
+        """
+
         for i in range(1, len(self.nodes)):
             node = self.nodes[i]
             if not node.parent.valid:
                 node.valid = False
 
-        # Find last_valid
-        self.find_last_valid()
-
-        self.nodes = [node for node in self.nodes if node.valid]
-        self.edges = [Edge(node.parent, node) for node in self.nodes[1: len(self.nodes)]]
-        self.waypoints = [node for node in self.waypoints if not node.valid]
-
-        # Update draw_list
-        self.update_draw_list(None)
-
-    def find_last_valid(self):
-        """
-        Find the last valid node in the path and set the last_valid variable
-        """
-        print(f'Path before: {self.path}')
-        last_valid_index = -1
-        for i, point in enumerate(self.path):
-            current_node = None
-            for node in self.path_nodes:
-                if node.point == point:
-                    current_node = node
-                    break
-            if not current_node.valid:
-                self.last_valid = current_node
-                last_valid_index = i
+        idx = -1
+        for i in range(len(self.path_nodes)):
+            node = self.path_nodes[i]
+            if not node.valid:
+                idx = i
                 break
 
-        self.path = self.path[:last_valid_index]
-        print(f'Path now   : {self.path}')
-        print('-' * 50)
-        print()
+        self.waypoints = self.path_nodes[idx:]
+        self.path_nodes = self.path_nodes[:idx]
+        self.last_valid = self.path_nodes[-1]
+        self.path_iterator.set_path(self.path_nodes)
+        self.nodes = [node for node in self.nodes if node.valid]
 
-    def invalidate_nodes(self):
-        """
-        If an edge is obstructed by an obstacle, invalidate its child
-        """
-        for edge in self.edges:
-            if self.check_collision(edge.parent_node.point, edge.child_node.point):
-                edge.child_node.valid = False
+        self.update_draw_list(None)
 
-    def step_planning(self):
+    def is_path_invalid(self):
+        if not self.has_path():
+            return True
+        for node in self.path_nodes:
+            if not node.valid:
+                return True
+        return False
 
-        node_rand = self.generate_random_node()
-        node_near = self.nearest_neighbor(node_rand)
-        node_new = self.new_state(node_near, node_rand)
+    def update_draw_list(self, placeholder):
 
-        if node_new and not self.check_collision(node_near.point, node_new.point):
-            self.nodes.append(node_new)
-            self.edges.append(Edge(node_near, node_new))
-            dist = self.distance_to_goal(node_new)
+        self.draw_list = []
+        for node in self.nodes:
+            if node.parent is not None:
+                self.draw_list.append(node.point)
+                self.draw_list.append(Segment(node.parent.point, node.point))
 
-            if dist <= self.step_length:
-                self.extract_path(node_new)
-                self.extract_waypoints(node_new)
-                return
-
-            # Update drawing list
-            self.update_draw_list(None)
-
-    def step_replanning(self):
-
-        node_rand = self.generate_random_node_replanning()
-        node_near = self.nearest_neighbor(node_rand)
-        node_new = self.new_state(node_near, node_rand)
-
-        if node_new and not self.check_collision(node_near.point, node_new.point):
-            self.nodes.append(node_new)
-            self.edges.append(Edge(node_near, node_new))
-            dist = self.distance_to_goal(node_new)
-
-            if dist <= self.step_length:
-                self.extract_path_replanning(node_new)
-                self.extract_waypoints(node_new)
-                return
-
-            # Update drawing list
-            self.update_draw_list(None)
+                """
+                # Add segment buffers to the drawing list 
+                line = Segment(node.parent.point, node.point)
+                buffer = Polygon.get_segment_buffer(line, left_margin=self.boundary/2, right_margin=self.boundary/2)
+                self.draw_list.append(buffer)
+                """
 
     def check_collision(self, start, end):
         if start == end:
@@ -240,12 +273,23 @@ class DynamicRRT(SamplingBased):
             return False
         return super().check_collision(start, end)
 
-    def extract_waypoints(self, node):
-        self.waypoints = [ValidNode(self.map.goal)]
-        node_now = node
-        while node_now.parent is not None:
-            node_now = node_now.parent
-            self.waypoints.append(node_now)
+    # ------------------------------- planning step ------------------------------ #
+
+    def step_planning(self):
+        node_rand = self.generate_random_node()
+        node_near = self.nearest_neighbor(node_rand)
+        node_new = self.new_state(node_near, node_rand)
+
+        if node_new and not self.check_collision(node_near.point, node_new.point):
+            self.nodes.append(node_new)
+            dist = self.distance_to_goal(node_new)
+
+            if dist <= self.step_length:
+                self.extract_path_and_waypoints(node_new)
+                return
+
+            # Update drawing list
+            self.update_draw_list(None)
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
@@ -258,16 +302,8 @@ class DynamicRRT(SamplingBased):
 
         return ValidNode(Point(x, y))
 
-    def generate_random_node_replanning(self):
-        p = np.random.random()
-        if p < self.goal_sample_rate:
-            return ValidNode(self.map.goal)
-        elif self.goal_sample_rate < p < self.goal_sample_rate + self.waypoint_sample_rate:
-            return self.waypoints[np.random.randint(0, len(self.waypoints) - 1)]
-        else:
-            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            return ValidNode(Point(x, y))
+    def nearest_neighbor(self, n):
+        return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
 
     def new_state(self, node_start, node_end):
         dist, theta = self.get_distance_and_angle(node_start, node_end)
@@ -284,29 +320,32 @@ class DynamicRRT(SamplingBased):
 
         return node_new
 
-    def nearest_neighbor(self, n):
-        return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
-
-    def distance_to_goal(self, node):
-        return node.point.distance(self.map.goal)
-
     @staticmethod
     def get_distance_and_angle(node_start, node_end):
         dx = node_end.point.x - node_start.point.x
         dy = node_end.point.y - node_start.point.y
         return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
 
-    def extract_path(self, node_end):
-        self.path = [self.map.goal]
-        self.path_nodes = {ValidNode(self.map.goal)}
+    def distance_to_goal(self, node):
+        return node.point.distance(self.map.goal)
+
+    def extract_path_and_waypoints(self, node_end):
+
+        goal_node = ValidNode(self.map.goal)
+        self.path_nodes = [goal_node]
+        # self.waypoints = [goal_node]
         node_now = node_end
 
         while node_now.parent is not None:
             node_now = node_now.parent
-            self.path.append(node_now.point)
-            self.path_nodes.add(node_now)
+            self.path_nodes.append(node_now)
+            # self.waypoints.append(node_now)
 
-        self.path = self.path[::-1]
+        # Reverse the path to make it go from start to goal
+        self.path_nodes = self.path_nodes[::-1]
+
+        # Set the path
+        self.path_iterator.set_path(self.path_nodes)
 
         # Set planning as done
         self.planning_done = True
@@ -314,36 +353,59 @@ class DynamicRRT(SamplingBased):
         # Enable moving obstacles
         self.moving_obstacles_status = True
 
-    def extract_path_replanning(self, node_end):
-        self.path = [self.map.goal]
-        self.path_nodes = {ValidNode(self.map.goal)}
+    # ------------------------------ replanning step ----------------------------- #
+
+    def step_replanning(self):
+
+        node_rand = self.generate_random_node_replanning()
+        node_near = self.nearest_neighbor(node_rand)
+        node_new = self.new_state(node_near, node_rand)
+
+        if node_new and not self.check_collision(node_near.point, node_new.point):
+            self.nodes.append(node_new)
+            dist = self.distance_to_goal(node_new)
+
+            if dist <= self.step_length:
+                self.extract_path_and_waypoints_replanning(node_new)
+                return
+
+            # Update drawing list
+            self.update_draw_list(None)
+
+    def generate_random_node_replanning(self):
+        p = np.random.random()
+        if p < self.goal_sample_rate:
+            return ValidNode(self.map.goal)
+        elif self.goal_sample_rate < p < self.goal_sample_rate + self.waypoint_sample_rate:
+            return self.waypoints[np.random.randint(0, len(self.waypoints) - 1)]
+        else:
+            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            return ValidNode(Point(x, y))
+
+    def extract_path_and_waypoints_replanning(self, node_end):
+        """
+        Rebuild the path going back until the parent node is the last_valid node
+        """
+
+        goal_node = ValidNode(self.map.goal)
+        self.path_nodes = [goal_node]
         node_now = node_end
 
-        print(f'Last valid: {self.last_valid}')
-        while node_now.parent is not None and node_now != self.last_valid and node_now != self.node_current:
-            print(f'{node_now} -> {node_now.parent}')
+        while node_now.parent is not None and node_now.point != self.node_current:
             node_now = node_now.parent
-            self.path.append(node_now.point)
-            self.path_nodes.add(node_now)
+            self.path_nodes.append(node_now)
 
-        self.path = self.path[::-1]
+        # Reverse the path to make it go from start to goal
+        self.path_nodes = self.path_nodes[::-1]
+
+        # Set the path
+        self.path_iterator.set_path(self.path_nodes)
+
+        # Set planning as done
+        self.planning_done = True
+
+        self.last_valid = None
 
         # Enable moving obstacles
         self.moving_obstacles_status = True
-
-        # Clear last_valid to let trim happen again if the path is invalid
-        self.last_valid = None
-
-    def update_draw_list(self, placeholder):
-        self.draw_list = []
-        for node in self.nodes:
-            if node.parent is not None:
-                self.draw_list.append(node.point)
-                self.draw_list.append(Segment(node.parent.point, node.point))
-
-                """
-                # Add segment buffers to the drawing list 
-                line = Segment(node.parent.point, node.point)
-                buffer = Polygon.get_segment_buffer(line, left_margin=self.boundary/2, right_margin=self.boundary/2)
-                self.draw_list.append(buffer)
-                """

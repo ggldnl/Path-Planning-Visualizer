@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 application = Flask(__name__, template_folder='template')
 
 # Initialize a random number generator
-np.random.seed(0)
+# np.random.seed(0)
 
 # ---------------------------- defining some stuff --------------------------- #
 
