@@ -202,7 +202,7 @@ class Map:
                 obstacle.vel = (np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5))
 
                 if self.displacement_type == 'gridlike':
-                    vx = np.random.randint(0, 1) * np.random.uniform(-0.5, 0.5)
+                    vx = np.random.randint(0, 2) * np.random.uniform(-0.5, 0.5)
                     vy = np.random.uniform(-0.5, 0.5)
                     if vx != 0:
                         vy = 0
