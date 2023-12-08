@@ -1,6 +1,5 @@
 from model.controllers.sampling_based_algorithm import SamplingBased
 from model.controllers.graph import Node
-from model.controllers.graph import Edge
 
 from model.geometry.segment import Segment
 from model.geometry.point import Point
@@ -17,7 +16,7 @@ class ValidNode(Node):
         return f'Node ({self.point}, {"v" if self.valid else "n"})'
 
 
-class PathIterator:
+class PathWrapper:
 
     def __init__(self, path=None):
         if path is None:
@@ -26,15 +25,15 @@ class PathIterator:
             self.path = path
 
     def set_path(self, path):
-        # print(f'PathIterator: path set -> {self.path}')
+        # print(f'PathWrapper: path set -> {self.path}')
         self.path = path
 
     def __getitem__(self, item):
-        # print(f'PathIterator: returning element {item} -> [{self.path[item].point}]')
+        # print(f'PathWrapper: returning element {item} -> [{self.path[item].point}]')
         return self.path[item].point
 
     def pop(self, item):
-        # print(f'PathIterator: popping element {item}')
+        # print(f'PathWrapper: popping element {item}')
         self.path.pop(item)
 
     def __len__(self):
@@ -95,17 +94,17 @@ class DynamicRRT(SamplingBased):
         self.node_current = None  # Points to the current node (first element of the path)
 
         # Uniform with the interface (it expects the path to contain points)
-        self.path_iterator = PathIterator()
+        self.path_wrapper = PathWrapper()
 
         super().__init__(map, start, boundary, iterations)
 
     @property
     def path(self):
-        return self.path_iterator
+        return self.path_wrapper
 
     @path.setter
     def path(self, new_path):
-        self.path_iterator.set_path(new_path)
+        self.path_wrapper.set_path(new_path)
 
     def heuristic(self, point):
         return point.distance(self.map.goal)
@@ -238,7 +237,7 @@ class DynamicRRT(SamplingBased):
         self.waypoints = self.path_nodes[idx:]
         self.path_nodes = self.path_nodes[:idx]
         self.last_valid = self.path_nodes[-1]
-        self.path_iterator.set_path(self.path_nodes)
+        self.path_wrapper.set_path(self.path_nodes)
         self.nodes = [node for node in self.nodes if node.valid]
 
         self.update_draw_list(None)
@@ -345,7 +344,7 @@ class DynamicRRT(SamplingBased):
         self.path_nodes = self.path_nodes[::-1]
 
         # Set the path
-        self.path_iterator.set_path(self.path_nodes)
+        self.path_wrapper.set_path(self.path_nodes)
 
         # Set planning as done
         self.planning_done = True
@@ -389,18 +388,34 @@ class DynamicRRT(SamplingBased):
         """
 
         goal_node = ValidNode(self.map.goal)
-        self.path_nodes = [goal_node]
+        new_path_nodes = [goal_node]
         node_now = node_end
 
-        while node_now.parent is not None and node_now.point != self.node_current:
+        is_current_in_same_path = False
+        while node_now.parent is not None:
+
+            if node_now.point == self.node_current:
+                is_current_in_same_path = True
+                break
+
             node_now = node_now.parent
-            self.path_nodes.append(node_now)
+            new_path_nodes.append(node_now)
+
+        if not is_current_in_same_path:
+            # TODO: important! The path planning algorithm does not have the task
+            #  of making the robot go back to the origin following the same points
+            #  it followed before but backwards. This is the controller's job, but
+            #  our simple controller does not take this into account and makes the
+            #  robot automatically go to the origin (parent == Null) if a new path
+            #  does not include a node_current
+            pass
 
         # Reverse the path to make it go from start to goal
-        self.path_nodes = self.path_nodes[::-1]
+        new_path_nodes = new_path_nodes[::-1]
+        self.path_nodes = new_path_nodes
 
         # Set the path
-        self.path_iterator.set_path(self.path_nodes)
+        self.path_wrapper.set_path(self.path_nodes)
 
         # Set planning as done
         self.planning_done = True
