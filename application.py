@@ -91,14 +91,13 @@ show_path = True
 show_data_structures = True
 
 # TODO read this!
-# Boolean to update only the robot (some of its attributes needs to be shown or hidden).
-# It will be turned off the iteration after the update happens.
-#
-# This can be solved by simply updating the frame each time regardless of the value of
-# running and stepping variables. This poses another problem: with the actual communication
-# protocol between frontend and backend, the amount of data exchanged is very big, so by
-# not sending data when the simulation is stopped we can reduce the memory consumption.
-# This should be fixed in later updates!
+#  Boolean to update only the robot (some of its attributes needs to be shown or hidden).
+#  It will be turned off the iteration after the update happens.
+#  This can be solved by simply updating the frame each time regardless of the value of
+#  running and stepping variables. This poses another problem: with the actual communication
+#  protocol between frontend and backend, the amount of data exchanged is very big, so by
+#  not sending data when the simulation is stopped we can reduce the memory consumption.
+#  This should be fixed in later updates!
 update_robot = False
 
 # Define the world here so we can access it through the routes
@@ -314,7 +313,7 @@ def simulation_control():
         if 'direction' in data:
 
             # TODO for now, only the first robot can be controlled with the arrow keys.
-            # Future implementations can use the mouse to select one of the robots
+            #  Future implementations can use the mouse to select one of the robots
             dir = data['direction']
             robot = world.robots[0]
 
@@ -391,7 +390,7 @@ if __name__ == "__main__":
     # search_algorithm = AStarSearch(world.map, robot.current_pose.as_point())
     # search_algorithm = RRT(world.map, robot.current_pose.as_point())
     # search_algorithm = RRTStar(world.map, robot.current_pose.as_point(), max_iterations=1000)
-    search_algorithm = DynamicRRT(world.map, robot.current_pose.as_point())
+    search_algorithm = DynamicRRT(world.map, robot.current_pose.as_point(), iterations=4)
 
     controller = Controller(robot, search_algorithm)
 
