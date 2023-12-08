@@ -200,6 +200,7 @@ class DynamicRRT(SamplingBased):
         For each node in the path and its parent (previous one), check if there is a collision in between
         """
         for i in range(1, len(self.path_nodes)):
+            # TODO: fix this (index out of bounds)
             if self.check_collision(self.path_nodes[i-1].point, self.path_nodes[i].point):
                 # print(f'Invalidating node: {self.path_nodes[i]}')
                 self.path_nodes[i].valid = False
