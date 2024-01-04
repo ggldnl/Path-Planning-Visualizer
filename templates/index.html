@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Path Planning Visualizer</title>
+
+    <!-- Styles -->
+
+    <link rel="stylesheet" href="static/styles/canvas.css">
+    <link rel="stylesheet" href="static/styles/buttons.css">
+    <link rel="stylesheet" href="static/styles/sidebar.css">
+
+    <!-- Font Awesome -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+
+</head>
+<body>
+
+    <!-- Left sidebar -->
+
+    <div id="sidebar">
+        <input type="range" id="robots-linear-velocity-slider" min="0" max="100" value="50">
+        <input type="range" id="robots-angular-velocity-slider" min="0" max="100" value="50">
+        <input type="range" id="obstacles-spawn-frequency-slider" min="0" max="100" value="50">
+
+        <div class="icon-button" id="save-btn"><i class="fas fa-save"></i></div>
+        <div class="icon-button" id="load-btn"><i class="fas fa-upload"></i></div>
+        <div class="icon-button" id="random-btn"><i class="fas fa-dice"></i></div>
+    </div>
+    <div class="icon-button" id="open-btn"><i class="fas fa-bars"></i></div>
+    <div class="icon-button" id="home-btn"><i class="fas fa-home"></i></div>
+
+    <!-- Canvas -->
+
+    <canvas id="canvas"></canvas>
+
+    <!-- Components -->
+
+    <div class="floating-simulation-control-container">
+        <div class="simulation-control-container">
+            <button class="button" id="start_btn">Start</button>
+            <button class="button" id="stop_btn">Stop</button>
+            <button class="button" id="step_btn">Step</button>
+            <button class="button" id="reset_btn">Reset</button>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+    <script type="module" src="static/js/websocket.js"></script>
+    <script type="module" src="static/js/canvas.js"></script>
+    <script type="module" src="static/js/sidebar.js"></script>
+
+</body>
+</html>

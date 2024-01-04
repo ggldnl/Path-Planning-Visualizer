@@ -1,237 +1,302 @@
+import { backgroundColor, axisColor, gridColor, fontColor, font } from './style.js';
 
-export function drawLine(ctx, p1, p2, pixelOrigin, pixelScale, color, width) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.beginPath();
+var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-    // First point
-    var x1_2 = pixelOrigin.x + p1[0] * pixelScale;
-    var y1_2 = pixelOrigin.y - p1[1] * pixelScale;
+// Data variable that will contain the shapes to show
+var data;
 
-    var x2_2 = pixelOrigin.x + p2[0] * pixelScale;
-    var y2_2 = pixelOrigin.y - p2[1] * pixelScale;
+socket.on('real_time_data', function (string_data) {
+    const shapes = JSON.parse(string_data);
+    data = shapes;
+});
 
-    ctx.moveTo(x1_2, y1_2);
-    ctx.lineTo(x2_2, y2_2);
-    ctx.stroke();
-    ctx.closePath();
-}
 
-function drawGridLine(ctx, x1, y1, x2, y2, color, width) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.closePath();
-}
+window.onload = function () {
 
-export function drawCircle(ctx, relativePos, pixelOrigin, pixelScale, radius, lineWidth, fillColor, borderColor=null) {
+    var canvas = document.getElementById("canvas");
+    var home_btn = document.getElementById("home-btn");
+    var ctx = canvas.getContext("2d");
 
-    // Position of the circle in the new coordinate frame
-    var x = pixelOrigin.x + relativePos[0] * pixelScale;
-    var y = pixelOrigin.y - relativePos[1] * pixelScale;
+    var width = canvas.width = window.innerWidth;
+    var height = canvas.height = window.innerHeight;
 
-    ctx.lineWidth = lineWidth;
-    ctx.beginPath();
-    ctx.arc(x, y, radius * pixelScale, 0, 2 * Math.PI);
+    var pixelOffset = {
+        x: 0,
+        y: 0
+    };
+    var scale = 50;
+    const initial_scale = scale;
 
-    // Draw and fill the circle
-    ctx.fillStyle = fillColor;
-    ctx.fill();
+    function drawScreen() {
 
-    if (borderColor === null) {
-        ctx.strokeStyle = fillColor;
-    } else {
-        ctx.strokeStyle = borderColor;
-    }
-    ctx.stroke();
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = backgroundColor;
+        ctx.strokeStyle = backgroundColor;
+        ctx.fillRect(0, 0, width, height);
 
-    ctx.closePath();
-}
+        var pixelOrigin = {
+            x: width / 2 - pixelOffset.x,
+            y: height / 2 - pixelOffset.y
+        };
 
-export function drawGrid(
-        ctx,
-        pixelOffset,
-        pixelScale,
-        screenSize,
-        textOffset,
-        backgroundColor,
-        axisColor,
-        gridColor,
-        textClor,
-        fps=null,
-        pps=null
-    ) {
+        function drawHorizontalAxis() {
+            ctx.beginPath();
+            ctx.moveTo(0, pixelOrigin.y);
+            ctx.lineTo(width, pixelOrigin.y);
+            ctx.strokeStyle = axisColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        };
 
-    ctx.clearRect(0, 0, screenSize.width, screenSize.height);
-    ctx.fillStyle = backgroundColor;
-    ctx.strokeStyle = backgroundColor;
-    ctx.fillRect(0, 0, screenSize.width, screenSize.height);
+        function drawVerticalAxis() {
+            ctx.beginPath();
+            ctx.moveTo(pixelOrigin.x, 0);
+            ctx.lineTo(pixelOrigin.x, height);
+            ctx.strokeStyle = axisColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        };
 
-    var originX = screenSize.width / 2 - pixelOffset.x;
-    var originY = screenSize.height / 2 - pixelOffset.y;
+        function drawGrid() {
 
-    // Add mark on the origin
-    ctx.fillStyle = textColor
-    ctx.fillText(
-        '0',
-        originX + textOffset.x,
-        originY - textOffset.y
-    );
+            ctx.strokeStyle = gridColor;
+            ctx.fillStyle = fontColor;
+            var leftEdge = Math.floor(-(width / 2 - pixelOffset.x) / scale);
+            var rightEdge = Math.ceil((width / 2 + pixelOffset.x) / scale);
 
-    // Draw horizontal axis
-    drawGridLine(ctx, 0, originY, screenSize.width, originY, axisColor, 1);
-
-    // Draw vertical axis
-    drawGridLine(ctx, originX, 0, originX, screenSize.height, axisColor, 1);
-    
-    // Draw grid
-    var leftEdge = Math.floor(-(screenSize.width / 2 - pixelOffset.x) / pixelScale);
-    var rightEdge = Math.ceil((screenSize.width / 2 + pixelOffset.x) / pixelScale);
-    for (var x = leftEdge * 10; x <= rightEdge * 10; x += 1) {
-        var px = originX + pixelScale * x / 10;
-        drawGridLine(ctx, px, 0, px, screenSize.height, gridColor, 0.25);
-
-        // Draw a numeric reference
-        if (pixelScale > 1000) {
-            if (x !== 0 && x % 1 === 0) {
-                ctx.fillStyle = textColor
-                ctx.fillText(
-                    (x / 10).toString() + 'm',
-                    px + textOffset.x,
-                    originY - textOffset.y
-                );
+            // Text offset of the ticks text from the axis
+            const textDisplacement = {
+                x: 5,
+                y: 5
             }
-        } else if (pixelScale > 100) {
-            if (x !== 0 && x % 5 === 0) {
-                ctx.fillStyle = textColor
-                ctx.fillText(
-                    (x / 10).toString() + 'm',
-                    px + textOffset.x,
-                    originY - textOffset.y
-                );
+
+            for (var x = leftEdge; x <= rightEdge; x++) {
+                var px = pixelOrigin.x + scale * x;
+                ctx.beginPath();
+                ctx.moveTo(px, 0);
+                ctx.lineTo(px, height);
+                ctx.lineWidth = 0.25;
+                ctx.stroke();
+
+                if (scale > 70) {
+                    if (x % 1 === 0) {
+                        ctx.fillText(
+                            (x / 10).toString() + 'm',
+                            px + textDisplacement.x,
+                            pixelOrigin.y - textDisplacement.y
+                        );
+                    }
+                } else if (scale > 30) {
+                    if (x % 5 === 0) {
+                        ctx.fillText(
+                            (x / 10).toString() + 'm',
+                            px + textDisplacement.x,
+                            pixelOrigin.y - textDisplacement.y
+                        );
+                    }
+                } else {
+                    if (x % 10 === 0) {
+                        ctx.fillText(
+                            (x / 10).toString() + 'm',
+                            px + textDisplacement.x,
+                            pixelOrigin.y - textDisplacement.y
+                        );
+                    }
+                }
             }
-        } else {
-            if (x !== 0 && x % 10 === 0) {
-                ctx.fillStyle = textColor
-                ctx.fillText(
-                    (x / 10).toString() + 'm',
-                    px + textOffset.x,
-                    originY - textOffset.y
-                );
+
+            var topEdge = Math.floor(-(height / 2 - pixelOffset.y) / scale);
+            var bottomEdge = Math.ceil((height / 2 + pixelOffset.y) / scale);
+            for (var y = topEdge; y <= bottomEdge; y++) {
+                var py = pixelOrigin.y + scale * y;
+                ctx.beginPath();
+                ctx.moveTo(0, py);
+                ctx.lineTo(width, py);
+                ctx.lineWidth = 0.25;
+                ctx.stroke();
+
+                if (scale > 70) {
+                    if (y % 1 === 0) {
+                        ctx.fillText(
+                            (-y / 10).toString() + 'm',
+                            pixelOrigin.x + textDisplacement.x,
+                            py - textDisplacement.y
+                        );
+                    }
+                } else if (scale > 30) {
+                    if (y % 5 === 0) {
+                        ctx.fillText(
+                            (-y / 10).toString() + 'm',
+                            pixelOrigin.x + textDisplacement.x,
+                            py - textDisplacement.y
+                        );
+                    }
+                } else {
+                    if (y % 10 === 0) {
+                        ctx.fillText(
+                            (-y / 10).toString() + 'm',
+                            pixelOrigin.x + textDisplacement.x,
+                            py - textDisplacement.y
+                        );
+                    }
+                }
+
             }
-        }
-    }
-    var topEdge = Math.floor(-(screenSize.height / 2 - pixelOffset.y) / pixelScale);
-    var bottomEdge = Math.ceil((screenSize.height / 2 + pixelOffset.y) / pixelScale);
-    for (var y = topEdge * 10; y <= bottomEdge * 10; y += 1) {
-        var py = originY + pixelScale * y / 10;
-        drawGridLine(ctx, 0, py, screenSize.width, py, gridColor, 0.25);
+        };
 
-        // Draw a numeric reference
-        if (pixelScale > 1000) {
-            if (y !== 0 && y % 1 === 0) {
-                ctx.fillText(
-                    (-y / 10).toString() + 'm',
-                    originX + textOffset.x,
-                    py - textOffset.y
-                );
+        function drawPolygon(points, fillColor, borderColor, lineWidth) {
+
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = lineWidth;
+
+            // First point
+            ctx.beginPath();
+            ctx.moveTo(pixelOrigin.x + points[0][0] * scale, pixelOrigin.y - points[0][1] * scale);
+
+            // Add the other points
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(pixelOrigin.x + points[i][0] * scale, pixelOrigin.y - points[i][1] * scale);
             }
-        } else if (pixelScale > 100) {
-            if (y !== 0 && y % 5 === 0) {
-                ctx.fillText(
-                    (-y / 10).toString() + 'm',
-                    originX + textOffset.x,
-                    py - textOffset.y
-                );
+
+            // Close the path
+            ctx.closePath();
+
+            // Fill the path
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+
+            // Stroke the path
+            if (borderColor === null) {
+                ctx.strokeStyle = fillColor;
+            } else {
+                ctx.strokeStyle = borderColor;
             }
-        } else {
-            if (y !== 0 && y % 10 === 0) {
-                ctx.fillText(
-                    (-y / 10).toString() + 'm',
-                    originX + textOffset.x,
-                    py - textOffset.y
-                );
-            }
-        }
-    }
+            ctx.stroke();
 
-    if (fps != null) {
-        ctx.fillText(
-            fps.toString() + ' FPS',
-            screenSize.width - 80,
-            20
-        )
-    }
-
-    if (pps != null) {
-        ctx.fillText(
-            pps.toString() + ' PPS',
-            screenSize.width - 80,
-            40
-        )
-    }
-}
-
-export function drawPolygon(ctx, points, pixelOrigin, pixelScale, lineWidth, fillColor, borderColor=null) {
-
-    if (points.length > 0) {
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = lineWidth;
-        ctx.beginPath();
-
-        // First point
-        var x0 = pixelOrigin.x + points[0][0] * pixelScale;
-        var y0 = pixelOrigin.y - points[0][1] * pixelScale;
-
-        ctx.moveTo(x0, y0);
-
-        var x = 0;
-        var y = 0;
-        for (let i = 1; i < points.length; i++) {
-            x = pixelOrigin.x + points[i][0] * pixelScale;
-            y = pixelOrigin.y - points[i][1] * pixelScale;
-            ctx.lineTo(x, y);
         }
 
-        ctx.lineTo(x0, y0);
+        function drawCircle(center, radius, fillColor, borderColor, lineWidth) {
 
-        ctx.fillStyle = fillColor;
-        ctx.fill();
+            ctx.lineWidth = lineWidth;
 
-        if (borderColor === null) {
-            ctx.strokeStyle = fillColor;
-        } else {
-            ctx.strokeStyle = borderColor;
+            ctx.beginPath();
+            var x = pixelOrigin.x + center[0] * scale;
+            var y = pixelOrigin.y - center[1] * scale;
+            ctx.arc(x, y, radius * scale, 0, 2 * Math.PI);
+            ctx.closePath();
+
+            // Draw and fill the circle
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+
+            if (borderColor === null) {
+                ctx.strokeStyle = fillColor;
+            } else {
+                ctx.strokeStyle = borderColor;
+            }
+            ctx.stroke();
+
         }
-        ctx.stroke();
 
-        ctx.closePath();
+        function drawSegment(p1, p2, color, lineWidth) {
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+
+            // First point
+            ctx.beginPath();
+            ctx.moveTo(pixelOrigin.x + p1[0] * scale, pixelOrigin.y - p1[1] * scale);
+
+            // Second point
+            ctx.lineTo(pixelOrigin.x + p2[0] * scale, pixelOrigin.y - p2[1] * scale);
+            ctx.closePath();
+
+            ctx.stroke();
+        }
+
+        drawHorizontalAxis();
+        drawVerticalAxis();
+        drawGrid();
+
+        if (data !== undefined) {
+            for (var element of data) {
+
+                /*
+                // Iterate over key-value pairs and print them
+                Object.entries(element).forEach(([key, value]) => {
+                    console.log(`${key}: ${value}`);
+                });
+                */
+
+                var type = element["type"];
+                if (type === "polygon") {
+                    drawPolygon(element["points"], element["fill_color"], element["border_color"], element["line_width"]);
+                } else if (type == "circle") {
+                    drawCircle(element["center"], element["radius"], element["fill_color"], element["border_color"], element["line_width"]);
+                } else if (type == "segment") {
+                    drawSegment(element["p1"], element["p2"], element["color"], element["line_width"]);
+                }
+            }
+        }
+
+        requestAnimationFrame(drawScreen);
+    };
+
+    window.onresize = function () {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    };
+
+    // Add a click event listener to the button to reset the view
+    home_btn.addEventListener("click", function() {
+        pixelOffset.x = 0;
+        pixelOffset.y = 0;
+        scale = initial_scale;
+    });
+
+    canvas.onwheel = function (event) {
+        var beforeOffsetX = pixelOffset.x;
+        var beforeOffsetY = pixelOffset.y;
+        var beforeOffsetXCart = pixelOffset.x / scale;
+        var beforeOffsetYCart = pixelOffset.y / scale;
+        scale -= event.deltaY * scale / 2500;
+        pixelOffset.x = beforeOffsetXCart * scale;
+        pixelOffset.y = beforeOffsetYCart * scale;
+        if (scale < 10) {
+            scale = 10;
+            pixelOffset.x = beforeOffsetX;
+            pixelOffset.y = beforeOffsetY;
+        }
+        if (scale > 200) {
+            scale = 200;
+            pixelOffset.x = beforeOffsetX;
+            pixelOffset.y = beforeOffsetY;
+        }
+    };
+
+    {
+        var dragging = false;
+        var mouseX_new = 0;
+        var mouseY_new = 0;
+
+        canvas.onmousedown = function (event) {
+            dragging = true;
+            mouseX_new = event.clientX + pixelOffset.x;
+            mouseY_new = event.clientY + pixelOffset.y;
+        };
+
+        canvas.onmousemove = function (event) {
+            var currentMouseX = event.clientX;
+            var currentMouseY = event.clientY;
+            if (dragging) {
+                pixelOffset.x = mouseX_new - currentMouseX;
+                pixelOffset.y = mouseY_new - currentMouseY;
+            }
+        };
+
+        canvas.onmouseup = function (event) {
+            dragging = false;
+        };
     }
-}
-
-export function drawCircumscribedPolygon(ctx, x, y, radius, lineWidth, sides, filLColor, borderColor=null) {
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = lineWidth;
-    ctx.beginPath();
-    const angleStep = (2 * Math.PI) / sides;
-    ctx.moveTo(x + radius * Math.cos(0), y + radius * Math.sin(0));
-    for (let i = 1; i <= sides; i++) {
-        const angle = i * angleStep;
-        ctx.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
-    }
-
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-
-    if (fillColor === null) {
-        ctx.strokeStyle = borderColor;
-    } else {
-        ctx.strokeStyle = fillColor;
-    }
-    ctx.stroke();
-
-    ctx.closePath();
-}
+    drawScreen();
+};

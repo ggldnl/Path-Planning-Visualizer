@@ -1,0 +1,65 @@
+<!-- templates/index_old.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Example</title>
+</head>
+<body>
+    <h1>WebSocket Example</h1>
+    <div id="client-info">
+        <h2>Client Information</h2>
+        <p>Your SID: <span id="current-sid"></span></p>
+        <h3>Connected Clients</h3>
+        <ul id="client-list"></ul>
+    </div>
+    <div id="real-time-data">
+        <h2>Real-Time Data</h2>
+        <p>Client Data: <span id="client-data"></span></p>
+        <p>Server Data: <span id="server-data"></span></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log('Connected to WebSocket');
+            document.getElementById('current-sid').textContent = socket.id;
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from WebSocket');
+            document.getElementById('current-sid').textContent = '';
+        });
+
+        socket.on('update_pool', function(clients) {
+            updateClientPool(clients);
+        });
+
+        socket.on('real_time_data', function(data) {
+            document.getElementById('server-data').textContent = data;
+        });
+
+        function updateClientPool(clients) {
+            var clientList = document.getElementById('client-list');
+            clientList.innerHTML = '';
+            clients.forEach(function(client) {
+                var listItem = document.createElement('li');
+                listItem.textContent = client;
+                clientList.appendChild(listItem);
+            });
+        }
+
+        function generateAndSendData(alg_name) {
+            document.getElementById('client-data').textContent = alg_name;
+            socket.emit('client-data', { algorithm: alg_name });
+        }
+    </script>
+
+    <button onclick="generateAndSendData('A*')">A*</button>
+    <button onclick="generateAndSendData('RRT')">RRT</button>
+</body>
+</html>

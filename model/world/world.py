@@ -1,8 +1,9 @@
-import numpy as np
+import json
 
-from model.world.map.map_builder import MapBuilder
 from model.exceptions.collision_exception import CollisionException
 from model.geometry.intersection import check_intersection
+from model.world.map.map_builder import MapBuilder
+from model.world import view
 
 
 class World:
@@ -39,8 +40,9 @@ class World:
         self.controllers.append(controller)
 
     def reset_robots(self):
-        for robot in self.robots:
+        for robot, controller in zip(self.robots, self.controllers):
             robot.reset()
+            controller.reset()
 
     def step(self):
         """
@@ -103,3 +105,32 @@ class World:
                     if polygon1.check_nearness(polygon2):
                         if check_intersection(polygon1, polygon2):
                             raise CollisionException(f'Robot {robot.name} collided with an obstacle.')
+
+    def to_json(self, add_path=True, add_data_structures=True):
+
+        shapes_list = []
+
+        # Add the obstacles
+        for obstacle in self.map.obstacles:
+            shapes_list.append(view.get_obstacle_view_dict(obstacle))
+
+        # Add the robots
+        for robot in self.robots:
+            shapes_list.extend(view.get_robot_view_dict(robot))
+
+        # Add the start and the goal points to the frame
+        shapes_list.append(view.get_goal_view_dict(self.map.goal))
+
+        # Add data structures
+        if add_data_structures:
+            for controller in self.controllers:
+                shapes_list.extend(view.get_data_structures_view_dict(controller.search_algorithm.draw_list))
+
+        # Add the path
+        if add_path:
+            for robot, controller in zip(self.robots, self.controllers):
+                path = controller.search_algorithm.path
+                if len(path) > 0:
+                    shapes_list.extend(view.get_path_view_dict([robot.current_pose.as_point().to_array()] + path))
+
+        return json.dumps(shapes_list)

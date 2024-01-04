@@ -13,17 +13,5 @@ obstacle_fill_color = '#0047AB66'
 goal_border_color = '#00008B66'
 goal_fill_color = '#00008B66'
 
-default_robot_border_color = '#006400FF'
-default_robot_fill_color = '#00640066'
-
-robot_1_border_color = default_robot_border_color
-robot_1_fill_color = default_robot_fill_color
-
-robot_2_border_color = '#006400FF'
-robot_2_fill_color = '#00640066'
-
-robot_3_border_color = '#FFBF00FF'
-robot_3_fill_color = '#FFBF0066'
-
-robot_4_border_color = default_robot_border_color
-robot_4_fill_color = default_robot_fill_color
+robot_border_color = '#006400FF'
+robot_fill_color = '#00640066'
