@@ -25,13 +25,13 @@ Sampling-based Planning
 
 ## TODO
 
-- [ ] Introduce new frontend and polling mechanism to allow the frontend to poll the server for data
-- [ ] Update documentation
-- [ ] Add save capabilities
-- [x] Add load capabilities
-- [ ] Fix inverted angles in link origin (URDF parser)
-- [ ] Add typing and input checking
-- [ ] Provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
-- [ ] Interact with obstacles on mouse click (accelerate them, stop them, ...) 
-- [ ] CRUCIAL to refactor search algorithm and introduce a class hierarchy to share code (e.g. nodes, drawing geometry production method, ...)
+- [ ] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
+- [ ] Rework map and remove moving obstacles. Add randomly spawned obstacles instead
+- [ ] Interact with obstacles on mouse click (accelerate them, stop them, ...)
 - [ ] Add missing search algorithms
+- [ ] Finish left sidebar
+- [ ] Add another load button to left sidebar to load a custom URDF
+- [ ] Make the save button actually save the last map data received
+- [ ] Fix inverted angles in link origin (URDF parser)
+- [ ] Add typing and input checking 
+- [ ] Update documentation
