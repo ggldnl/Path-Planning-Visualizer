@@ -3,13 +3,38 @@ import { backgroundColor, axisColor, gridColor, fontColor, font } from './style.
 var socket = io.connect('http://' + document.domain + ':' + location.port);
 
 // Data variable that will contain the shapes to show
+var json_data;
 var data;
 
 socket.on('real_time_data', function (string_data) {
-    const shapes = JSON.parse(string_data);
-    data = shapes;
+    json_data = string_data;
+    data = JSON.parse(string_data);
 });
 
+document.getElementById('save-btn').addEventListener('click', function() {
+
+    // Create a Blob with the JSON data
+    const blob = new Blob([json_data], { type: 'application/json' });
+
+    // Create a link element
+    var link = document.createElement("a");
+
+    // Set the download attribute with the desired filename
+    link.download = "map.json";
+
+    // Create a URL for the Blob and set it as the href attribute
+    link.href = window.URL.createObjectURL(blob);
+
+    // Append the link to the body
+    document.body.appendChild(link);
+
+    // Trigger a click event on the link to start the download
+    link.click();
+
+    // Remove the link from the DOM
+    document.body.removeChild(link);
+
+});
 
 window.onload = function () {
 

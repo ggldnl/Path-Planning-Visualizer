@@ -31,7 +31,7 @@ Sampling-based Planning
 - [ ] Add missing search algorithms
 - [ ] Finish left sidebar
 - [ ] Add another load button to left sidebar to load a custom URDF
-- [ ] Make the save button actually save the last map data received
+- [x] Make the save button actually save the last map data received
 - [ ] Fix inverted angles in link origin (URDF parser)
 - [ ] Add typing and input checking 
 - [ ] Update documentation

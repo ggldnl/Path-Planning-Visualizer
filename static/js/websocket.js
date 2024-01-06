@@ -8,12 +8,6 @@ socket.on('disconnect', function() {
     console.log('Disconnected from WebSocket');
 });
 
-document.getElementById('save-btn').addEventListener('click', function() {
-    // TODO
-    var message = 'Saving...';
-    console.log(message);
-});
-
 document.getElementById('load-btn').addEventListener('click', function() {
 
     // Create a file input element
