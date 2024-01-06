@@ -27,7 +27,7 @@ Sampling-based Planning
 
 - [x] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
 - [ ] Rework map and remove moving obstacles. Add randomly spawned obstacles instead
-- [ ] Interact with obstacles on mouse click (accelerate them, stop them, ...)
+- [x] Add obstacles on mouse click
 - [ ] Add missing search algorithms
 - [ ] Finish left sidebar
 - [ ] Add another load button to left sidebar to load a custom URDF

@@ -119,6 +119,15 @@ def handle_disconnect():
         logger.info(f'Client {sid} disconnected')
 
 
+@socketio.on('add_obstacle')
+def handle_add_obstacle(x, y):
+    sid = request.sid
+    world = client_data[sid]['data']
+    # TODO
+    # world.map.add_obstacles(x, y)
+    logger.info(f'Client {sid} added new obstacle at ({x}, {y})')
+
+
 def send_world_data(sid):
     """
     Emit world data for session ID

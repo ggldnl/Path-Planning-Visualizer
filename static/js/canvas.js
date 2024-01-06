@@ -275,12 +275,14 @@ window.onload = function () {
     };
 
     {
-        var dragging = false;
+        var mouseDown = false;
+        var clicking = false;
         var mouseX_new = 0;
         var mouseY_new = 0;
 
         canvas.onmousedown = function (event) {
-            dragging = true;
+            mouseDown = true;
+            clicking = true;
             mouseX_new = event.clientX + pixelOffset.x;
             mouseY_new = event.clientY + pixelOffset.y;
         };
@@ -288,14 +290,22 @@ window.onload = function () {
         canvas.onmousemove = function (event) {
             var currentMouseX = event.clientX;
             var currentMouseY = event.clientY;
-            if (dragging) {
+            if (mouseDown) {
+                clicking = false; // User is dragging
                 pixelOffset.x = mouseX_new - currentMouseX;
                 pixelOffset.y = mouseY_new - currentMouseY;
             }
         };
 
         canvas.onmouseup = function (event) {
-            dragging = false;
+            mouseDown = false;
+            if (clicking) {
+                clicking = false;
+                // Send position to backend
+                var x = (event.clientX - width / 2 + pixelOffset.x) / scale;
+                var y = - (event.clientY - height / 2 + pixelOffset.y) / scale;
+                socket.emit('add_obstacle', x, y);
+            }
         };
     }
     drawScreen();
