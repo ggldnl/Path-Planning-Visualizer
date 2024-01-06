@@ -8,14 +8,10 @@ from model.geometry.pose import Pose
 
 class Robot(metaclass=ABCMeta):
 
-    def __init__(self, name, bodies, motors=None, fill_color=None, border_color=None):
+    def __init__(self, name, bodies):
 
         # Name of the robot
         self.name = name
-
-        # Accents, if any
-        self.fill_color = fill_color
-        self.border_color = border_color
 
         # Robot starts at the origin
         self.previous_pose = Pose(0, 0, 0)  # theta = 0 -> robot headed on positive x
@@ -33,13 +29,8 @@ class Robot(metaclass=ABCMeta):
 
         self._compute_outline()
 
-        # Sensor objects
-        self.sensors = []
-
-        # Motor objects
-        self.motors = []
-
         # Define tolerance in translation/rotation
+        self.TRANSLATION_EPSILON = 0.05
         self.ROTATION_EPSILON = 0.2
 
     def _compute_outline(self):
@@ -68,14 +59,6 @@ class Robot(metaclass=ABCMeta):
             body.polygon.translate(x_diff, y_diff)
 
         self._compute_outline()
-
-    def add_sensor(self, sensor, pose):
-
-        # The pose is relative to the center of the robot
-        # sensor.polygon.rotate_around(0, 0, pose.theta)
-        # sensor.polygon.translate(pose.x, pose.y)
-        sensor.polygon.transform(pose)
-        self.sensors.append(sensor)
 
     def step_motion(self, dt):
         """
@@ -110,27 +93,12 @@ class Robot(metaclass=ABCMeta):
         self.outline.translate(dx, dy)
         self.outline.rotate_around(current_x, current_y, dtheta)
 
-        # Update the sensor polygons
-        for sensor in self.sensors:
-            sensor.polygon.translate(dx, dy)
-            sensor.polygon.rotate_around(current_x, current_y, dtheta)
-
-        # Update the motor polygons
-        for motor in self.motors:
-            motor.polygon.translate(dx, dy)
-            motor.polygon.rotate_around(current_x, current_y, dtheta)
-
     @abstractmethod
     def apply_dynamics(self, dt):
         return
 
     @abstractmethod
     def compute_odometry(self, dt):
-        return
-
-    @abstractmethod
-    def add_motor(self, motor, pose):
-        # Number of motors is constrained based on the type of the robot
         return
 
     def is_at_target(self):

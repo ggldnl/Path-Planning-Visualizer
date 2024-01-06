@@ -5,8 +5,8 @@ import numpy as np
 
 class NonHolonomicRobot(Robot):
 
-    def __init__(self, bodies, motors=None, fill_color=None, border_color=None):
-        super().__init__('Non Holonomic Robot', bodies, motors, fill_color, border_color)
+    def __init__(self, bodies):
+        super().__init__('Non Holonomic Robot', bodies)
 
     def apply_dynamics(self, dt):
 
@@ -42,8 +42,4 @@ class NonHolonomicRobot(Robot):
         self.current_pose = (current_x, current_y, current_theta)
 
     def compute_odometry(self, dt):
-        return
-
-    def add_motor(self, motor, pose):
-        if len(self.motors) == 2:
-            raise ValueError('Differential drive robots only have two motors')
+        raise NotImplementedError()

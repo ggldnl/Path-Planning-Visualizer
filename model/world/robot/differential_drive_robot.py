@@ -6,8 +6,8 @@ import numpy as np
 
 class DifferentialDriveRobot(Robot):
 
-    def __init__(self, bodies, wheelbase, motors=None, fill_color=None, border_color=None):
-        super().__init__('Differential Drive Robot', bodies, motors, fill_color, border_color)
+    def __init__(self, bodies, wheelbase):
+        super().__init__('Differential Drive Robot', bodies)
         self.wheelbase = wheelbase
 
     def apply_dynamics(self, dt):
@@ -102,7 +102,7 @@ class DifferentialDriveRobot(Robot):
     def compute_odometry(self, dt):
 
         # TODO finish implementation and test
-
+        """
         # Compute the change in wheel angle (in radians)
         d_angle_left = dt * self.motors[0].speed
         d_angle_right = dt * self.motors[1].speed
@@ -132,7 +132,4 @@ class DifferentialDriveRobot(Robot):
         self.estimated_pose = (new_x, new_y, new_theta)
         self.motors[0].encoder.step_revolutions(revolutions_left)
         self.motors[1].encoder.step_revolutions(revolutions_right)
-
-    def add_motor(self, motor, pose):
-        if len(self.motors) == 2:
-            raise ValueError('Differential drive robots only have two motors')
+        """
