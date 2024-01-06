@@ -7,7 +7,7 @@
     text-align: center;
     vertical-align: middle;
 
-	background: #303030;
+	background: #262626;
     color: #fff;
     border: none;
 
@@ -30,7 +30,7 @@
     align-items: center;
     justify-content: center;
 
-    background-color: #303030;
+    background: #262626;
     color: #fff;
     border: none;
 
@@ -40,4 +40,37 @@
 
 .icon-button:hover {
     background: #161616;
+}
+
+/* Radio buttons */
+
+.check-button {
+	padding-left: 10px; /* interior */
+	height: 50px;
+	width: 80%;
+
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
+    text-align: left;
+    vertical-align: middle;
+
+	background: #303030;
+    color: #fff;
+    border: none;
+
+    cursor: pointer;
+    /* border: 1px solid #262626; */
+
+    border-radius: 5px;
+}
+
+.check-button:hover {
+/*
+    background: #161616
+    color: #808080;
+*/
+}
+
+.checked {
+    background: #0069d9;
 }

@@ -3,7 +3,7 @@
     width: 0;
     position: fixed;
     top: 0;
-    background-color: #262626;
+    background: #303030;
     overflow-x: hidden;
     transition: 0.5s;
     padding-top: 60px;
@@ -25,43 +25,7 @@
     flex-direction: column;
     /* Gap between buttons */
     gap: 20px;
-    background: #303030;
     align-items: center;
-}
-
-#right-sidebar .option {
-    background: #303030;
-    height: 50px;
-    width: 80%;
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    margin: 0 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    padding: 0 10px;
-    transition: all 0.3s ease;
-}
-
-input[type="radio"]{
-  display: none;
-}
-#option-1:checked:checked ~ .option-1,
-#option-2:checked:checked ~ .option-2,
-#option-3:checked:checked ~ .option-3 {
-  border-color: #0069d9;
-  background: #0069d9;
-}
-
-#right-sidebar .option span{
-  font-size: 18px;
-  color: #808080;
-}
-
-#option-1:checked:checked ~ .option-1 span,
-#option-2:checked:checked ~ .option-2 span,
-#option-3:checked:checked ~ .option-3 span {
-  color: #fff;
 }
 
 #sidebar a {

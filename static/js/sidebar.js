@@ -34,3 +34,25 @@ right_open_btn.onclick = function (event) {
     }
 
 }
+
+var check_buttons = document.querySelectorAll('.check-button');
+
+check_buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+        toggleCheck(this);
+    });
+});
+
+function toggleCheck(clickedButton) {
+    // Get the parent container
+    var buttonContainer = document.getElementById('right-sidebar');
+
+    // Remove 'checked' class from all buttons inside the container
+    var buttons = buttonContainer.querySelectorAll('.check-button');
+    buttons.forEach(function (button) {
+        button.classList.remove('checked');
+    });
+
+    // Add 'checked' class to the clicked button
+    clickedButton.classList.add('checked');
+}
