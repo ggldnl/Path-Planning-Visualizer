@@ -68,3 +68,19 @@ document.getElementById('robots-angular-velocity-slider').addEventListener('inpu
     console.log('robots-angular-velocity: ', value);
     socket.emit('world_status_update', {'robots_angular_velocity': value});
 });
+
+document.getElementById('start-btn').addEventListener('click', function() {
+    socket.emit('simulation_controls_update', 'start');
+});
+
+document.getElementById('stop-btn').addEventListener('click', function() {
+    socket.emit('simulation_controls_update', 'stop');
+});
+
+document.getElementById('step-btn').addEventListener('click', function() {
+    socket.emit('simulation_controls_update', 'step');
+});
+
+document.getElementById('reset-btn').addEventListener('click', function() {
+    socket.emit('simulation_controls_update', 'reset');
+});

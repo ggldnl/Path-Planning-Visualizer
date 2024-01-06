@@ -159,21 +159,22 @@ def handle_simulation_controls_update(command):
     """
 
     sid = request.sid
-    sim_control = client_data[sid]['sim_controls']
-    if command == 'play':
-        sim_control['running'] = True
+    sim_controls = client_data[sid]['sim_controls']
+    sim_settings = client_data[sid]['sim_settings']
+    if command == 'start':
+        sim_controls['running'] = True
     elif command == 'stop':
-        sim_control['running'] = False
+        sim_controls['running'] = False
     elif command == 'step':
-        sim_control['stepping'] = True
+        sim_controls['stepping'] = True
     elif command == 'reset':
 
-        sim_control['running'] = False
-        sim_control['stepping'] = True
+        sim_controls['running'] = False
+        sim_controls['stepping'] = True
 
-        if sim_control['autostart']:
-            sim_control['running'] = True
-            sim_control['stepping'] = False
+        if sim_settings['autostart']:
+            sim_controls['running'] = True
+            sim_controls['stepping'] = False
 
         world = client_data[sid]['data']
         world.reset_robots()
@@ -196,7 +197,7 @@ def handle_map_io(command, data=None):
     sid = request.sid
     world = client_data[sid]['data']
     sim_settings = client_data[sid]['sim_settings']
-    sim_control = client_data[sid]['sim_controls']
+    sim_controls = client_data[sid]['sim_controls']
 
     if command == 'load':
         if data is None:
@@ -216,12 +217,12 @@ def handle_map_io(command, data=None):
     world.reset_robots()
 
     # Step the simulation
-    sim_control['running'] = False
-    sim_control['stepping'] = True
+    sim_controls['running'] = False
+    sim_controls['stepping'] = True
 
     if sim_settings['autostart']:
-        sim_control['running'] = True
-        sim_control['stepping'] = False
+        sim_controls['running'] = True
+        sim_controls['stepping'] = False
 
     logger.info(f'User {sid} map IO command: {command}')
 
@@ -268,7 +269,7 @@ def send_real_time_data():
             for client_sid in client_data:
 
                 world = client_data[client_sid]['data']
-                sim_control = client_data[client_sid]['sim_controls']
+                sim_controls = client_data[client_sid]['sim_controls']
 
                 # Step the simulation
                 world.step()
@@ -276,8 +277,8 @@ def send_real_time_data():
                 # Emit new data
                 socketio.emit('real_time_data', world.to_json(), room=client_sid)
 
-                if sim_control['stepping']:
-                    sim_control['stepping'] = False
+                if sim_controls['stepping']:
+                    sim_controls['stepping'] = False
 
 
 if __name__ == '__main__':
