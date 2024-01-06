@@ -25,7 +25,7 @@ Sampling-based Planning
 
 ## TODO
 
-- [ ] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
+- [x] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
 - [ ] Rework map and remove moving obstacles. Add randomly spawned obstacles instead
 - [ ] Interact with obstacles on mouse click (accelerate them, stop them, ...)
 - [ ] Add missing search algorithms
