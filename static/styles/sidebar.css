@@ -9,6 +9,9 @@
     padding-top: 60px;
     color: white;
     z-index: 1;
+
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
 }
 
 #left-sidebar {
@@ -17,6 +20,48 @@
 
 #right-sidebar {
     right: 0;
+    /* Right sidebar content is vertically aligned */
+    display: flex;
+    flex-direction: column;
+    /* Gap between buttons */
+    gap: 20px;
+    background: #303030;
+    align-items: center;
+}
+
+#right-sidebar .option {
+    background: #303030;
+    height: 50px;
+    width: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    margin: 0 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0 10px;
+    transition: all 0.3s ease;
+}
+
+input[type="radio"]{
+  display: none;
+}
+#option-1:checked:checked ~ .option-1,
+#option-2:checked:checked ~ .option-2,
+#option-3:checked:checked ~ .option-3 {
+  border-color: #0069d9;
+  background: #0069d9;
+}
+
+#right-sidebar .option span{
+  font-size: 18px;
+  color: #808080;
+}
+
+#option-1:checked:checked ~ .option-1 span,
+#option-2:checked:checked ~ .option-2 span,
+#option-3:checked:checked ~ .option-3 span {
+  color: #fff;
 }
 
 #sidebar a {
@@ -79,4 +124,3 @@
 #home-btn.shifted {
     left: 340px; /* 250px (opened sidebar) + 20px (gap 1) + 50px (open-btn) + 20px (gap 2) */
 }
-
