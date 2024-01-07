@@ -41,6 +41,39 @@ document.getElementById('load-btn').addEventListener('click', function() {
     fileInput.click();
 });
 
+document.getElementById('load-URDF-btn').addEventListener('click', function() {
+
+    // Create a file input element
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+
+    // Set an event listener for when a file is selected
+    fileInput.addEventListener('change', function (event) {
+        var file = event.target.files[0];
+
+        if (file) {
+            // Read the content of the file as text
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var fileContent = e.target.result;
+
+                try {
+                    var jsonData = JSON.parse(fileContent);
+                    socket.emit('URDF_update', jsonData);
+                    console.log('Robot URDF:', jsonData);
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+    });
+
+    // Trigger a click event on the file input to open the file chooser dialog
+    fileInput.click();
+});
+
 document.getElementById('random-btn').addEventListener('click', function() {
     socket.emit('map_io_command', 'random');
 });

@@ -29,8 +29,9 @@ Sampling-based Planning
 - [ ] Rework map and remove moving obstacles. Add randomly spawned obstacles instead
 - [x] Add obstacles on mouse click
 - [ ] Add missing search algorithms
+- [ ] Redefine world serialization
 - [ ] Finish left sidebar
-- [ ] Add another load button to left sidebar to load a custom URDF
+- [x] Add another load button to left sidebar to load a custom URDF
 - [x] Make the save button actually save the last map data received
 - [ ] Fix inverted angles in link origin (URDF parser)
 - [ ] Add typing and input checking 

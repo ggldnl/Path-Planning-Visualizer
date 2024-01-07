@@ -128,6 +128,12 @@ def handle_add_obstacle(x, y):
     logger.info(f'Client {sid} added new obstacle at ({x}, {y})')
 
 
+@socketio.on('URDF_update')
+def handle_URDF_update(jsonData):
+    sid = request.sid
+    logger.info(f'Client {sid} updated URDF file to: {jsonData}')
+
+
 def send_world_data(sid):
     """
     Emit world data for session ID
