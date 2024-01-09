@@ -14,30 +14,40 @@ class StandardMap(Map):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-    def _add_obstacle(self, obstacle):
+    def add_obstacle(self, obstacle):
         self._obstacles.append(obstacle)
         self._initial_obstacles.append(obstacle.copy())
 
     def step_motion(self, dt):
-        for obstacle in self._obstacles:
 
-            if self.boundaries:
+        # TODO add a way to select if the obstacles should move based on their velocity vector
+        #   or randomly spawn
 
-                # Try to compute the next pose
-                x, y, z = obstacle.polygon.pose
-                vx, vy, vz = obstacle.vel
-                lsm = obstacle.linear_speed_multiplier
+        # Moving obstacles
+        """
+        if self.allow_changes:
 
-                new_x = x + vx * lsm * dt
-                new_y = y + vy * lsm * dt
+            for obstacle in self._obstacles:
 
-                if not -self.obs_max_dist <= new_x <= self.obs_max_dist:
-                    obstacle.vel = (-vx, vy, vz)
+                if self.boundaries:
 
-                if not -self.obs_max_dist <= new_y <= self.obs_max_dist:
-                    obstacle.vel = (vx, -vy, vz)
+                    # Try to compute the next pose
+                    x, y, z = obstacle.polygon.pose
+                    vx, vy, vz = obstacle.vel
+                    lsm = obstacle.linear_speed_multiplier
 
-            obstacle.step_motion(dt)
+                    new_x = x + vx * lsm * dt
+                    new_y = y + vy * lsm * dt
+
+                    if not -self.obs_max_dist <= new_x <= self.obs_max_dist:
+                        obstacle.vel = (-vx, vy, vz)
+
+                    if not -self.obs_max_dist <= new_y <= self.obs_max_dist:
+                        obstacle.vel = (vx, -vy, vz)
+
+                obstacle.step_motion(dt)
+        """
+        pass
 
     def reset_map(self):
         self._obstacles = [obstacle.copy() for obstacle in self._initial_obstacles]
@@ -57,6 +67,7 @@ class StandardMap(Map):
         """
         Add some junk just to keep this version of the map compatible, it is too slow and we can't use it anyway
         """
+        # TODO uniform this method with query_region
         min_x, min_y, max_x, max_y = bounds
         return self.query_region(Polygon([
             Point(min_x, min_y),
@@ -64,7 +75,6 @@ class StandardMap(Map):
             Point(max_x, max_y),
             Point(max_x, min_y)
         ]))
-
 
     def save_as_pickle(self, filename):
         with open(filename, "wb") as file:
@@ -98,15 +108,3 @@ class StandardMap(Map):
 
         self._obstacles = obstacles
         self._initial_obstacles = [obstacle.copy() for obstacle in self._obstacles]
-        print('Map updated!')
-
-    """
-    def check_collision(self, point1, point2):
-        # line = Segment(point1, point2)
-        # buffer = Polygon.get_segment_buffer(line, self.discretization_step, self.discretization_step)
-        buffer = Polygon.get_point_buffer(point2, self.discretization_step)
-        for obstacle_id in range(len(self._obstacles)):
-            if check_intersection(buffer, self.get_polygon(obstacle_id)):
-                return True
-        return False
-    """

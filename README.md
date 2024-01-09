@@ -26,13 +26,18 @@ Sampling-based Planning
 ## TODO
 
 - [x] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
-- [ ] Rework map and remove moving obstacles. Add randomly spawned obstacles instead
+- [x] Rework map and remove moving obstacles. Add obstacles on mouse click instead
 - [x] Add obstacles on mouse click
+- [ ] Rework world json to use map serialization instead of plain polygons serialization
 - [ ] Add missing search algorithms
-- [ ] Redefine world serialization
+- [x] Redefine world serialization
+- [ ] Provide thread safe rtree implementation
 - [ ] Finish left sidebar
 - [x] Add another load button to left sidebar to load a custom URDF
 - [x] Make the save button actually save the last map data received
+- [ ] Find a way to specify obstacles shape (rectangle, polygon, ...)
+- [ ] Find a way to choose the behavior of the map (moving/spawning obstacles)
+- [ ] Uniform query and query_region methods in Map class
 - [ ] Fix inverted angles in link origin (URDF parser)
 - [ ] Add typing and input checking 
 - [ ] Update documentation

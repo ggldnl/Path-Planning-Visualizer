@@ -10,8 +10,7 @@ default_params = {
     "obs_max_width": 0.7,
     "obs_min_height": 0.4,
     "obs_max_height": 0.9,
-    "obs_steady_count": 10,
-    "obs_moving_count": 10,
+    "obs_count": 40,
     "obs_min_lin_speed": -0.02,
     "obs_max_lin_speed": 0.02,
     "obs_min_ang_speed": -2.0,
@@ -19,8 +18,7 @@ default_params = {
     "goal_min_dist": 3.0,
     "goal_max_dist": 5.0,
     "min_goal_clearance": 0.5,
-    "obstacles_type": 'rectangular',
-    "displacement_type": 'gridlike',
+    "map_type": "gridlike",
     "boundaries": True,
 }
 
@@ -30,9 +28,18 @@ class MapBuilder:
     def __init__(self):
 
         self.params_dictionary = default_params
+
+        """
+        Map type specifies the data structures used to carry out the computations.
+        Standard maps use simple lists, spatial maps use quad trees.
+        TODO write a thread safe implementation for the rtree library.
+        """
         self.map_type = 'standard'
+
+        """
+        Obstacles can be of type 'triangle', 'rectangle', 'pentagon', 'random'.
+        """
         self.obstacles_type = 'rectangular'
-        self.displacement_type = 'gridlike'
 
     @classmethod
     def _check_range(cls, a, b, min_distance=None):
@@ -78,14 +85,9 @@ class MapBuilder:
         self.params_dictionary['obs_max_height'] = obs_max_height
         return self
 
-    def set_obs_steady_count(self, obs_steady_count):
-        self._check_non_negative(obs_steady_count, strict=False)  # could be zero if we don't want steady obstacles
-        self.params_dictionary['obs_steady_count'] = obs_steady_count
-        return self
-
-    def set_obs_moving_count(self, obs_moving_count):
-        self._check_non_negative(obs_moving_count, strict=False)
-        self.params_dictionary['obs_moving_count'] = obs_moving_count
+    def set_obs_count(self, obs_count):
+        self._check_non_negative(obs_count, strict=False)
+        self.params_dictionary['obs_count'] = obs_count
         return self
 
     def set_obs_linear_speed_range(self, obs_min_lin_speed, obs_max_lin_speed):
@@ -112,10 +114,6 @@ class MapBuilder:
 
     def set_obstacles_type(self, obstacles_type: Literal['triangle', 'rectangle', 'pentagon', 'random']):
         self.params_dictionary["obstacles_type"] = obstacles_type
-        return self
-
-    def set_displacement_type(self, displacement_type: Literal['random', 'gridlike']):
-        self.params_dictionary["displacement_type"] = displacement_type
         return self
 
     def enable_boundaries(self):
@@ -155,6 +153,6 @@ if __name__ == '__main__':
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
     folder_dir = os.path.join(script_dir, 'maps')
-    output_file = os.path.join(folder_dir, 'map_1_gridlike_rectangle.json')
+    output_file = os.path.join(folder_dir, 'map_1_rectangle.json')
 
     map.save_as_json(output_file)

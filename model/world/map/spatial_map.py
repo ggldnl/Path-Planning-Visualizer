@@ -1,7 +1,6 @@
 
 # Model
 from model.geometry.intersection import check_intersection
-from model.geometry.segment import Segment
 from model.world.map.map import Map
 from model.world.map.obstacle import Obstacle
 from model.geometry.polygon import Polygon
@@ -22,37 +21,43 @@ class SpatialMap(Map):
         # Current obstacles position
         self._obstacles_tree = index.Index()
 
-    def _add_obstacle(self, obstacle):
+    def add_obstacle(self, obstacle):
         self._obstacles_tree.insert(len(self._obstacles), obstacle.polygon.bounds)
         self._obstacles.append(obstacle)
         self._initial_obstacles.append(obstacle.copy())
 
     def step_motion(self, dt):
         # TODO spatial map is not thread safe, flask requires multi threading
-        for obstacle_id in range(len(self._obstacles)):
-            obstacle = self._obstacles[obstacle_id]
-            bounds = obstacle.polygon.bounds
 
-            if self.boundaries:
+        """
+        if self.allow_changes:
 
-                # Try to compute the next pose
-                x, y, z = obstacle.polygon.pose
-                vx, vy, vz = obstacle.vel
-                lsm = obstacle.linear_speed_multiplier
+            for obstacle_id in range(len(self._obstacles)):
+                obstacle = self._obstacles[obstacle_id]
+                bounds = obstacle.polygon.bounds
 
-                new_x = x + vx * lsm * dt
-                new_y = y + vy * lsm * dt
+                if self.boundaries:
 
-                if not -self.obs_max_dist <= new_x <= self.obs_max_dist:
-                    obstacle.vel = (-vx, vy, vz)
+                    # Try to compute the next pose
+                    x, y, z = obstacle.polygon.pose
+                    vx, vy, vz = obstacle.vel
+                    lsm = obstacle.linear_speed_multiplier
 
-                if not -self.obs_max_dist <= new_y <= self.obs_max_dist:
-                    obstacle.vel = (vx, -vy, vz)
+                    new_x = x + vx * lsm * dt
+                    new_y = y + vy * lsm * dt
 
-            obstacle.step_motion(dt)
+                    if not -self.obs_max_dist <= new_x <= self.obs_max_dist:
+                        obstacle.vel = (-vx, vy, vz)
 
-            self._obstacles_tree.delete(obstacle_id, bounds)
-            self._obstacles_tree.insert(obstacle_id, obstacle.polygon.bounds)
+                    if not -self.obs_max_dist <= new_y <= self.obs_max_dist:
+                        obstacle.vel = (vx, -vy, vz)
+
+                obstacle.step_motion(dt)
+
+                self._obstacles_tree.delete(obstacle_id, bounds)
+                self._obstacles_tree.insert(obstacle_id, obstacle.polygon.bounds)
+        """
+        pass
 
     def reset_map(self):
         self._obstacles = []
@@ -60,18 +65,6 @@ class SpatialMap(Map):
             bounds = obstacle.polygon.get_bounding_box()
             self._obstacles_tree.insert(len(self._obstacles), bounds)
             self._obstacles.append(obstacle)
-
-    """
-    def check_collision(self, start, end, buffer_size=-1):
-
-        if buffer_size == -1:
-            buffer_size = self.discretization_step
-
-        line = Segment(start, end)
-        buffer = Polygon.get_segment_buffer(line, left_margin=buffer_size/2, right_margin=buffer_size/2)
-        intersecting_obstacles_ids = self.query_region(buffer)
-        return len(intersecting_obstacles_ids) > 0
-    """
 
     def query_region(self, region: Polygon):
         # Assuming region is a Polygon representing the query region
@@ -130,8 +123,7 @@ class SpatialMap(Map):
         obstacle_data = data['initial_obstacles']
         for obstacle_dictionary in obstacle_data:
             obstacle = Obstacle.from_dict(obstacle_dictionary)
-            self._add_obstacle(obstacle)
-        print('Map updated!')
+            self.add_obstacle(obstacle)
 
     def load_map(self, filename):
         self.load_map_from_json_file(filename)

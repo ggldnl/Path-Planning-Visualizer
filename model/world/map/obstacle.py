@@ -24,18 +24,20 @@ class Obstacle:
         Simulate the obstacle's motion over the given time interval
         """
 
-        # Update the pose based on the motion law (translation + rotation)
-        x, y, z = self.polygon.pose
-        vx, vy, vz = self.vel
-        lsm = self.linear_speed_multiplier
-        asm = self.angular_speed_multiplier
+        if self.vel != (0, 0, 0):
 
-        new_x = x + vx * lsm * dt
-        new_y = y + vy * lsm * dt
-        new_z = (z + vz * asm * dt) % (2 * np.pi)
+            # Update the pose based on the motion law (translation + rotation)
+            x, y, z = self.polygon.pose
+            vx, vy, vz = self.vel
+            lsm = self.linear_speed_multiplier
+            asm = self.angular_speed_multiplier
 
-        # self.polygon.translate_to(self.pose[0], self.pose[1])
-        self.polygon.transform_to(new_x, new_y, new_z)
+            new_x = x + vx * lsm * dt
+            new_y = y + vy * lsm * dt
+            new_z = (z + vz * asm * dt) % (2 * np.pi)
+
+            # self.polygon.translate_to(self.pose[0], self.pose[1])
+            self.polygon.transform_to(new_x, new_y, new_z)
 
     def copy(self):
         new_polygon = self.polygon.copy()
