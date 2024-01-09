@@ -4,6 +4,7 @@ from abc import abstractmethod
 import numpy as np
 
 # Model
+from model.geometry.polygon import Polygon
 from model.geometry.rectangle import Rectangle
 from model.world.map.obstacle import Obstacle
 from model.geometry.point import Point
@@ -103,19 +104,33 @@ class Map:
     def add_obstacle(self, obstacle):
         pass
 
+    def add_obstacles(self, obstacles):
+        for obstacle in obstacles:
+            self.add_obstacle(obstacle)
+
+    def remove_obstacle(self, obstacle_id):
+        if obstacle_id < 0 or obstacle_id >= len(self._obstacles):
+            raise IndexError(f'Index out of range: {obstacle_id}')
+        self._obstacles.pop(obstacle_id)
+
     def enable_changes(self):
         self.allow_changes = True
 
     def disable_changes(self):
         self.allow_changes = False
 
-    def add_obstacles(self, obstacles):
-        for obstacle in obstacles:
-            self.add_obstacle(obstacle)
+    def generate_obstacle_on_coords(self, x, y):
+        polygon = Polygon.generate_random_polygon(4, self.obs_max_width)
+        polygon.translate_to(x, y)
+        self.add_obstacle(Obstacle(polygon))
 
     def _generate_random_obstacle_polygon(self):
 
         # TODO implement other obstacle types
+        #   Solve by displacing this to a 'generate_random_X' in each
+        #   Shape object and using a string here to disambiguate; the
+        #   string will determine ALL the obstacles types in the map,
+        #   both the generated and the added ones
 
         # Generate dimensions
         width = self.obs_min_width + (np.random.random() * self.obs_width_range)

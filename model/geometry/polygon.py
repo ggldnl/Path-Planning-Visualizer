@@ -40,10 +40,10 @@ class Polygon(Shape):
         return self.get_bounding_box()
 
     @classmethod
-    def generate_random_polygon(cls, num_sides, radius, noise=0.5):
+    def generate_random_polygon(cls, num_sides, radius, noise=0.5, merge_near_points=0):
 
         if num_sides < 3:
-            raise ValueError('Number of sides must be at least 3')
+            raise ValueError("Number of sides must be at least 3")
 
         angles = np.linspace(0, 2 * np.pi, num_sides, endpoint=False)
 
@@ -51,7 +51,6 @@ class Polygon(Shape):
         perturbed_points = {}
 
         for angle in angles:
-
             # Perturb the angle with Gaussian noise
             angle += np.random.normal(0, noise)
             angle = angle % (2 * np.pi)
@@ -67,7 +66,21 @@ class Polygon(Shape):
         # sorted_perturbed_points = sorted(perturbed_points, key=lambda point: point[2])
         points = [perturbed_points[key] for key in sorted(perturbed_points.keys())]
 
-        return cls(points)
+        merged_points = []
+        if merge_near_points > 0:
+            merged_points.append(points[0])
+            for i in range(1, len(points)):
+                if points[i].distance(points[i - 1]) > merge_near_points:
+                    merged_points.append(points[i])
+
+            # If we have more than 2 points
+            if len(merged_points) > 2:
+                return cls(merged_points)
+            else:
+                return cls(points)
+
+        else:
+            return cls(points)
 
     @classmethod
     def get_segment_buffer(cls, segment, left_margin, right_margin):

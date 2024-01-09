@@ -34,6 +34,7 @@ import threading
 
 # Local imports
 from model.world.world import World
+from model.geometry.circle import Circle
 
 # ---------------------------------- config ---------------------------------- #
 
@@ -123,9 +124,16 @@ def handle_disconnect():
 def handle_add_obstacle(x, y):
     sid = request.sid
     world = client_data[sid]['data']
-    # TODO
-    # world.map.add_obstacles(x, y)
-    logger.info(f'Client {sid} added new obstacle at ({x}, {y})')
+    map = world.map
+
+    obstacles_in_region = map.query_region(Circle(x, y, 0.2))
+    if len(obstacles_in_region) > 0:
+        obstacle_id = obstacles_in_region[0]
+        map.remove_obstacle(obstacle_id)
+        logger.info(f'Client {sid} removed obstacle [{obstacle_id}] at ({x}, {y})')
+    else:  # No obstacle in region
+        world.map.generate_obstacle_on_coords(x, y)
+        logger.info(f'Client {sid} added new obstacle at ({x}, {y})')
 
 
 @socketio.on('URDF_update')
