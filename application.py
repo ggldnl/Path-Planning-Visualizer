@@ -31,6 +31,7 @@ import logging
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 import threading
+from typing import Literal
 
 # Local imports
 from model.world.world import World
@@ -62,9 +63,53 @@ UPDATE_FREQUENCY = 1 / REFRESH_RATE
 
 # -------------------------- routes and websockets --------------------------- #
 
+"""
+The app uses the following channels for one-time data exchange:
+
+- simulation_control_update: Handles messages related to simulation control (start, stop, step, restart).
+- simulation_settings_update: Handles messages related to simulation settings (enable autostart, show structures, ...).
+- robot_update: Handles updates about the robot's status (angular speed, linear speed, load custom robot).
+- map_update: Manages updates related to the map or environment (load custom map, store current map, get random map).
+- controller_update: Handles messages related to the controller (algorithm).
+- obstacle_control: Handles messages related to obstacle management (add, remove obstacles).
+
+The type of messages accepted by each channel is explained below:
+
+- simulation_control_update: string
+- simulation_settings_update: {setting: value}
+- robot_update: {setting: value}
+- map_update: {setting: value}
+- controller_update: string
+- obstacle_control: float, float
+
+Each channel requires a handler:
+
+- handle_simulation_control_update(command)
+- handle_simulation_settings_update(update_dict)
+- handle_robot_update(update_dict)
+- handle_map_update(update_dict)
+- handle_controller_update(algorithm)
+- handle_obstacle_control(x, y)
+
+The app uses the following channels for real-time data transfer:
+
+- real_time_data: Contains the json representation of the world, sent from the backend to the frontend.
+"""
+
+"""
+For each client we need:
+
+- simulation settings (sim_settings): what to show, preferences and so on
+- simulation control (sim_control): if the simulation is currently playing/stopped/stepping/being reset
+- world (data)
+"""
+
 
 @app.route('/')
 def index():
+    """
+    Render the main page of the app
+    """
     return render_template('index.html')
 
 
@@ -75,14 +120,10 @@ def handle_connect():
     """
 
     with clients_lock:
-
         # Add the new user
         clients.add(request.sid)
 
-        # For each client we need:
-        # 1. Simulation settings (sim_settings): what to show, preferences and so on
-        # 2. Simulation controls (sim_controls): if the simulation is currently playing/stopped/being reset
-        # 3. World (data)
+        # Client dictionary
         client_data[request.sid] = {}
 
         # Dictionary containing this user's preferences for the simulation
@@ -93,9 +134,9 @@ def handle_connect():
         }
 
         # Dictionary containing this user's simulation control variables
-        client_data[request.sid]['sim_controls'] = {
+        client_data[request.sid]['sim_control'] = {
             'running': False,  # True once the play button is pressed
-            'stepping': True,  # True when the stepping button is pressed, set to false automatically after one iteration
+            'stepping': True,  # True when the stepping button is pressed, set false automatically after one iteration
         }
 
         # Initialize the world for the new client
@@ -103,7 +144,7 @@ def handle_connect():
 
         # Log the new connection
         logger.info(f'Client {request.sid} connected')
-        logger.info(f'Clients list: {clients}')
+        logger.info(f'Clients: {clients}')
 
 
 @socketio.on('disconnect')
@@ -113,176 +154,25 @@ def handle_disconnect():
     """
 
     with clients_lock:
-
         sid = request.sid
         clients.remove(sid)
         del client_data[sid]
         logger.info(f'Client {sid} disconnected')
 
 
-@socketio.on('add_obstacle')
-def handle_add_obstacle(x, y):
-    sid = request.sid
-    world = client_data[sid]['data']
-    map = world.map
-
-    obstacles_in_region = map.query_region(Circle(x, y, 0.2))
-    if len(obstacles_in_region) > 0:
-        obstacle_id = obstacles_in_region[0]
-        map.remove_obstacle(obstacle_id)
-        logger.info(f'Client {sid} removed obstacle [{obstacle_id}] at ({x}, {y})')
-    else:  # No obstacle in region
-        world.map.generate_obstacle_on_coords(x, y)
-        logger.info(f'Client {sid} added new obstacle at ({x}, {y})')
-
-
-@socketio.on('URDF_update')
-def handle_URDF_update(jsonData):
-    sid = request.sid
-    logger.info(f'Client {sid} updated URDF file to: {jsonData}')
-
-
 def send_world_data(sid):
     """
-    Emit world data for session ID
+    Emit world data for session ID once
     """
 
     world = client_data[sid]['data']
     emit('real_time_data', world.to_json(), room=sid)
 
 
-@socketio.on('simulation_settings_update')
-def handle_simulation_settings_update(new_settings):
-    """
-    Handle simulation setting update request from the client.
-    'new_settings' is a dictionary containing setting: value pairs
-    """
-
-    sid = request.sid
-    current_settings = client_data[sid]['sim_settings']
-    for key, value in new_settings.items():
-        if key in current_settings:
-
-            # Set the new value
-            current_settings[key] = value
-            logger.info(f'User {sid} settings status update: {sid}')
-        else:
-            logger.info(f'Invalid settings status update: {key}, {value}')
-
-    # If we change a visual preference (e.g. show the path) we need to see
-    # the changes without stepping the simulation
-    send_world_data(sid)
-
-
-@socketio.on('simulation_controls_update')
-def handle_simulation_controls_update(command):
-    """
-    Handle simulation control update request from the client.
-    'command' is a string in ['play', 'stop', 'step', 'reset']
-    """
-
-    sid = request.sid
-    sim_controls = client_data[sid]['sim_controls']
-    sim_settings = client_data[sid]['sim_settings']
-    if command == 'start':
-        sim_controls['running'] = True
-    elif command == 'stop':
-        sim_controls['running'] = False
-    elif command == 'step':
-        sim_controls['stepping'] = True
-    elif command == 'reset':
-
-        sim_controls['running'] = False
-        sim_controls['stepping'] = True
-
-        if sim_settings['autostart']:
-            sim_controls['running'] = True
-            sim_controls['stepping'] = False
-
-        world = client_data[sid]['data']
-        world.reset_robots()
-        world.map.reset_map()
-
-    # No need to send world data as these booleans will affect (stop/resume) the next iteration
-        
-    logger.info(f'User {sid} simulation control update: {command}')
-
-
-@socketio.on('map_io_command')
-def handle_map_io(command, data=None):
-    """
-    Handle map input/output request. Available requests to the map are 'load' and 'random'.
-    If the command is 'load', the server will use 'data' as the new map.
-    If the command is 'random', the server will discard 'data' and randomly generate a new map.
-    The frontend will handle the logic to save a map to the client's machine.
-    """
-
-    sid = request.sid
-    world = client_data[sid]['data']
-    sim_settings = client_data[sid]['sim_settings']
-    sim_controls = client_data[sid]['sim_controls']
-
-    if command == 'load':
-        if data is None:
-            raise ValueError(f'Invalid map data: {data}')
-
-        world.map.load_map_from_json_data(data)
-
-    elif command == 'random':
-
-        world.map.clear()
-        world.map.generate(world.robots)
-
-    else:
-        raise ValueError(f'Invalid map IO request: {command}')
-
-    # Reset robots and their controller
-    world.reset_robots()
-
-    # Step the simulation
-    sim_controls['running'] = False
-    sim_controls['stepping'] = True
-
-    if sim_settings['autostart']:
-        sim_controls['running'] = True
-        sim_controls['stepping'] = False
-
-    logger.info(f'User {sid} map IO command: {command}')
-
-
-@socketio.on('world_status_update')
-def handle_world_status_update(status_update):
-    """
-    Handle world status update request from the client.
-    World status update include:
-    1. robots linear speed
-    2. robots angular speed
-    3. obstacles spawn frequency
-    'status_update' is a dictionary containing variable: value pairs
-    """
-
-    sid = request.sid
-    world = client_data[sid]['data']
-
-    if 'obstacles_spawn_frequency' in status_update:
-        spawn_frequency = float(status_update['obstacles_spawn_frequency'])
-        logger.info(f'User {sid} world status update: obstacles_spawn_frequency={spawn_frequency}')
-        # TODO use this value
-
-    if 'robots_linear_velocity' in status_update:
-        linear_velocity = float(status_update['robots_linear_velocity'])
-        logger.info(f'User {sid} world status update: robots_linear_velocity={linear_velocity}')
-        for robot in world.robots:
-            robot.linear_velocity = linear_velocity
-
-    if 'robots_angular_velocity' in status_update:
-        angular_velocity = float(status_update['robots_angular_velocity'])
-        logger.info(f'User {sid} world status update: robots_angular_velocity={angular_velocity}')
-        for robot in world.robots:
-            robot.angular_velocity = angular_velocity
-
-
 def send_real_time_data():
+    """
+    Background update loop periodically sending data to the frontend
+    """
 
     while True:
         time.sleep(UPDATE_FREQUENCY)
@@ -292,7 +182,7 @@ def send_real_time_data():
             for client_sid in client_data:
 
                 world = client_data[client_sid]['data']
-                sim_controls = client_data[client_sid]['sim_controls']
+                sim_control = client_data[client_sid]['sim_control']
 
                 # Step the simulation
                 world.step()
@@ -300,8 +190,195 @@ def send_real_time_data():
                 # Emit new data
                 socketio.emit('real_time_data', world.to_json(), room=client_sid)
 
-                if sim_controls['stepping']:
-                    sim_controls['stepping'] = False
+                if sim_control['stepping']:
+                    sim_control['stepping'] = False
+
+
+@socketio.on('simulation_control_update')
+def handle_simulation_control_update(command: Literal['start', 'stop', 'step', 'reset']):
+    """
+    Handle simulation control update request from the client.
+
+    Parameters:
+        - command (Literal['start', 'stop', 'step', 'reset']): command for simulation control.
+            'start' starts the simulation;
+            'stop' stops the simulation;
+            'step' runs only one step of the simulation;
+            'reset' resets the simulation to the initial conditions;
+    """
+
+    sid = request.sid
+    sim_control = client_data[sid]['sim_control']
+    sim_settings = client_data[sid]['sim_settings']
+
+    if command == 'start':
+        sim_control['running'] = True
+    elif command == 'stop':
+        sim_control['running'] = False
+    elif command == 'step':
+        sim_control['stepping'] = True
+    elif command == 'reset':
+
+        sim_control['running'] = False
+        sim_control['stepping'] = True
+
+        if sim_settings['autostart']:
+            sim_control['running'] = True
+            sim_control['stepping'] = False
+
+        world = client_data[sid]['data']
+        world.reset_robots()
+        world.map.reset_map()
+
+    # No need to send world data as these booleans will affect (stop/resume) the next iteration
+
+    logger.info(f'User {sid} simulation control update request: {command}')
+
+
+@socketio.on('simulation_settings_update')
+def handle_simulation_settings_update(update_dict: dict):
+    """
+    Handle simulation setting update request from the client.
+
+    Parameters:
+        - update_dict (dict): dictionary containing simulation settings. Available settings are the following:
+            'show_path': whether to show the path or not;
+            'show_data_structures': whether to show algorithm's data structures or not;
+            'autostart': whether to automatically start the simulation after a reset or a new random initial state;
+    """
+
+    sid = request.sid
+    current_settings = client_data[sid]['sim_settings']
+    for key, value in update_dict.items():
+        if key in current_settings:
+
+            # Set the new value
+            current_settings[key] = value
+            logger.info(f'User {sid} simulation settings update request: {key}, {value}')
+        else:
+            logger.info(f'Invalid settings update request: {key}, {value}')
+
+    # If we change a visual preference (e.g. show the path) we need to see
+    # the changes without stepping the simulation
+    send_world_data(sid)
+
+
+@socketio.on('robot_update')
+def handle_robot_update(update_dict: dict):
+    """
+    Handle robot update request from the client.
+
+    Parameters:
+        - update_dict (dict): dictionary containing robot update data. Available keys are the following:
+            'angular_speed': set the angular speed of the robot;
+            'linear_velocity': set the linear speed of the robot;
+            'load': load a new robot using the provided URDF data;
+    """
+
+    sid = request.sid
+    world = client_data[sid]['data']
+
+    for key, value in update_dict.items():
+        if key == 'linear_velocity':
+            linear_velocity = float(update_dict['linear_velocity'])
+            logger.info(f'User {sid} robot update request: {key}, {value}')
+            for robot in world.robots:
+                robot.linear_velocity = linear_velocity
+        elif key == 'angular_velocity':
+            angular_velocity = float(update_dict['angular_velocity'])
+            logger.info(f'User {sid} robot update request: {key}, {value}')
+            for robot in world.robots:
+                robot.angular_velocity = angular_velocity
+        elif key == 'load':
+            # TODO add URDF parsing
+
+            # Send world data to immediately show the new robot
+            send_world_data(sid)
+
+            logger.info(f'User {sid} robot update request: loading new robot based on provided URDF data')
+        else:
+            logger.info(f'Invalid robot update request: {key}, {value}')
+
+
+@socketio.on('map_update')
+def handle_map_update(update_dict: dict):
+    """
+    Handle map update request from the client.
+
+    Parameters:
+        - update_dict (dict): dictionary containing map update data. Available keys are the following:
+            'load': load a map using the provided json data;
+            'random': generate a new map (value is discarded);
+    """
+
+    sid = request.sid
+    world = client_data[sid]['data']
+    sim_settings = client_data[sid]['sim_settings']
+    sim_control = client_data[sid]['sim_control']
+
+    for key, value in update_dict.items():
+        if key == 'load':
+            data = update_dict['load']
+            world.map.load_map_from_json_data(data)
+            logger.info(f'User {sid} map update request: loading new map based on provided json data')
+        elif key == 'random':
+            world.map.clear()
+            world.map.generate(world.robots)
+            logger.info(f'User {sid} map update request: generating new map')
+        else:
+            logger.info(f'Invalid map update request: {key}, {value}')
+
+    # Reset robots and their controller
+    world.reset_robots()
+
+    # Stop the simulation
+    sim_control['running'] = False
+    sim_control['stepping'] = False
+
+    # If autostart enabled, let the simulation start instead
+    if sim_settings['autostart']:
+        sim_control['running'] = True
+        sim_control['stepping'] = False
+
+    # Send new world data to show new map
+    send_world_data(sid)
+
+
+@socketio.on('controller_update')
+def handle_controller_update(algorithm: Literal['RRT', 'RRT*', 'A*']):
+    """
+    Handle controller update request from the client.
+
+    Parameters:
+        - algorithm: string representing the algorithm to use.
+    """
+
+    sid = request.sid
+    logger.info(f'User {sid} controller update request: selected algorithm {algorithm}')
+
+
+@socketio.on('obstacle_control')
+def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
+    """
+    Handle obstacle control request from the client. If no obstacle is near the input (x, y) point, add an obstacle
+    following the map specification (obstacle type), otherwise remove the closest one.
+
+    Parameters:
+        - x (float): x coordinate of the query point;
+        - y (float): y coordinate of the query point;
+    """
+
+    sid = request.sid
+    world = client_data[sid]['data']
+
+    obstacles_in_region = world.map.query_region(Circle(x, y, query_radius))
+    if len(obstacles_in_region) > 0:
+        obstacle_id = obstacles_in_region[0]
+        world.map.remove_obstacle(obstacle_id)
+        logger.info(f'User {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
+    else:  # No obstacle in region
+        world.map.generate_obstacle_on_coords(x, y)
+        logger.info(f'User {sid} obstacle control request: adding obstacle at ({x}, {y})')
 
 
 if __name__ == '__main__':

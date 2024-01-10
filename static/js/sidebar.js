@@ -1,3 +1,5 @@
+var socket = io.connect('http://' + document.domain + ':' + location.port);
+
 const left_sidebar = document.getElementById("left-sidebar");
 const left_open_btn = document.getElementById('left-open-btn');
 const home_btn = document.getElementById('home-btn');
@@ -35,11 +37,17 @@ right_open_btn.onclick = function (event) {
 
 }
 
-var check_buttons = document.querySelectorAll('.check-button');
+var check_buttons = document.querySelectorAll('.radio-button');
 
 check_buttons.forEach(function (button) {
     button.addEventListener('click', function () {
+
+        // Send selection to backend
+        socket.emit('controller_update', {'algorithm': this.textContent})
+
+        // Toggle check
         toggleCheck(this);
+
     });
 });
 
@@ -48,7 +56,7 @@ function toggleCheck(clickedButton) {
     var buttonContainer = document.getElementById('right-sidebar');
 
     // Remove 'checked' class from all buttons inside the container
-    var buttons = buttonContainer.querySelectorAll('.check-button');
+    var buttons = buttonContainer.querySelectorAll('.radio-button');
     buttons.forEach(function (button) {
         button.classList.remove('checked');
     });

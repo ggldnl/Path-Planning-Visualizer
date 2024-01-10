@@ -22,26 +22,37 @@
     <div id="left-sidebar">
         <input type="range" id="robots-linear-velocity-slider" min="0" max="100" value="50">
         <input type="range" id="robots-angular-velocity-slider" min="0" max="100" value="50">
-        <input type="range" id="obstacles-spawn-frequency-slider" min="0" max="100" value="50">
 
         <div class="icon-button" id="save-btn"><i class="fas fa-save"></i></div>
         <div class="icon-button" id="load-btn"><i class="fas fa-upload"></i></div>
         <div class="icon-button" id="random-btn"><i class="fas fa-dice"></i></div>
 
         <div class="icon-button" id="load-URDF-btn"><i class="fas fa-robot"></i></div>
+        
+        <label>
+            <input type="checkbox" id="show-path-chk"> Show path
+        </label>
+        <br>
+        <label>
+            <input type="checkbox" id="show-data-structures-chk"> Show data structures
+        </label>
+        <br>
+        <label>
+            <input type="checkbox" id="autostart-chk"> Enable autostart
+        </label>
     </div>
     <div class="icon-button" id="left-open-btn"><i class="fas fa-bars"></i></div>
     <div class="icon-button" id="home-btn"><i class="fas fa-home"></i></div>
 
     <!-- Right sidebar -->
     <div id="right-sidebar">
-        <button class="check-button checked">Manual</button>
-        <button class="check-button">Best First Search</button>
-        <button class="check-button">Breadth First Search</button>
-        <button class="check-button">Depth First Search</button>
-        <button class="check-button">A Star Search</button>
-        <button class="check-button">RRT Search</button>
-        <button class="check-button">RRT Star Search</button>
+        <button class="radio-button checked">Manual</button>
+        <button class="radio-button">Best First Search</button>
+        <button class="radio-button">Breadth First Search</button>
+        <button class="radio-button">Depth First Search</button>
+        <button class="radio-button">A Star Search</button>
+        <button class="radio-button">RRT Search</button>
+        <button class="radio-button">RRT Star Search</button>
 
     </div>
     <div class="icon-button" id="right-open-btn"><i class="fas fa-gamepad"></i></div>

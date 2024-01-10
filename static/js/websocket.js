@@ -26,7 +26,7 @@ document.getElementById('load-btn').addEventListener('click', function() {
 
                 try {
                     var jsonData = JSON.parse(fileContent);
-                    socket.emit('map_io_command', 'load', jsonData);
+                    socket.emit('map_update', {'load': jsonData});
                     console.log('JSON Data:', jsonData);
                 } catch (error) {
                     console.error('Error parsing JSON:', error);
@@ -59,8 +59,8 @@ document.getElementById('load-URDF-btn').addEventListener('click', function() {
 
                 try {
                     var jsonData = JSON.parse(fileContent);
-                    socket.emit('URDF_update', jsonData);
-                    console.log('Robot URDF:', jsonData);
+                    socket.emit('robot_update', {'load': jsonData});
+                    console.log('URDF Data:', jsonData);
                 } catch (error) {
                     console.error('Error parsing JSON:', error);
                 }
@@ -75,39 +75,45 @@ document.getElementById('load-URDF-btn').addEventListener('click', function() {
 });
 
 document.getElementById('random-btn').addEventListener('click', function() {
-    socket.emit('map_io_command', 'random');
-});
-
-document.getElementById('obstacles-spawn-frequency-slider').addEventListener('input', function() {
-    var value = this.value;
-    console.log('obstacles-spawn-frequency: ', value);
-    socket.emit('world_status_update', {'obstacles_spawn_frequency': value});
+    socket.emit('map_update', {'random': null});
 });
 
 document.getElementById('robots-linear-velocity-slider').addEventListener('input', function() {
     var value = this.value;
     console.log('robots-linear-velocity: ', value);
-    socket.emit('world_status_update', {'robots_linear_velocity': value});
+    socket.emit('robot_update', {'linear_velocity': value});
 });
 
 document.getElementById('robots-angular-velocity-slider').addEventListener('input', function() {
     var value = this.value;
     console.log('robots-angular-velocity: ', value);
-    socket.emit('world_status_update', {'robots_angular_velocity': value});
+    socket.emit('robot_update', {'angular_velocity': value});
 });
 
 document.getElementById('start-btn').addEventListener('click', function() {
-    socket.emit('simulation_controls_update', 'start');
+    socket.emit('simulation_control_update', 'start');
 });
 
 document.getElementById('stop-btn').addEventListener('click', function() {
-    socket.emit('simulation_controls_update', 'stop');
+    socket.emit('simulation_control_update', 'stop');
 });
 
 document.getElementById('step-btn').addEventListener('click', function() {
-    socket.emit('simulation_controls_update', 'step');
+    socket.emit('simulation_control_update', 'step');
 });
 
 document.getElementById('reset-btn').addEventListener('click', function() {
-    socket.emit('simulation_controls_update', 'reset');
+    socket.emit('simulation_control_update', 'reset');
+});
+
+document.getElementById('show-path-chk').addEventListener('change', function() {
+    socket.emit('simulation_settings_update', {'show_path': this.checked});
+});
+
+document.getElementById('show-data-structures-chk').addEventListener('change', function() {
+    socket.emit('simulation_settings_update', {'show_data_structures': this.checked});
+});
+
+document.getElementById('autostart-chk').addEventListener('change', function() {
+    socket.emit('simulation_settings_update', {'autostart': this.checked});
 });

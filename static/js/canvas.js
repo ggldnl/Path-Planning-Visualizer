@@ -329,7 +329,7 @@ window.onload = function () {
                 // Send position to backend
                 var x = (event.clientX - width / 2 + pixelOffset.x) / scale;
                 var y = - (event.clientY - height / 2 + pixelOffset.y) / scale;
-                socket.emit('add_obstacle', x, y);
+                socket.emit('obstacle_control', x, y);
             }
         };
     }
