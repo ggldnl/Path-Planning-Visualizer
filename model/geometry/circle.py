@@ -1,5 +1,6 @@
 from model.geometry.shape import Shape
 from model.geometry.point import Point
+import numpy as np
 
 
 class Circle(Shape):
@@ -11,15 +12,18 @@ class Circle(Shape):
         self.pose.y = y
         self.radius = radius
 
-    @property
-    def bounds(self):
+        # Set of points to discretize the shape, needed to compute convex hull
+        self.points = [Point(radius * np.cos(angle), radius * np.sin(angle))
+                       for angle in np.linspace(0, 2 * np.pi, 12)]
+
+    def get_bounds(self):
         return (self.pose.x - self.radius,
                 self.pose.y - self.radius,
                 self.pose.x + self.radius,
                 self.pose.y + self.radius)
 
     @classmethod
-    def get_segment_buffer(cls, segment, margin=None):
+    def segment_buffer(cls, segment, margin=None):
         center = segment.midpoint()
         if margin is None:
             margin = len(segment) / 2
@@ -35,6 +39,66 @@ class Circle(Shape):
 
     def get_center(self):
         return Point(self.pose.x, self.pose.y)
+
+    def translate(self, offset_x, offset_y):
+        self.pose.x += offset_x
+        self.pose.y += offset_y
+
+        for point in self.points:
+            point.x += offset_x
+            point.y += offset_y
+
+    def rotate(self, theta):
+        pass
+
+    def transform(self, x, y, theta):
+        self.translate(x, y)
+
+    def translate_to(self, x, y):
+        self.pose.x = x
+        self.pose.y = y
+
+        for point in self.points:
+            point.x = x
+            point.y = y
+
+    def rotate_to(self, theta):
+        pass
+
+    def transform_to(self, x, y, theta):
+        self.translate_to(x, y)
+
+    def rotate_around(self, x, y, theta):
+
+        # Compute the center coordinates
+        translated_x = self.pose.x - x
+        translated_y = self.pose.y - y
+
+        # Rotate the coordinates
+        self.pose.x = x + translated_x * np.cos(theta) - translated_y * np.sin(theta)
+        self.pose.y = y + translated_x * np.sin(theta) + translated_y * np.cos(theta)
+
+        # Update the discretization points
+        for point in self.points:
+
+            translated_x = point.x - x
+            translated_y = point.y - y
+
+            point.x = x + translated_x * np.cos(theta) - translated_y * np.sin(theta)
+            point.y = y + translated_x * np.sin(theta) + translated_y * np.cos(theta)
+
+    def to_dict(self):
+        return {
+            'x': self.pose.x,
+            'y': self.pose.y,
+            'radius': self.radius
+        }
+
+    def get_edges(self):
+        pass
+
+    def copy(self):
+        return Circle(self.pose.x, self.pose.y, self.radius)
 
     def __str__(self):
         return f'Circle(center={self.pose.as_point()}, radius={self.radius})'

@@ -59,17 +59,6 @@ class Controller:
         # Add the orientation (keep the orientation of the robot while moving towards the goal)
         return Pose(target_x, target_y, np.arctan2(delta_y, delta_x))
 
-    def old_step(self):
-        """
-        Does one step of the search loop, regardless of whether the path is obstructed or something else
-        has happened: the actual path planning algorithm will account for this (that is why it is called
-        path planning with moving obstacles).
-        """
-
-        if not self.search_algorithm.has_terminated() and not self.is_robot_at(self.search_algorithm.map.goal):
-            for _ in range(self.iterations):
-                self.search_algorithm.step()
-
     def next(self):
         """
         Returns next point to reach if there is a FULL path to the goal. If the method is called before
@@ -106,7 +95,7 @@ class Controller:
         return self.robot.current_pose.as_point() == point
 
     def is_robot_at_goal(self):
-        return self.robot.current_pose.as_point() == self.search_algorithm.map.goal
+        return self.robot.current_pose.as_point() == self.search_algorithm.world_map.goal
 
     """
     def has_path(self):

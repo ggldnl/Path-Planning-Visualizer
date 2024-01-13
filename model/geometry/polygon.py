@@ -35,127 +35,31 @@ class Polygon(Shape):
         # Find the enclosing radius
         self.radius = self._find_radius()
 
-    @property
-    def bounds(self):
+    def _find_radius(self):
+        """
+        Find the radius of a circle that fully encloses this polygon.
+        Supposes that the center has already been found.
+        """
+
+        radius = 0
+        for point in self.points:
+            distance = np.sqrt((self.pose.x - point.x) ** 2 + (self.pose.y - point.y) ** 2)
+            radius = max(radius, distance)
+
+        return radius
+
+    def _find_center(self):
+        total_x = sum(point.x for point in self.points)
+        total_y = sum(point.y for point in self.points)
+        num_points = len(self.points)
+        self.pose.x = total_x / num_points
+        self.pose.y = total_y / num_points
+
+    def get_bounds(self):
         return self.get_bounding_box()
-
-    @classmethod
-    def generate_random_polygon(cls, num_sides, radius, noise=0.5, merge_near_points=0):
-
-        if num_sides < 3:
-            raise ValueError("Number of sides must be at least 3")
-
-        angles = np.linspace(0, 2 * np.pi, num_sides, endpoint=False)
-
-        # perturbed_points = []
-        perturbed_points = {}
-
-        for angle in angles:
-            # Perturb the angle with Gaussian noise
-            angle += np.random.normal(0, noise)
-            angle = angle % (2 * np.pi)
-
-            # Calculate the coordinates for the random point
-            x = radius * np.cos(angle)
-            y = radius * np.sin(angle)
-
-            # perturbed_points.append((x, y, angle))
-            perturbed_points.update({angle: Point(x, y)})
-
-        # Sort the array to have a convex polygon
-        # sorted_perturbed_points = sorted(perturbed_points, key=lambda point: point[2])
-        points = [perturbed_points[key] for key in sorted(perturbed_points.keys())]
-
-        merged_points = []
-        if merge_near_points > 0:
-            merged_points.append(points[0])
-            for i in range(1, len(points)):
-                if points[i].distance(points[i - 1]) > merge_near_points:
-                    merged_points.append(points[i])
-
-            # If we have more than 2 points
-            if len(merged_points) > 2:
-                return cls(merged_points)
-            else:
-                return cls(points)
-
-        else:
-            return cls(points)
-
-    @classmethod
-    def get_segment_buffer(cls, segment, left_margin, right_margin):
-
-        if left_margin < 0:
-            raise ValueError(f"Left margin should be a positive number, {left_margin} was given instead.")
-
-        if right_margin < 0:
-            raise ValueError(f"Right margin should be a positive number, {right_margin} was given instead.")
-
-        A = segment.start
-        B = segment.end
-
-        AB = B - A
-
-        # Compute the squared magnitude of AB
-        mag_squared = AB.x ** 2 + AB.y ** 2
-
-        # Avoid division by zero by checking if mag_squared is non-zero
-        if mag_squared == 0:
-            raise ValueError(f"Segment {segment} has zero length.")
-
-        # Compute the unit vector u_AB
-        u_AB = AB / np.sqrt(mag_squared)
-
-        # Compute the normal vector n_AB
-        n_AB = Point(-u_AB.y, u_AB.x)
-
-        # Compute the vertices of the buffer
-        C = A + left_margin * n_AB
-        D = B + left_margin * n_AB
-        E = B - right_margin * n_AB
-        F = A - right_margin * n_AB
-
-        # Create a polygon from the four corners of the rectangle
-        buffer = Polygon([C, D, E, F, C])
-
-        return buffer
-
-    @classmethod
-    def get_point_buffer(cls, point, margin, num_points=4):
-        """
-        Returns the buffer of a point. The buffer of a point is by default a square around it
-        """
-
-        if margin < 0:
-            raise ValueError(f"Margin should be a positive number, {margin} was given instead.")
-
-        if num_points < 0:
-            raise ValueError(f"Number of point for the buffer should be a positive number, {num_points} was given instead.")
-
-        points = []
-        for i in range(num_points):
-            points.append(
-                Point(point.x + margin * np.cos(i * 2 * np.pi / num_points), point.y + margin * np.sin(i * 2 * np.pi / num_points))
-            )
-
-        return Polygon(points)
-
-    @classmethod
-    def from_dict(cls, dictionary):
-
-        # point_list = json.loads(dictionary['points'], object_hook=lambda d: Point(d['x'], d['y']))
-
-        points = []
-        for point_dictionary in dictionary['points']:
-            points.append(Point.from_dict(point_dictionary))
-
-        return Polygon(points)
 
     def to_point_array(self):
         return [[point.x, point.y] for point in self.points]
-
-    def to_dict(self):
-        return {'points': [point.to_dict() for point in self.points]}
 
     def get_bounding_box(self):
         """
@@ -176,25 +80,6 @@ class Polygon(Shape):
 
         return min_x, min_y, max_x, max_y
 
-    def _find_radius(self):
-        """
-        Supposes that the center has already been found
-        """
-
-        radius = 0
-        for point in self.points:
-            distance = np.sqrt((self.pose.x - point.x) ** 2 + (self.pose.y - point.y) ** 2)
-            radius = max(radius, distance)
-
-        return radius
-
-    def _find_center(self):
-        total_x = sum(point.x for point in self.points)
-        total_y = sum(point.y for point in self.points)
-        num_points = len(self.points)
-        self.pose.x = total_x / num_points
-        self.pose.y = total_y / num_points
-
     def translate(self, offset_x, offset_y):
 
         for point in self.points:
@@ -203,36 +88,6 @@ class Polygon(Shape):
 
         self.pose.x += offset_x
         self.pose.y += offset_y
-
-    def rotate_around_pose(self, pose):
-        x, y, theta = pose
-        self.rotate_around(x, y, theta)
-
-    def rotate_around(self, x, y, angle):
-        """
-        Rotate the polygon around a specified point by the specified angle (in radians).
-        """
-
-        if not 0 <= angle <= 2 * np.pi:
-            raise ValueError(f'Angle {angle} is not in radians')
-
-        # Apply rotation to each point
-        for point in self.points:
-
-            # Translate the point to the origin (center) of rotation
-            translated_x = point.x - x
-            translated_y = point.y - y
-
-            # Perform the rotation
-            new_x = translated_x * np.cos(angle) - translated_y * np.sin(angle)
-            new_y = translated_x * np.sin(angle) + translated_y * np.cos(angle)
-
-            # Translate the point back to its original position
-            point.x = new_x + x
-            point.y = new_y + y
-
-        # Update the center
-        self._find_center()
 
     def rotate(self, angle):
         """
@@ -253,10 +108,9 @@ class Polygon(Shape):
             point.x = new_x + self.pose.x
             point.y = new_y + self.pose.y
 
-    def transform(self, pose):
-        x, y, alpha = pose
+    def transform(self, x, y, theta):
         self.translate(x, y)
-        self.rotate(alpha)
+        self.rotate(theta)
 
     def translate_to(self, x, y):
         offset_x = x - self.pose.x
@@ -268,30 +122,63 @@ class Polygon(Shape):
         angle_diff = target_angle - self.pose.theta
         self.rotate(angle_diff)
 
-    def transform_to_pose(self, pose):
-        x, y, theta = pose
-        self.translate_to(x, y)
-        self.rotate_to(theta)
-
     def transform_to(self, x, y, theta):
         self.translate_to(x, y)
         self.rotate_to(theta)
 
+    @classmethod
+    def from_dict(cls, dictionary):
+
+        # point_list = json.loads(dictionary['points'], object_hook=lambda d: Point(d['x'], d['y']))
+
+        points = []
+        for point_dictionary in dictionary['points']:
+            points.append(Point.from_dict(point_dictionary))
+
+        return Polygon(points)
+
+    def to_dict(self):
+        return {'points': [point.to_dict() for point in self.points]}
+
     def get_edges(self):
-        # Get the edges of the polygon
+        """
+        Get the edges of a polygon
+        """
+
         edges = []
         for i in range(len(self.points)):
             edge = Segment(self.points[i], self.points[(i + 1) % len(self.points)])
             edges.append(edge)
         return edges
 
-    def check_nearness(self, other):
-        return self.pose.distance(other.pose) <= self.radius + other.radius
+    def rotate_around(self, x, y, angle):
+        """
+        Rotate the polygon around a specified point by the specified angle (in radians).
+        """
+
+        # Apply rotation to each point
+        for point in self.points:
+
+            # Translate the point to the origin (center) of rotation
+            translated_x = point.x - x
+            translated_y = point.y - y
+
+            # Perform the rotation
+            new_x = translated_x * np.cos(angle) - translated_y * np.sin(angle)
+            new_y = translated_x * np.sin(angle) + translated_y * np.cos(angle)
+
+            # Translate the point back to its original position
+            point.x = new_x + x
+            point.y = new_y + y
+
+        # Update the center
+        self._find_center()
 
     def project(self, axis):
         """
         Project the polygon onto an axis and return the min and max values
         """
+
         min_proj = float('inf')
         max_proj = float('-inf')
         for point in self.points:
@@ -306,6 +193,7 @@ class Polygon(Shape):
         """
         Returns a deep copy of the polygon
         """
+
         # points = []
         # for point in self.points:
         #     points.append(Point(point.x, point.y))
@@ -359,3 +247,113 @@ class Polygon(Shape):
         self.points[key] = value
         self.radius = self._find_radius()
         self._find_center()
+
+    @classmethod
+    def random_polygon(cls, num_sides, radius, noise=0.5, merge_near_points=0):
+        """
+        Returns a random polygon for which the circumscribed circle has
+        center at the origin and the specified radius
+        """
+
+        if num_sides < 3:
+            raise ValueError("Number of sides must be at least 3")
+
+        angles = np.linspace(0, 2 * np.pi, num_sides, endpoint=False)
+
+        # perturbed_points = []
+        perturbed_points = {}
+
+        for angle in angles:
+            # Perturb the angle with Gaussian noise
+            angle += np.random.normal(0, noise)
+            angle = angle % (2 * np.pi)
+
+            # Calculate the coordinates for the random point
+            x = radius * np.cos(angle)
+            y = radius * np.sin(angle)
+
+            # perturbed_points.append((x, y, angle))
+            perturbed_points.update({angle: Point(x, y)})
+
+        # Sort the array to have a convex polygon
+        # sorted_perturbed_points = sorted(perturbed_points, key=lambda point: point[2])
+        points = [perturbed_points[key] for key in sorted(perturbed_points.keys())]
+
+        merged_points = []
+        if merge_near_points > 0:
+            merged_points.append(points[0])
+            for i in range(1, len(points)):
+                if points[i].distance(points[i - 1]) > merge_near_points:
+                    merged_points.append(points[i])
+
+            # If we have more than 2 points
+            if len(merged_points) > 2:
+                return cls(merged_points)
+            else:
+                return cls(points)
+
+        else:
+            return cls(points)
+
+    @classmethod
+    def point_buffer(cls, point, margin, num_points=4):
+        """
+        Returns the buffer of a point. The buffer of a point is by default a square around it
+        with side specified by the margin parameter
+        """
+
+        if margin < 0:
+            raise ValueError(f"Margin should be a positive number, {margin} was given instead.")
+
+        if num_points < 0:
+            raise ValueError(f"Number of point for the buffer should be a positive number, {num_points} was given instead.")
+
+        points = []
+        for i in range(num_points):
+            points.append(
+                Point(point.x + margin * np.cos(i * 2 * np.pi / num_points), point.y + margin * np.sin(i * 2 * np.pi / num_points))
+            )
+
+        return Polygon(points)
+
+    @classmethod
+    def segment_buffer(cls, segment, left_margin, right_margin):
+        """
+        Returns the buffer of a segment. The buffer of a segment is by default a rectangle around it
+        with left and right sides specified by the left_margin and right_margin parameters respectively
+        """
+
+        if left_margin < 0:
+            raise ValueError(f"Left margin should be a positive number, {left_margin} was given instead.")
+
+        if right_margin < 0:
+            raise ValueError(f"Right margin should be a positive number, {right_margin} was given instead.")
+
+        A = segment.start
+        B = segment.end
+
+        AB = B - A
+
+        # Compute the squared magnitude of AB
+        mag_squared = AB.x ** 2 + AB.y ** 2
+
+        # Avoid division by zero by checking if mag_squared is non-zero
+        if mag_squared == 0:
+            raise ValueError(f"Segment {segment} has zero length.")
+
+        # Compute the unit vector u_AB
+        u_AB = AB / np.sqrt(mag_squared)
+
+        # Compute the normal vector n_AB
+        n_AB = Point(-u_AB.y, u_AB.x)
+
+        # Compute the vertices of the buffer
+        C = A + left_margin * n_AB
+        D = B + left_margin * n_AB
+        E = B - right_margin * n_AB
+        F = A - right_margin * n_AB
+
+        # Create a polygon from the four corners of the rectangle
+        buffer = Polygon([C, D, E, F, C])
+
+        return buffer

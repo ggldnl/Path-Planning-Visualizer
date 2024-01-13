@@ -190,7 +190,7 @@ def generate_data() -> Iterator[str]:
                         stepping = False
 
                     # Dump the data
-                    yield f"data:{frame.to_json()}\n\n"
+                    yield f"data:{frame.json_view()}\n\n"
 
                     # Wait
                     time.sleep(UPDATE_FREQUENCY)

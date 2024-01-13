@@ -8,10 +8,10 @@ from model.controllers.graph import Node
 
 class AStarSearch(SearchBased):
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(map, start, boundary, iterations, discretization_step)
+    def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
+        super().__init__(world_map, start, boundary, iterations, discretization_step)
 
-    def pre_search(self, ):
+    def pre_search(self):
 
         self.path = []
         self.draw_list = []
@@ -23,21 +23,22 @@ class AStarSearch(SearchBased):
 
         self.open_set.put((start_node.cost + start_node.heuristic, start_node))  # Priority queue with f(n) as priority
 
-        self.map.disable_moving_obstacles()
+        # self.world_map.disable_moving_obstacles()
+        self.world_map.disable()
 
     def heuristic(self, point):
-        return point.distance(self.map.goal)
+        return point.distance(self.world_map.goal)
 
     def can_run(self):
         # Termination condition is that the highest priority element (nearest to the goal) is the goal itself
-        return not self.open_set.empty() and not self.open_set.queue[0][1].point == self.map.goal
+        return not self.open_set.empty() and not self.open_set.queue[0][1].point == self.world_map.goal
 
     def step_search(self):
 
         current_node = self.open_set.get()[1]
 
         """
-        if current_node.point == self.map.goal:
+        if current_node.point == self.world_map.goal:
             # Goal reached, reconstruct the path
             self.reconstruct_path(current_node)
             return

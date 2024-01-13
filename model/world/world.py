@@ -2,34 +2,25 @@ import json
 
 from model.exceptions.collision_exception import CollisionException
 from model.geometry.intersection import check_intersection
-from model.world.map.map_builder import MapBuilder
 from model.world import view
 
 
 class World:
 
-    def __init__(self, dt):
+    def __init__(self, world_map, robots, controllers, dt):
 
         # Initialize world time
         self.world_time = 0.0  # seconds
         self.dt = dt  # seconds
         self.idx = 0
 
-        self.robots = []
+        self.world_map = world_map
+        self.robots = robots
+        self.controllers = controllers
 
-        # Initialize lists of world objects
-        self.controllers = []
-
-        # Initialize the map
-        self.map = (MapBuilder()
-                    .set_type('spatial')
-                    .enable_boundaries()
-                    .build())
-
-        # TODO bug: map is generated before we add robots; we can add robots over obstacles
-        #   Solve by introducing a WorldBuilder
-        # self.map.generate(self.robots)
-        self.map.load_map(r'/home/daniel/Git/Robot-Simulator/model/world/map/maps/map_1_rectangular_obstacles.json')
+    @property
+    def map(self):
+        return self.world_map
 
     def set_period(self, dt):
         self.dt = dt
@@ -50,26 +41,11 @@ class World:
 
         dt = self.dt
         # Step all the obstacles
-        self.map.step_motion(dt)
+        self.world_map.step_motion(dt)
 
         for robot, controller in zip(self.robots, self.controllers):
-
-            """
-            # Scan the map, compute path, ...
-            controller.step()
-
-            if controller.has_path():
-
-                # Get the next target point (could be the same as before if the robot hasn't reached it yet)
-                next = controller.next()
-                robot.target_pose = next
-
-                # Update the robot making it follow the path
-                robot.step_motion(dt)
-            """
-
-            next = controller.step()
-            robot.target_pose = next
+            next_pose = controller.step()
+            robot.target_pose = next_pose
             robot.step_motion(dt)
 
         # Apply physics interactions
@@ -87,7 +63,7 @@ class World:
         Raises a CollisionException if one occurs.
         """
 
-        solids = self.map.obstacles + self.robots
+        solids = self.world_map.obstacles + self.robots
 
         for robot in self.robots:
 
@@ -105,12 +81,20 @@ class World:
                         if check_intersection(polygon1, polygon2):
                             raise CollisionException(f'Robot {robot.name} collided with an obstacle.')
 
-    def to_json(self, add_path=True, add_data_structures=True):
+    def to_dict(self):
+        return {
+            "map": self.world_map.to_dict(),
+            "robots": [robot.to_dict() for robot in self.robots],
+            "controllers": [controller.to_dict() for controller in self.controllers],
+            "dt": self.dt
+        }
+
+    def json_view(self, add_path=True, add_data_structures=True):
 
         shapes_list = []
 
         # Add the obstacles
-        for obstacle in self.map.obstacles:
+        for obstacle in self.world_map.obstacles:
             shapes_list.append(view.get_obstacle_view_dict(obstacle))
 
         # Add the robots
@@ -118,7 +102,7 @@ class World:
             shapes_list.extend(view.get_robot_view_dict(robot))
 
         # Add the start and the goal points to the frame
-        shapes_list.append(view.get_goal_view_dict(self.map.goal))
+        shapes_list.append(view.get_goal_view_dict(self.world_map.goal))
 
         # Add data structures
         if add_data_structures:
@@ -130,6 +114,6 @@ class World:
             for robot, controller in zip(self.robots, self.controllers):
                 path = controller.search_algorithm.path
                 if len(path) > 0:
-                    shapes_list.extend(view.get_path_view_dict([robot.current_pose.as_point().to_array()] + path))
+                    shapes_list.extend(view.get_path_view_dict([robot.current_pose] + path))
 
         return json.dumps(shapes_list)

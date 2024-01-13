@@ -20,10 +20,10 @@ class SearchAlgorithm(ABC):
     sa.post_search()
     """
 
-    def __init__(self, map, start, boundary, iterations=1):
+    def __init__(self, world_map, start, boundary, iterations=1):
 
         # Map
-        self.map = map
+        self.world_map = world_map
 
         # Start point
         self.start = start
@@ -75,8 +75,8 @@ class SearchAlgorithm(ABC):
         the second point is reachable by the first
         """
         line = Segment(start, end)
-        buffer = Polygon.get_segment_buffer(line, left_margin=self.boundary/2, right_margin=self.boundary/2)
-        intersecting_obstacles_ids = self.map.query_region(buffer)
+        buffer = Polygon.segment_buffer(line, left_margin=self.boundary/2, right_margin=self.boundary/2)
+        intersecting_obstacles_ids = self.world_map.query_polygon(buffer)
         return len(intersecting_obstacles_ids) > 0
 
     def has_path(self):
@@ -86,7 +86,7 @@ class SearchAlgorithm(ABC):
         If the path contains points and the last point is the goal, then the path
         is complete and the robot can follow it.
         """
-        return len(self.path) > 0 and self.path[-1] == self.map.goal
+        return len(self.path) > 0 and self.path[-1] == self.world_map.goal
 
     def has_terminated(self):
         """
@@ -142,7 +142,7 @@ class SearchAlgorithm(ABC):
         """
         for _ in range(self.iterations):
 
-            # If the algorithm as not yet terminated (while search time/space remaining)
+            # If the algorithm has not yet terminated (while search time/space remaining)
             if self.can_run():
 
                 # Progress the search
@@ -170,13 +170,13 @@ class TestSearchAlgorithm(SearchAlgorithm):
     The termination condition is to find a path or to exit on time constraint violation.
     """
 
-    def __init__(self, map, start, boundary=0.2, iterations=1, max_iterations=10):
+    def __init__(self, world_map, start, boundary=0.2, iterations=1, max_iterations=10):
 
         self.max_iterations = max_iterations
         self.current_iteration = 0
         self.goal_found = False
 
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(world_map, start, boundary, iterations)
 
     def can_run(self):
         # Termination condition = goal found or times up

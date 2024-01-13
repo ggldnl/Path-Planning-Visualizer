@@ -20,26 +20,52 @@
     <!-- Left sidebar -->
 
     <div id="left-sidebar">
-        <input type="range" id="robots-linear-velocity-slider" min="0" max="100" value="50">
-        <input type="range" id="robots-angular-velocity-slider" min="0" max="100" value="50">
 
-        <div class="icon-button" id="save-btn"><i class="fas fa-save"></i></div>
-        <div class="icon-button" id="load-btn"><i class="fas fa-upload"></i></div>
-        <div class="icon-button" id="random-btn"><i class="fas fa-dice"></i></div>
+        <label class="description-label">Robot control</label>
 
-        <div class="icon-button" id="load-URDF-btn"><i class="fas fa-robot"></i></div>
-        
-        <label>
-            <input type="checkbox" id="show-path-chk"> Show path
-        </label>
-        <br>
-        <label>
-            <input type="checkbox" id="show-data-structures-chk"> Show data structures
-        </label>
-        <br>
-        <label>
-            <input type="checkbox" id="autostart-chk"> Enable autostart
-        </label>
+        <div></div>
+        <div></div>
+        <div class="vertical-content-div">
+
+            <label>Linear velocity</label>
+            <input type="range" id="robots-linear-velocity-slider" min="-1" max="1" value="0">
+
+            <label>Angular velocity</label>
+            <input type="range" id="robots-angular-velocity-slider" min="-1" max="1" value="0">
+
+            <label>Upload URDF</label>
+            <div class="icon-button" id="load-URDF-btn"><i class="fas fa-robot"></i></div>
+
+        </div>
+
+        <div></div>
+        <div></div>
+        <label class="description-label">Map control</label>
+
+        <div></div>
+        <div class="horizontal-content-div">
+            <div class="icon-button" id="save-btn"><i class="fas fa-save"></i></div>
+            <div class="icon-button" id="load-btn"><i class="fas fa-upload"></i></div>
+            <div class="icon-button" id="random-btn"><i class="fas fa-dice"></i></div>
+        </div>
+
+        <div></div>
+        <div></div>
+        <label class="description-label">Invisibles</label>
+
+        <div></div>
+        <div class="vertical-content-div">
+            <label>
+                <input type="checkbox" id="show-path-chk"> Show path
+            </label>
+            <label>
+                <input type="checkbox" id="show-data-structures-chk"> Show data
+            </label>
+            <label>
+                <input type="checkbox" id="autostart-chk"> Enable autostart
+            </label>
+        </div>
+
     </div>
     <div class="icon-button" id="left-open-btn"><i class="fas fa-bars"></i></div>
     <div class="icon-button" id="home-btn"><i class="fas fa-home"></i></div>

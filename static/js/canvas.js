@@ -1,10 +1,15 @@
 import { backgroundColor, axisColor, gridColor, fontColor, font } from './style.js';
+import { socket } from './websocket.js';
 
-var socket = io.connect('http://' + document.domain + ':' + location.port);
+// var socket = io.connect('http://' + document.domain + ':' + location.port);
 
 // Data variable that will contain the shapes to show
 var json_data;
 var data;
+
+// Double click
+var clickCount = 0;
+var clickTimer;
 
 socket.on('real_time_data', function (string_data) {
     json_data = string_data;
@@ -49,7 +54,9 @@ window.onload = function () {
         x: 0,
         y: 0
     };
-    var scale = 50;
+    var scale = 350;
+    const min_scale = 10;
+    const max_scale = 500;
     const initial_scale = scale;
 
     function drawScreen() {
@@ -287,13 +294,13 @@ window.onload = function () {
         scale -= event.deltaY * scale / 2500;
         pixelOffset.x = beforeOffsetXCart * scale;
         pixelOffset.y = beforeOffsetYCart * scale;
-        if (scale < 10) {
-            scale = 10;
+        if (scale < min_scale) {
+            scale = min_scale;
             pixelOffset.x = beforeOffsetX;
             pixelOffset.y = beforeOffsetY;
         }
-        if (scale > 200) {
-            scale = 200;
+        if (scale > max_scale) {
+            scale = max_scale;
             pixelOffset.x = beforeOffsetX;
             pixelOffset.y = beforeOffsetY;
         }
@@ -325,11 +332,32 @@ window.onload = function () {
         canvas.onmouseup = function (event) {
             mouseDown = false;
             if (clicking) {
-                clicking = false;
-                // Send position to backend
+
+                // Change coordinate system
                 var x = (event.clientX - width / 2 + pixelOffset.x) / scale;
                 var y = - (event.clientY - height / 2 + pixelOffset.y) / scale;
-                socket.emit('obstacle_control', x, y);
+
+                clickCount ++;
+                if (clickCount == 1) {
+                    clickTimer = setTimeout(function() {
+
+                        // Send obstacle position to backend
+                        console.log('Add obstacle at (', x, ', ', y, ')')
+                        socket.emit('obstacle_control', x, y);
+
+                        clickCount = 0;
+                    }, 250);
+                } else if (clickCount == 2) {
+                    clearTimeout(clickTimer);
+
+                    // Send goal position to backend
+                    console.log('Move goal to (', x, ', ', y, ')')
+                    socket.emit('goal_control', x, y);
+
+                    clickCount = 0;
+                }
+
+                clicking = false;
             }
         };
     }

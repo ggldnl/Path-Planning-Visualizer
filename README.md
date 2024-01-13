@@ -28,14 +28,14 @@ Sampling-based Planning
 - [x] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
 - [x] Rework map and remove moving obstacles. Add obstacles on mouse click instead
 - [x] Add obstacles on mouse click
-- [ ] Redefine/Uniform websocket channels names
+- [x] Redefine/Uniform websocket channels names
 - [ ] Fix bug with region query in Map class
 - [ ] Uniform query and query_region methods in Map class
 - [ ] Rework world json to use map serialization instead of plain polygons serialization
 - [ ] Add missing search algorithms
 - [x] Redefine world serialization
 - [ ] Provide thread safe rtree implementation
-- [ ] Finish left sidebar
+- [x] Finish left sidebar
 - [x] Add another load button to left sidebar to load a custom URDF
 - [x] Make the save button actually save the last map data received
 - [ ] Find a way to specify obstacles shape (rectangle, polygon, ...)

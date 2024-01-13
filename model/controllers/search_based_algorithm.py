@@ -16,7 +16,10 @@ class SearchBased(SearchAlgorithm):
     yet expanded and avoid adding them multiple times to the open_set
     """
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
+    def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
+
+        if world_map.boundaries is None:
+            raise ValueError('The map should be bounded for search based algorithms')
 
         # Side of the area that each node covers
         self.discretization_step = discretization_step
@@ -30,7 +33,7 @@ class SearchBased(SearchAlgorithm):
         # to avoid adding it twice to the open_set
         self.generated_neighbors = set()
 
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(world_map, start, boundary, iterations)
 
     def get_view(self, point):
         tile = Polygon([
@@ -65,8 +68,8 @@ class SearchBased(SearchAlgorithm):
                     neighbor_x = new_x + i * self.discretization_step
                     neighbor_y = new_y + j * self.discretization_step
 
-                    if (-self.map.goal_max_dist <= neighbor_x <= self.map.goal_max_dist and
-                            -self.map.goal_max_dist <= neighbor_y <= self.map.goal_max_dist):
+                    if (self.world_map.boundaries[0] <= neighbor_x <= self.world_map.boundaries[2] and
+                            self.world_map.boundaries[1] <= neighbor_y <= self.world_map.boundaries[3]):
 
                         # Round them to match the grid
                         neighbor_x = round(neighbor_x / self.discretization_step) * self.discretization_step

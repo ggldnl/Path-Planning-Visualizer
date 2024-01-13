@@ -34,8 +34,14 @@ import threading
 from typing import Literal
 
 # Local imports
-from model.world.world import World
 from model.geometry.circle import Circle
+from model.world.robot.robots.cobalt.cobalt import Cobalt
+from model.world.map.map_builder import MapBuilder
+from model.world.world_builder import WorldBuilder
+
+# Search algorithms
+from model.controllers.controller import Controller
+from model.controllers.search_based.a_star_search import AStarSearch
 
 # ---------------------------------- config ---------------------------------- #
 
@@ -139,8 +145,43 @@ def handle_connect():
             'stepping': True,  # True when the stepping button is pressed, set false automatically after one iteration
         }
 
-        # Initialize the world for the new client
-        client_data[request.sid]['data'] = World(UPDATE_FREQUENCY)
+        # Initialize the robots for the new client
+        robots = [Cobalt()]
+        robot_zones = [Circle(r.current_pose.x, r.current_pose.y, r.outline.radius + 0.2) for r in robots]
+
+        # Initialize the map for the new client
+        world_map = (MapBuilder()
+                     .set_data_structure('list')
+                     .build(keep_out_zones=robot_zones))
+
+        # Initialize the world for the new client.
+        # For now, only one robot for client is supported.
+        # TODO add native multi robot support
+
+        """
+        # The following will set every robot to use the same search algorithm:
+        world_builder = WorldBuilder(world_map)
+        world_builder = world_builder.set_delta(UPDATE_FREQUENCY)
+        for robot in robots:
+            world_builder = world_builder.add_robot(
+                robot, Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point(), iterations=4))
+            )
+        world = world_builder.build()
+        """
+
+        world = (WorldBuilder(world_map)
+                 .set_delta(UPDATE_FREQUENCY)
+                 .add_robot(
+                        robots[0],
+                        Controller(robots[0], AStarSearch(world_map, robots[0].current_pose.as_point(), iterations=4))
+                 )
+                 # .add_robot(
+                 #      robots[1],
+                 #      Controller(robots[1], AStarSearch(world_map, robots[1].current_pose.as_point(), iterations=4))
+                 # )
+                 .build())
+
+        client_data[request.sid]['data'] = world
 
         # Log the new connection
         logger.info(f'Client {request.sid} connected')
@@ -166,7 +207,7 @@ def send_world_data(sid):
     """
 
     world = client_data[sid]['data']
-    emit('real_time_data', world.to_json(), room=sid)
+    emit('real_time_data', world.json_view(), room=sid)
 
 
 def send_real_time_data():
@@ -184,14 +225,16 @@ def send_real_time_data():
                 world = client_data[client_sid]['data']
                 sim_control = client_data[client_sid]['sim_control']
 
-                # Step the simulation
-                world.step()
+                if sim_control['stepping'] or sim_control['running']:
 
-                # Emit new data
-                socketio.emit('real_time_data', world.to_json(), room=client_sid)
+                    # Step the simulation
+                    world.step()
 
-                if sim_control['stepping']:
-                    sim_control['stepping'] = False
+                    # Emit new data
+                    socketio.emit('real_time_data', world.json_view(), room=client_sid)
+
+                    if sim_control['stepping']:
+                        sim_control['stepping'] = False
 
 
 @socketio.on('simulation_control_update')
@@ -322,8 +365,18 @@ def handle_map_update(update_dict: dict):
             world.map.load_map_from_json_data(data)
             logger.info(f'User {sid} map update request: loading new map based on provided json data')
         elif key == 'random':
+
             world.map.clear()
-            world.map.generate(world.robots)
+
+            robot_zones = [Circle(r.current_pose.x, r.current_pose.y, r.outline.radius + 0.2) for r in world.robots]
+
+            # Initialize the map for the new client
+            world_map = (MapBuilder()
+                         .set_data_structure('list')
+                         .build(keep_out_zones=robot_zones))
+
+            world.world_map = world_map
+
             logger.info(f'User {sid} map update request: generating new map')
         else:
             logger.info(f'Invalid map update request: {key}, {value}')
@@ -379,6 +432,25 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
     else:  # No obstacle in region
         world.map.generate_obstacle_on_coords(x, y)
         logger.info(f'User {sid} obstacle control request: adding obstacle at ({x}, {y})')
+
+
+@socketio.on('goal_control')
+def handle_goal_control(x: float, y: float):
+    """
+    Handle goal control request from the client.
+
+    Parameters:
+        - x (float): x coordinate of the query point;
+        - y (float): y coordinate of the query point;
+    """
+
+    sid = request.sid
+    world = client_data[sid]['data']
+    result = world.map.set_goal(x, y)
+    if result:
+        logger.info(f'User {sid} goal control request: moving goal to ({x}, {y})')
+    else:
+        logger.info(f'User {sid} goal control request: failed to move goal to ({x}, {y})')
 
 
 if __name__ == '__main__':

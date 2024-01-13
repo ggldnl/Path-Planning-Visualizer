@@ -1,4 +1,6 @@
-var socket = io.connect('http://' + document.domain + ':' + location.port);
+import { socket } from './websocket.js';
+
+// var socket = io.connect('http://' + document.domain + ':' + location.port);
 
 const left_sidebar = document.getElementById("left-sidebar");
 const left_open_btn = document.getElementById('left-open-btn');

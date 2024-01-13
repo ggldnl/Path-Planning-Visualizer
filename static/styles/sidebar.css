@@ -16,6 +16,37 @@
 
 #left-sidebar {
     left: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.description-label {
+    padding-left: 20px;
+}
+
+.horizontal-content-div {
+
+    display: flex;
+    flex-direction: row;
+
+    gap: 5px;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.vertical-content-div {
+
+    margin-left: 40px;
+    margin-right: 40px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
 }
 
 #right-sidebar {
@@ -24,7 +55,7 @@
     display: flex;
     flex-direction: column;
     /* Gap between buttons */
-    gap: 20px;
+    gap: 10px;
     align-items: center;
 }
 

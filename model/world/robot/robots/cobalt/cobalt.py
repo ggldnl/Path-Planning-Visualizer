@@ -1,5 +1,6 @@
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.geometry.polygon import Polygon
+from model.geometry.circle import Circle
 from model.geometry.pose import Pose
 
 import numpy as np
@@ -12,6 +13,8 @@ class Cobalt(DifferentialDriveRobot):
         # Build the base
 
         radius = 0.05  # 5 cm
+
+        """
         base_upper_half = [
             [radius * np.cos(angle), radius * np.sin(angle)]
             for angle in np.linspace(np.deg2rad(25), np.deg2rad(155), 8)
@@ -22,7 +25,6 @@ class Cobalt(DifferentialDriveRobot):
             for angle in np.linspace(np.deg2rad(205), np.deg2rad(335), 8)
         ]
 
-        """
         left_wheel_housing = [
             [-0.034, base_upper_half[-1][1]],
             [-0.034, base_lower_half[0][1]]
@@ -32,12 +34,14 @@ class Cobalt(DifferentialDriveRobot):
             [0.034, base_lower_half[-1][1]],
             [0.034, base_upper_half[0][1]]
         ]
-        """
-
+        
         base_polygon = Polygon(
             base_upper_half +   # left_wheel_housing +
             base_lower_half     # + right_wheel_housing
         )
+        """
+
+        base_polygon = Circle(0, 0, radius)
 
         # Wheels have radius 20 mm and height 10 mm
         wheel_radius = 0.02
@@ -49,24 +53,27 @@ class Cobalt(DifferentialDriveRobot):
             [wheel_height / 2, -wheel_radius]
         ])
 
-        left_wheel_pose = Pose(0.04, 0, 0)
-        right_wheel_pose = Pose(-0.04, 0, 0)
+        # left_wheel_pose = Pose(0.04, 0, 0)
+        # right_wheel_pose = Pose(-0.04, 0, 0)
 
         left_wheel_polygon = wheel_polygon.copy()
-        left_wheel_polygon.transform(left_wheel_pose)
+        left_wheel_polygon.transform(0.04, 0, 0)
 
         right_wheel_polygon = wheel_polygon.copy()
-        right_wheel_polygon.transform(right_wheel_pose)
+        right_wheel_polygon.transform(-0.04, 0, 0)
 
         caster_wheel_radius = 0.005
+        """
         caster_wheel = Polygon([
             [caster_wheel_radius * np.cos(angle), caster_wheel_radius * np.sin(angle)]
             for angle in np.linspace(0, 2 * np.pi, 8)
         ])
+        """
+        caster_wheel = Circle(0, 0, caster_wheel_radius)
 
-        caster_wheel_pose = Pose(0, -0.035, 0)
+        # caster_wheel_pose = Pose(0, -0.035, 0)
 
-        caster_wheel.transform(caster_wheel_pose)
+        caster_wheel.transform(0, -0.035, 0)
 
         bodies = [
             base_polygon,
@@ -79,9 +86,6 @@ class Cobalt(DifferentialDriveRobot):
         wheelbase = 0.035 * 2
 
         super().__init__(bodies, wheelbase)
-
-        left_sensor_angle = np.pi / 6
-        right_sensor_angle = -left_sensor_angle
 
         # Robot is headed on positive x values
         orientation = 3/2 * np.pi
@@ -99,8 +103,13 @@ if __name__ == '__main__':
     plt.figure()
 
     for polygon in robot.bodies:
-        x = [point.x for point in polygon.points] + [polygon.points[0].x]
-        y = [point.y for point in polygon.points] + [polygon.points[0].y]
+        if isinstance(polygon, Polygon):
+            x = [point.x for point in polygon.points] + [polygon.points[0].x]
+            y = [point.y for point in polygon.points] + [polygon.points[0].y]
+        else:
+            theta = np.linspace(0, 2 * np.pi, 100)
+            x = polygon.pose.x + polygon.radius * np.cos(theta)
+            y = polygon.pose.y + polygon.radius * np.sin(theta)
         plt.plot(x, y, color='blue')
 
     plt.title("Projected XY Points")
