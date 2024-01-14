@@ -21,7 +21,8 @@ default_params = {
     "goal_min_dist": 3.0,
     "goal_max_dist": 5.0,
     "goal_min_clearance": 0.5,
-    "map_boundaries": (-5.0, -5.0, 5.0, 5.0)
+    "map_boundaries": (-5.0, -5.0, 5.0, 5.0),
+    "grid": False
 }
 
 
@@ -96,6 +97,10 @@ class MapBuilder:
     def set_goal_clearance(self, goal_min_clearance):
         self._check_non_negative(goal_min_clearance)
         self.params_dictionary['goal_min_clearance'] = goal_min_clearance
+        return self
+
+    def set_grid(self, grid):
+        self.params_dictionary['grid'] = grid
         return self
 
     def set_data_structure(self, data_structure: Literal['list', 'quadtree']):

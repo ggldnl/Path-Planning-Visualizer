@@ -36,6 +36,8 @@ class Map:
 
                  # Global parameters
                  map_boundaries,
+
+                 grid,
                  ):
 
         # Size of the obstacles (for now, only rectangular obstacles are generated)
@@ -68,6 +70,9 @@ class Map:
         # and have no bounds.
         self.map_boundaries = map_boundaries
 
+        # Whether the map should have a grid structure or not
+        self.grid = grid
+
         # Initial obstacles
         self._initial_obstacles = []
 
@@ -81,9 +86,6 @@ class Map:
         # Two possible update methods are provided: obstacles can move
         # using their velocity vector or can be randomly spawned
         self.enable_changes = True
-
-        # Whether the map should have a grid structure or not
-        self.grid = False
 
     @property
     def goal(self):
@@ -225,7 +227,7 @@ class Map:
             width = round(width, 1)
             height = round(height, 1)
             x = round(x, 1)
-            y = round (y, 1)
+            y = round(y, 1)
             theta = np.random.randint(0, 3) * (np.pi / 2)
 
         # Crate a polygon
