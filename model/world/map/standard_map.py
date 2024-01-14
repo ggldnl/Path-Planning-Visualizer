@@ -1,6 +1,7 @@
 from model.geometry.intersection import check_intersection
 
 from model.world.map.map import Map
+from model.world.map.obstacle import Obstacle
 
 
 class StandardMap(Map):
@@ -24,8 +25,8 @@ class StandardMap(Map):
             self._obstacles.append(obstacle)
 
     def spawn_obstacle_at(self, point):
-        # TODO
-        print('Spawning obstacle PEW PEW!!')
+        polygon = self._generate_random_polygon(point)
+        self.add_obstacle(Obstacle(polygon))
 
     def query_polygon(self, region):
         result = []

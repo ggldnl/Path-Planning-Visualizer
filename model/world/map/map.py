@@ -205,17 +205,21 @@ class Map:
 
     # ------------------------------ Map generation ------------------------------ #
 
-    def _generate_random_polygon(self):
+    def _generate_random_polygon(self, at=None):
 
         # Generate dimensions
         width = self.obs_min_width + (np.random.random() * self.obs_width_range)
         height = self.obs_min_height + (np.random.random() * self.obs_height_range)
 
         # Generate position
-        dist = self.obs_min_dist + (np.random.random() * self.obs_dist_range)
-        phi = -np.pi + (np.random.random() * 2 * np.pi)
-        x = dist * np.sin(phi)
-        y = dist * np.cos(phi)
+        if at is None:
+            dist = self.obs_min_dist + (np.random.random() * self.obs_dist_range)
+            phi = -np.pi + (np.random.random() * 2 * np.pi)
+            x = dist * np.sin(phi)
+            y = dist * np.cos(phi)
+        else:
+            x = at.x
+            y = at.y
 
         theta = np.random.random() * 2 * np.pi - np.pi
 

@@ -97,13 +97,14 @@ class World:
                         if check_intersection(polygon1, polygon2):
                             raise CollisionException(f'Robot {robot.name} collided with an obstacle.')
 
-    def to_dict(self):
-        return {
-            "map": self.world_map.to_dict(),
-            "robots": [robot.to_dict() for robot in self.robots],
-            "controllers": [controller.to_dict() for controller in self.controllers],
+    def to_json(self, add_path=True, add_data_structures=True):
+        return json.dumps({
+            "shapes": self.json_view(add_path=add_path, add_data_structures=add_data_structures),
+            "goal": self.world_map.goal.to_dict(),
+            "robot_poses": [robot.current_pose.to_dict() for robot in self.robots],
+            "controllers": [str(controller.__class__.__name__) for controller in self.controllers],
             "dt": self.dt
-        }
+        })
 
     def json_view(self, add_path=True, add_data_structures=True):
 
@@ -132,4 +133,5 @@ class World:
                 if len(path) > 0:
                     shapes_list.extend(view.get_path_view_dict([robot.current_pose] + path))
 
-        return json.dumps(shapes_list)
+        # return json.dumps(shapes_list)
+        return shapes_list

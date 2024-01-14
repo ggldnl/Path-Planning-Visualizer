@@ -42,6 +42,7 @@ from model.world.world import World
 # Search algorithms
 from model.controllers.controller import Controller
 from model.controllers.search_based.a_star_search import AStarSearch
+from model.controllers.sampling_based.dynamic_rrt_search import DynamicRRT
 
 # ---------------------------------- config ---------------------------------- #
 
@@ -168,6 +169,7 @@ def handle_connect():
         # Take a controller
         controllers = [
             Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):
@@ -201,7 +203,12 @@ def send_world_data(sid):
     """
 
     world = client_data[sid]['data']
-    emit('real_time_data', world.json_view(), room=sid)
+    sim_settings = client_data[sid]['sim_settings']
+
+    emit('real_time_data', world.to_json(
+        add_path=sim_settings['show_path'],
+        add_data_structures=sim_settings['show_data_structures']
+    ), room=sid)
 
 
 def send_real_time_data():
@@ -219,6 +226,7 @@ def send_real_time_data():
 
                 world = client_data[client_sid]['data']
                 sim_control = client_data[client_sid]['sim_control']
+                sim_settings = client_data[client_sid]['sim_settings']
 
                 if sim_control['stepping'] or sim_control['running']:
 
@@ -226,7 +234,10 @@ def send_real_time_data():
                     world.step()
 
                     # Emit new data
-                    socketio.emit('real_time_data', world.json_view(), room=client_sid)
+                    socketio.emit('real_time_data', world.to_json(
+                        add_path=sim_settings['show_path'],
+                        add_data_structures=sim_settings['show_data_structures']
+                    ), room=client_sid)
 
                     if sim_control['stepping']:
                         sim_control['stepping'] = False

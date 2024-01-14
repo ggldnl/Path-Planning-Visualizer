@@ -43,6 +43,13 @@ class Pose:
     def as_tuple(self):
         return self.x, self.y
 
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "theta": self.theta
+        }
+
     def __str__(self):
         return f"Pose(x={self.x}, y={self.y}, theta={self.theta})"
 

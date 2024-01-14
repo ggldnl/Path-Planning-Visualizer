@@ -251,7 +251,8 @@ window.onload = function () {
         drawGrid();
 
         if (data !== undefined) {
-            for (var element of data) {
+
+            for (var element of data['shapes']) {
 
                 /*
                 // Iterate over key-value pairs and print them
