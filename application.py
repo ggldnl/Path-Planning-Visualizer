@@ -37,7 +37,7 @@ from typing import Literal
 from model.geometry.circle import Circle
 from model.world.robot.robots.cobalt.cobalt import Cobalt
 from model.world.map.map_builder import MapBuilder
-from model.world.world_builder import WorldBuilder
+from model.world.world import World
 
 # Search algorithms
 from model.controllers.controller import Controller
@@ -145,41 +145,35 @@ def handle_connect():
             'stepping': True,  # True when the stepping button is pressed, set false automatically after one iteration
         }
 
-        # Initialize the robots for the new client
-        robots = [Cobalt()]
-        robot_zones = [Circle(r.current_pose.x, r.current_pose.y, r.outline.radius + 0.2) for r in robots]
+        # Generate the world
+        world = World(UPDATE_FREQUENCY)
 
-        # Initialize the map for the new client
+        # Generate the robot(s)
+        robots = [
+            Cobalt()
+        ]
+
+        # Initialize the map using a map builder
         world_map = (MapBuilder()
-                     .set_data_structure('list')
-                     .build(keep_out_zones=robot_zones))
+                     .set_obs_count(40)
+                     .set_map_boundaries((-5.0, -5.0, 5.0, 5.0))
+                     .build())
 
-        # Initialize the world for the new client.
-        # For now, only one robot for client is supported.
-        # TODO add native multi robot support
+        # Generate a forbidden circle for each robot
+        forbidden_zones = [Circle(robot.current_pose.x, robot.current_pose.y, robot.outline.radius + 0.2) for robot in robots]
 
-        """
-        # The following will set every robot to use the same search algorithm:
-        world_builder = WorldBuilder(world_map)
-        world_builder = world_builder.set_delta(UPDATE_FREQUENCY)
-        for robot in robots:
-            world_builder = world_builder.add_robot(
-                robot, Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point(), iterations=4))
-            )
-        world = world_builder.build()
-        """
+        # Generate a map
+        world_map.generate(forbidden_zones)
 
-        world = (WorldBuilder(world_map)
-                 .set_delta(UPDATE_FREQUENCY)
-                 .add_robot(
-                        robots[0],
-                        Controller(robots[0], AStarSearch(world_map, robots[0].current_pose.as_point(), iterations=4))
-                 )
-                 # .add_robot(
-                 #      robots[1],
-                 #      Controller(robots[1], AStarSearch(world_map, robots[1].current_pose.as_point(), iterations=4))
-                 # )
-                 .build())
+        # Take a controller
+        controllers = [
+            Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
+        ]
+
+        for robot, controller in zip(robots, controllers):
+            world.add_robot(robot, controller)
+
+        world.set_map(world_map)
 
         client_data[request.sid]['data'] = world
 
@@ -216,6 +210,7 @@ def send_real_time_data():
     """
 
     while True:
+
         time.sleep(UPDATE_FREQUENCY)
 
         with clients_lock:
@@ -271,7 +266,7 @@ def handle_simulation_control_update(command: Literal['start', 'stop', 'step', '
 
         world = client_data[sid]['data']
         world.reset_robots()
-        world.map.reset_map()
+        world.map.reset()
 
     # No need to send world data as these booleans will affect (stop/resume) the next iteration
 
@@ -366,23 +361,22 @@ def handle_map_update(update_dict: dict):
             logger.info(f'User {sid} map update request: loading new map based on provided json data')
         elif key == 'random':
 
-            world.map.clear()
+            # Generate a forbidden circle for each robot
+            forbidden_zones = [Circle(robot.current_pose.x, robot.current_pose.y, robot.outline.radius + 0.2) for robot
+                               in world.robots]
 
-            robot_zones = [Circle(r.current_pose.x, r.current_pose.y, r.outline.radius + 0.2) for r in world.robots]
-
-            # Initialize the map for the new client
-            world_map = (MapBuilder()
-                         .set_data_structure('list')
-                         .build(keep_out_zones=robot_zones))
-
-            world.world_map = world_map
+            # Generate a map
+            world.world_map.generate(forbidden_zones)
 
             logger.info(f'User {sid} map update request: generating new map')
         else:
             logger.info(f'Invalid map update request: {key}, {value}')
 
     # Reset robots and their controller
-    world.reset_robots()
+    # world.reset_robots()
+    for robot, controller in zip(world.robots, world.controllers):
+        controller.search_algorithm.start = robot.current_pose.as_point()
+        controller.reset()
 
     # Stop the simulation
     sim_control['running'] = False

@@ -1,37 +1,52 @@
 import json
 
 from model.exceptions.collision_exception import CollisionException
+from model.world.map.map_builder import MapBuilder
 from model.geometry.intersection import check_intersection
+from model.geometry.circle import Circle
 from model.world import view
 
 
 class World:
 
-    def __init__(self, world_map, robots, controllers, dt):
+    def __init__(self, dt):
 
         # Initialize world time
         self.world_time = 0.0  # seconds
         self.dt = dt  # seconds
         self.idx = 0
 
-        self.world_map = world_map
-        self.robots = robots
-        self.controllers = controllers
+        # Initialize list of robots
+        self.robots = []
+        self.robots_initial_poses = []
+
+        # Initialize list of controllers (one for each robot)
+        self.controllers = []
+
+        # Initialize the map
+        self.world_map = None
 
     @property
     def map(self):
+        if map is None:
+            raise ValueError('Map has not yet been initialized!')
         return self.world_map
+
+    def set_map(self, world_map):
+        self.world_map = world_map
 
     def set_period(self, dt):
         self.dt = dt
 
     def add_robot(self, robot, controller):
         self.robots.append(robot)
+        self.robots_initial_poses.append(robot.current_pose.copy())
         self.controllers.append(controller)
 
     def reset_robots(self):
-        for robot, controller in zip(self.robots, self.controllers):
-            robot.reset()
+        for robot, robot_initial_pose, controller in zip(self.robots, self.robots_initial_poses, self.controllers):
+            robot.reset(robot_initial_pose)
+            controller.search_algorithm.start = robot_initial_pose
             controller.reset()
 
     def step(self):
@@ -40,6 +55,7 @@ class World:
         """
 
         dt = self.dt
+
         # Step all the obstacles
         self.world_map.step_motion(dt)
 

@@ -18,8 +18,8 @@ class SearchBased(SearchAlgorithm):
 
     def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
 
-        if world_map.boundaries is None:
-            raise ValueError('The map should be bounded for search based algorithms')
+        if world_map.map_boundaries is None:
+            raise ValueError('The map should be bounded for search based algorithms, unless you want to go on forever')
 
         # Side of the area that each node covers
         self.discretization_step = discretization_step
@@ -68,8 +68,8 @@ class SearchBased(SearchAlgorithm):
                     neighbor_x = new_x + i * self.discretization_step
                     neighbor_y = new_y + j * self.discretization_step
 
-                    if (self.world_map.boundaries[0] <= neighbor_x <= self.world_map.boundaries[2] and
-                            self.world_map.boundaries[1] <= neighbor_y <= self.world_map.boundaries[3]):
+                    if (self.world_map.map_boundaries[0] <= neighbor_x <= self.world_map.map_boundaries[2] and
+                            self.world_map.map_boundaries[1] <= neighbor_y <= self.world_map.map_boundaries[3]):
 
                         # Round them to match the grid
                         neighbor_x = round(neighbor_x / self.discretization_step) * self.discretization_step
