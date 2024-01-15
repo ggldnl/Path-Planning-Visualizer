@@ -138,10 +138,9 @@ class URDFParser:
         return T
 
     @classmethod
-    def _parse_urdf(cls, path):
+    def _parse_urdf(cls, root):
 
-        tree = ET.parse(path)
-        root = tree.getroot()
+        # root = tree.getroot()
 
         links = {}
         for link in root.findall(".//link"):
@@ -397,11 +396,23 @@ class URDFParser:
 
         return polygons
 
+    @staticmethod
+    def _compute_convex_hull(polygon_list):
+        points = []
+        for body in polygon_list:
+            for point in body.points:
+                points.append(point.to_array())
+
+        # Take only the outermost among them
+        hull = ConvexHull(points)
+        outermost_points = [points[i] for i in hull.vertices]
+        return Polygon(outermost_points)
+
     @classmethod
-    def parse(cls, pathlike):
+    def _parse_data(cls, root):
 
         # Get links and joints dictionaries
-        links, joints = URDFParser._parse_urdf(pathlike)
+        links, joints = URDFParser._parse_urdf(root)
 
         # Recursively apply the joint transformations to each link
         links_absolute = URDFParser._apply_joint_transformations(links, joints)
@@ -409,7 +420,31 @@ class URDFParser:
         # Get the projection of each link on the XY plane
         polygons = URDFParser._project_absolute_links(links_absolute)
 
-        return polygons
+        # Compute the convex hull of the polygons
+        outline = URDFParser._compute_convex_hull(polygons)
+
+        # Compute the boundaries of the convex hull
+        bounds = outline.get_bounds()
+
+        # Use the width as wheelbase (minx, miny, maxx, maxy)
+        width = bounds[2] - bounds[0]
+
+        return polygons, width
+
+    @classmethod
+    def parse_string(cls, xml_string):
+
+        root = ET.fromstring(xml_string)
+
+        return URDFParser._parse_data(root)
+
+    @classmethod
+    def parse_path(cls, pathlike):
+
+        tree = ET.parse(pathlike)
+        root = tree.getroot()
+
+        return URDFParser._parse_data(root)
 
 
 if __name__ == '__main__':
