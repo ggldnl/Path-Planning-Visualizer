@@ -389,9 +389,16 @@ def handle_map_update(update_dict: dict):
 
     for key, value in update_dict.items():
         if key == 'load':
+
             data = update_dict['load']
             world.from_json(data)
+
+            # Signal to the frontend that the current algorithm has changed
+            # TODO provide multi robot native support
+            emit('notify_controller_update', data['controllers'][0], room=sid)
+
             logger.info(f'User {sid} map update request: loading new map based on provided json data')
+
         elif key == 'random':
 
             # Generate a forbidden circle for each robot

@@ -1,9 +1,11 @@
+import importlib
 import json
 
 from model.exceptions.collision_exception import CollisionException
 from model.world.map.map_builder import MapBuilder
 from model.geometry.intersection import check_intersection
 from model.geometry.circle import Circle
+from model.geometry.pose import Pose
 from model.world import view
 
 
@@ -119,6 +121,7 @@ class World:
                     
                 } for robot in self.robots
             ],
+            # TODO serialize controller parameters
             "controllers": [controller.search_algorithm.__class__.__name__ for controller in self.controllers],
             "dt": self.dt,
             "view": self.world_view(add_path=add_path, add_data_structures=add_data_structures)
@@ -162,20 +165,42 @@ class World:
         """
 
         # Restore the map starting from the view
-        self.world_map.load_map_from_json_data(json_data["map"])
+        self.world_map.load_from_json_data(json_data["map"])
 
         # Load robots data
         robots_data = json_data["robots"]
         for robot, robot_data in zip(self.robots, robots_data):
-            # TODO update the pose
-            pass
+            robot.reset(Pose.from_dict(robot_data["pose"]))
 
         # Load the controllers
         controllers = json_data["controllers"]
         for current_controller, loaded_controller in zip(self.controllers, controllers):
-            # TODO introduce from_dict and to_dict methods to each search algorithm to restore them;
-            #   the from_dict should be a class method that returns an instance of a SearchAlgorithm
-            pass
+            # TODO serialize controller parameters
+
+            algorithm_class = None
+
+            sub_folders = ["search_based", "sampling_based"]
+            for sub_folder in sub_folders:
+
+                try:
+
+                    # Build the full import path
+                    module_path = f'model.controllers.{sub_folder}.{loaded_controller}'
+
+                    # Try to import the module dynamically
+                    algorithm_module = importlib.import_module(module_path)
+
+                    # Get the class dynamically
+                    algorithm_class = getattr(algorithm_module, loaded_controller)
+
+                except (ImportError, AttributeError) as e:
+                    # logger.error(f"Error handling algorithm: {str(e)}")
+                    pass
+
+            current_controller.search_algorithm = algorithm_class(self.world_map)
+
+        for robot, controller in zip(self.robots, self.controllers):
+            controller.reset(robot.current_pose)
 
         # Load the dt
         self.dt = json_data["dt"]
