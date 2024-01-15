@@ -108,11 +108,11 @@ class Map:
     def obstacles(self):
         return list(self._obstacles.values())
     
-    def set_goal(self, goal):
+    def set_goal(self, goal, clearance):
         """
         Set a new goal only if there are no obstacles near it
         """
-        obstacles_near_new_goal = self.query_polygon(Circle(goal.x, goal.y, self.goal_min_clearance))
+        obstacles_near_new_goal = self.query_polygon(Circle(goal.x, goal.y, clearance))
         if len(obstacles_near_new_goal) == 0:
             self._current_goal = goal
             return True
