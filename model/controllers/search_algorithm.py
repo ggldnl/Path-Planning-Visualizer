@@ -20,7 +20,7 @@ class SearchAlgorithm(ABC):
     sa.post_search()
     """
 
-    def __init__(self, world_map, start, boundary, iterations=1):
+    def __init__(self, world_map, start, margin, iterations=1):
 
         # Map
         self.world_map = world_map
@@ -28,8 +28,8 @@ class SearchAlgorithm(ABC):
         # Start point
         self.start = start
 
-        # The path should be distant from each obstacle by at least self.boundary/2
-        self.boundary = boundary
+        # The path should be distant from each obstacle by at least self.margin/2
+        self.margin = margin
 
         # Number of steps to execute each time (default = 1)
         self.iterations = iterations
@@ -75,7 +75,7 @@ class SearchAlgorithm(ABC):
         the second point is reachable by the first
         """
         line = Segment(start, end)
-        buffer = Polygon.segment_buffer(line, left_margin=self.boundary/2, right_margin=self.boundary/2)
+        buffer = Polygon.segment_buffer(line, left_margin=self.margin/2, right_margin=self.margin/2)
         intersecting_obstacles_ids = self.world_map.query_polygon(buffer)
         return len(intersecting_obstacles_ids) > 0
 
@@ -170,13 +170,13 @@ class TestSearchAlgorithm(SearchAlgorithm):
     The termination condition is to find a path or to exit on time constraint violation.
     """
 
-    def __init__(self, world_map, start, boundary=0.2, iterations=1, max_iterations=10):
+    def __init__(self, world_map, start, margin=0.2, iterations=1, max_iterations=10):
 
         self.max_iterations = max_iterations
         self.current_iteration = 0
         self.goal_found = False
 
-        super().__init__(world_map, start, boundary, iterations)
+        super().__init__(world_map, start, margin, iterations)
 
     def can_run(self):
         # Termination condition = goal found or times up
