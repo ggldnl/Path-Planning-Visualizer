@@ -473,9 +473,14 @@ def handle_goal_control(x: float, y: float):
 
     sid = request.sid
     world = client_data[sid]['data']
-    result = world.map.set_goal(Point(x, y))
+    result = world.map.set_goal(Point(x, y), 0.2)
     if result:
+
+        for robot, controller in zip(world.robots, world.controllers):
+            controller.reset(robot.current_pose)
+
         send_world_data(sid)
+
         logger.info(f'User {sid} goal control request: moving goal to ({x}, {y})')
     else:
         logger.info(f'User {sid} goal control request: failed to move goal to ({x}, {y})')
