@@ -13,7 +13,7 @@ default_params = {
     "obs_count": 40,
     "goal_min_dist": 3.0,
     "goal_max_dist": 5.0,
-    "goal_min_clearance": 0.4,
+    "goal_min_clearance": 0.5,
     "map_boundaries": (-5.0, -5.0, 5.0, 5.0),
     "grid": False
 }
