@@ -39,7 +39,10 @@ from model.world.robot.robots.cobalt.cobalt import Cobalt
 from model.world.map.map_builder import MapBuilder
 from model.world.world import World
 
-# Search algorithms
+from model.world.robot.differential_drive_robot import DifferentialDriveRobot
+from model.world.robot.URDF_parser import URDFParser
+
+# Controller and search algorithms
 from model.controllers.controller import Controller
 from model.controllers.search_based.a_star_search import AStarSearch
 from model.controllers.sampling_based.dynamic_rrt_search import DynamicRRT
@@ -339,7 +342,20 @@ def handle_robot_update(update_dict: dict):
             for robot in world.robots:
                 robot.angular_velocity = angular_velocity
         elif key == 'load':
-            # TODO add URDF parsing
+
+            #  TODO fix bug after switching robot
+            robot_polygons, estimated_wheelbase = URDFParser.parse_string(update_dict['load'])
+            robot = DifferentialDriveRobot(robot_polygons, estimated_wheelbase)
+
+            # TODO provide native multi robot support
+            robot.reset(world.robots[0].current_pose)
+            world.robots[0] = robot
+
+            """
+            algorithm = world.controllers[0].search_algorithm
+            if isinstance(algorithm, SearchBased):
+                algorithm.discretization_step = estimated_wheelbase/2
+            """
 
             # Send world data to immediately show the new robot
             send_world_data(sid)
