@@ -161,7 +161,7 @@ class Map:
 
     def to_dict(self):
         return {
-            "obstacles": [obstacle.to_dict() for obstacle in self._initial_obstacles],
+            "obstacles": [obstacle.to_dict() for obstacle in self._obstacles],
             "goal": self._current_goal.to_dict()
         }
 
