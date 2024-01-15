@@ -58,9 +58,7 @@ class DynamicRRT(SamplingBased):
     nodes from the waypoints cache when recomputing the path with a
     given probability. It has two phases: planning (finding the first path)
     and replanning (update the path if it is invalid). The replanning
-    generates a path very similar to the previous one and this is the
-    reason why this algorithm is not so great in our use case (obstacles
-    moves on the plane, they don't pop up in random positions).
+    generates a path very similar to the previous one
     """
 
     def __init__(self,

@@ -28,6 +28,7 @@
 import sys
 import time
 import logging
+import importlib
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 import threading
@@ -47,8 +48,9 @@ from model.world.robot.URDF_parser import URDFParser
 
 # Controller and search algorithms
 from model.controllers.controller import Controller
-from model.controllers.search_based.a_star_search import AStarSearch
-from model.controllers.sampling_based.dynamic_rrt_search import DynamicRRT
+from model.controllers.search_based.AStar import AStar
+from model.controllers.sampling_based.DynamicRRT import DynamicRRT
+from model.controllers.sampling_based.RRTStar import RRTStar
 
 # ---------------------------------- config ---------------------------------- #
 
@@ -174,8 +176,9 @@ def handle_connect():
 
         # Take a controller
         controllers = [
-            Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):
@@ -421,7 +424,7 @@ def handle_map_update(update_dict: dict):
 
 
 @socketio.on('controller_update')
-def handle_controller_update(algorithm: Literal['RRT', 'RRT*', 'A*']):
+def handle_controller_update(algorithm):
     """
     Handle controller update request from the client.
 
@@ -430,6 +433,35 @@ def handle_controller_update(algorithm: Literal['RRT', 'RRT*', 'A*']):
     """
 
     sid = request.sid
+
+    algorithm_class = None
+
+    sub_folders = ["search_based", "sampling_based"]
+    for sub_folder in sub_folders:
+
+        try:
+
+            # Build the full import path
+            module_path = f'model.controllers.{sub_folder}.{algorithm}'
+
+            # Try to import the module dynamically
+            algorithm_module = importlib.import_module(module_path)
+
+            # Get the class dynamically
+            algorithm_class = getattr(algorithm_module, algorithm)
+
+        except (ImportError, AttributeError) as e:
+            # logger.error(f"Error handling algorithm: {str(e)}")
+            pass
+
+    # TODO provide multi robot native support
+    world = client_data[sid]['data']
+    world.controllers[0] = Controller(
+        world.robots[0], algorithm_class(world.world_map, start=world.robots[0].current_pose.as_point())
+    )
+
+    send_world_data(sid)
+
     logger.info(f'User {sid} controller update request: selected algorithm {algorithm}')
 
 
@@ -446,7 +478,6 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
 
     sid = request.sid
     world = client_data[sid]['data']
-    logger.info(world.map._obstacles)
 
     obstacles_in_region = world.map.query_polygon(Circle(x, y, query_radius))
     if len(obstacles_in_region) > 0:

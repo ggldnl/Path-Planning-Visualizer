@@ -8,8 +8,8 @@ from model.geometry.point import Point
 
 class BestFirstSearch(SearchBased):
 
-    def __init__(self, map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(map, start, margin, iterations, discretization_step)
+    def __init__(self, world_map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
+        super().__init__(world_map, start, margin, iterations, discretization_step)
 
     def pre_search(self):
         self.path = []
@@ -18,10 +18,10 @@ class BestFirstSearch(SearchBased):
         self.open_set = PriorityQueue()
         self.open_set.put((0, Node(self.start)))
 
-        self.map.disable_moving_obstacles()
+        self.world_map.disable_moving_obstacles()
 
     def heuristic(self, point):
-        return point.distance(self.map.goal)
+        return point.distance(self.world_map.goal)
 
     def can_run(self):
         return not self.open_set.empty() and not self.has_path()
@@ -30,7 +30,7 @@ class BestFirstSearch(SearchBased):
 
         _, current_node = self.open_set.get()
 
-        if current_node.point == self.map.goal:
+        if current_node.point == self.world_map.goal:
             # Goal reached, reconstruct the path
             self.reconstruct_path(current_node)
             return
