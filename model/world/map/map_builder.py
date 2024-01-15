@@ -1,13 +1,6 @@
 from typing import Literal
 from model.world.map.standard_map import StandardMap
 from model.world.map.spatial_map import SpatialMap
-from model.geometry.point import Point
-from model.geometry.circle import Circle
-from model.geometry.rectangle import Rectangle
-from model.geometry.intersection import check_intersection
-from model.world.map.obstacle import Obstacle
-
-import numpy as np
 
 
 default_params = {
@@ -115,7 +108,5 @@ class MapBuilder:
             map_arch = SpatialMap
         else:
             raise ValueError(f'Unsupported map architecture: {self.data_structure}')
-
-        print(self.params_dictionary)
 
         return map_arch(**self.params_dictionary)
