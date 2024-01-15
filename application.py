@@ -35,11 +35,14 @@ from typing import Literal
 
 # Local imports
 from model.geometry.circle import Circle
-from model.world.robot.robots.cobalt.cobalt import Cobalt
-from model.world.map.map_builder import MapBuilder
+from model.geometry.point import Point
+
 from model.world.world import World
+from model.world.map.map_builder import MapBuilder
+
 
 from model.world.robot.differential_drive_robot import DifferentialDriveRobot
+from model.world.robot.robots.cobalt.cobalt import Cobalt
 from model.world.robot.URDF_parser import URDFParser
 
 # Controller and search algorithms
@@ -443,15 +446,19 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
 
     sid = request.sid
     world = client_data[sid]['data']
+    logger.info(world.map._obstacles)
 
-    obstacles_in_region = world.map.query_region(Circle(x, y, query_radius))
+    obstacles_in_region = world.map.query_polygon(Circle(x, y, query_radius))
     if len(obstacles_in_region) > 0:
         obstacle_id = obstacles_in_region[0]
         world.map.remove_obstacle(obstacle_id)
         logger.info(f'User {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
     else:  # No obstacle in region
-        world.map.generate_obstacle_on_coords(x, y)
+        world.map.spawn_obstacle_at(Point(x, y))
         logger.info(f'User {sid} obstacle control request: adding obstacle at ({x}, {y})')
+
+    # Send new world data to show new obstacles
+    send_world_data(sid)
 
 
 @socketio.on('goal_control')
@@ -466,8 +473,9 @@ def handle_goal_control(x: float, y: float):
 
     sid = request.sid
     world = client_data[sid]['data']
-    result = world.map.set_goal(x, y)
+    result = world.map.set_goal(Point(x, y))
     if result:
+        send_world_data(sid)
         logger.info(f'User {sid} goal control request: moving goal to ({x}, {y})')
     else:
         logger.info(f'User {sid} goal control request: failed to move goal to ({x}, {y})')
