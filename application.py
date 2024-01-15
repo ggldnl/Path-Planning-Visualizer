@@ -368,7 +368,7 @@ def handle_map_update(update_dict: dict):
     for key, value in update_dict.items():
         if key == 'load':
             data = update_dict['load']
-            world.map.load_map_from_json_data(data)
+            world.from_json(data)
             logger.info(f'User {sid} map update request: loading new map based on provided json data')
         elif key == 'random':
 
