@@ -386,8 +386,7 @@ def handle_map_update(update_dict: dict):
     # Reset robots and their controller
     # world.reset_robots()
     for robot, controller in zip(world.robots, world.controllers):
-        controller.search_algorithm.start = robot.current_pose.as_point()
-        controller.reset()
+        controller.reset(robot.current_pose)
 
     # Stop the simulation
     sim_control['running'] = False
