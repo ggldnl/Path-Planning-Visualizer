@@ -1,9 +1,11 @@
+import importlib
 import json
 
 from model.exceptions.collision_exception import CollisionException
 from model.world.map.map_builder import MapBuilder
 from model.geometry.intersection import check_intersection
 from model.geometry.circle import Circle
+from model.geometry.pose import Pose
 from model.world import view
 
 
@@ -45,9 +47,8 @@ class World:
 
     def reset_robots(self):
         for robot, robot_initial_pose, controller in zip(self.robots, self.robots_initial_poses, self.controllers):
+            controller.reset(robot_initial_pose)
             robot.reset(robot_initial_pose)
-            controller.search_algorithm.start = robot_initial_pose
-            controller.reset()
 
     def step(self):
         """
@@ -97,41 +98,109 @@ class World:
                         if check_intersection(polygon1, polygon2):
                             raise CollisionException(f'Robot {robot.name} collided with an obstacle.')
 
+    # ---------------------------- JSON serialization ---------------------------- #
+
     def to_json(self, add_path=True, add_data_structures=True):
-        return json.dumps({
-            "shapes": self.json_view(add_path=add_path, add_data_structures=add_data_structures),
-            "goal": self.world_map.goal.to_dict(),
-            "robot_poses": [robot.current_pose.to_dict() for robot in self.robots],
-            "controllers": [str(controller.__class__.__name__) for controller in self.controllers],
-            "dt": self.dt
-        })
+        """
+        Serialize the world. We add a "view" field that contains shape dictionaries.
+        There are three kinds of shape dictionaries (polygon, circle, segment). This
+        is done to reduce code dependency between backend and frontend: the frontend
+        only knows how to draw polygons, circles and segments. All the other data
+        is not touched by the frontend and all the view data is not used from the
+        backend when restoring a json.
+        """
 
-    def json_view(self, add_path=True, add_data_structures=True):
+        # Store world information
+        world_json = {
+            "map": self.world_map.to_dict(),
+            "robots": [
+                {
+                    # We will only need the pose for each robot since the robot itself can be
+                    # dynamically changed (uploading a URDF)
+                    "pose": robot.current_pose.to_dict()
+                    
+                } for robot in self.robots
+            ],
+            # TODO serialize controller parameters
+            "controllers": [controller.search_algorithm.__class__.__name__ for controller in self.controllers],
+            "dt": self.dt,
+            "view": self.world_view(add_path=add_path, add_data_structures=add_data_structures)
+        }
 
-        shapes_list = []
+        return json.dumps(world_json)
+
+    def world_view(self, add_path=True, add_data_structures=True):
+
+        shapes = []
 
         # Add the obstacles
         for obstacle in self.world_map.obstacles:
-            shapes_list.append(view.get_obstacle_view_dict(obstacle))
+            shapes.append(view.get_obstacle_view_dict(obstacle))
 
         # Add the robots
         for robot in self.robots:
-            shapes_list.extend(view.get_robot_view_dict(robot))
+            shapes.extend(view.get_robot_view_dict(robot))
 
         # Add the start and the goal points to the frame
-        shapes_list.append(view.get_goal_view_dict(self.world_map.goal))
+        shapes.append(view.get_goal_view_dict(self.world_map.goal))
 
         # Add data structures
         if add_data_structures:
             for controller in self.controllers:
-                shapes_list.extend(view.get_data_structures_view_dict(controller.search_algorithm.draw_list))
+                shapes.extend(view.get_data_structures_view_dict(controller.search_algorithm.draw_list))
 
         # Add the path
         if add_path:
             for robot, controller in zip(self.robots, self.controllers):
                 path = controller.search_algorithm.path
                 if len(path) > 0:
-                    shapes_list.extend(view.get_path_view_dict([robot.current_pose] + path))
+                    shapes.extend(view.get_path_view_dict([robot.current_pose] + path))
 
         # return json.dumps(shapes_list)
-        return shapes_list
+        return shapes
+
+    def from_json(self, json_data):
+        """
+        Reconstruct the world from the json_data. We completely discard the "view" field
+        """
+
+        # Restore the map starting from the view
+        self.world_map.load_from_json_data(json_data["map"])
+
+        # Load robots data
+        robots_data = json_data["robots"]
+        for robot, robot_data in zip(self.robots, robots_data):
+            robot.reset(Pose.from_dict(robot_data["pose"]))
+
+        # Load the controllers
+        controllers = json_data["controllers"]
+        for current_controller, loaded_controller in zip(self.controllers, controllers):
+            # TODO serialize controller parameters
+
+            algorithm_class = None
+
+            sub_folders = ["search_based", "sampling_based"]
+            for sub_folder in sub_folders:
+
+                try:
+
+                    # Build the full import path
+                    module_path = f'model.controllers.{sub_folder}.{loaded_controller}'
+
+                    # Try to import the module dynamically
+                    algorithm_module = importlib.import_module(module_path)
+
+                    # Get the class dynamically
+                    algorithm_class = getattr(algorithm_module, loaded_controller)
+
+                except (ImportError, AttributeError) as e:
+                    # logger.error(f"Error handling algorithm: {str(e)}")
+                    pass
+
+            current_controller.search_algorithm = algorithm_class(self.world_map)
+
+        for robot, controller in zip(self.robots, self.controllers):
+            controller.reset(robot.current_pose)
+
+        # Load the dt
+        self.dt = json_data["dt"]

@@ -6,10 +6,10 @@ from model.controllers.search_based_algorithm import SearchBased
 from model.controllers.graph import Node
 
 
-class AStarSearch(SearchBased):
+class AStar(SearchBased):
 
-    def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(world_map, start, boundary, iterations, discretization_step)
+    def __init__(self, world_map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
+        super().__init__(world_map, start, margin, iterations, discretization_step)
 
     def pre_search(self):
 

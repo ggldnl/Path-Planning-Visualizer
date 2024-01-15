@@ -28,6 +28,7 @@
 import sys
 import time
 import logging
+import importlib
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 import threading
@@ -35,14 +36,21 @@ from typing import Literal
 
 # Local imports
 from model.geometry.circle import Circle
-from model.world.robot.robots.cobalt.cobalt import Cobalt
-from model.world.map.map_builder import MapBuilder
-from model.world.world import World
+from model.geometry.point import Point
 
-# Search algorithms
+from model.world.world import World
+from model.world.map.map_builder import MapBuilder
+
+
+from model.world.robot.differential_drive_robot import DifferentialDriveRobot
+from model.world.robot.robots.cobalt.cobalt import Cobalt
+from model.world.robot.URDF_parser import URDFParser
+
+# Controller and search algorithms
 from model.controllers.controller import Controller
-from model.controllers.search_based.a_star_search import AStarSearch
-from model.controllers.sampling_based.dynamic_rrt_search import DynamicRRT
+from model.controllers.search_based.AStar import AStar
+from model.controllers.sampling_based.DynamicRRT import DynamicRRT
+from model.controllers.sampling_based.RRTStar import RRTStar
 
 # ---------------------------------- config ---------------------------------- #
 
@@ -168,8 +176,9 @@ def handle_connect():
 
         # Take a controller
         controllers = [
-            Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):
@@ -339,7 +348,20 @@ def handle_robot_update(update_dict: dict):
             for robot in world.robots:
                 robot.angular_velocity = angular_velocity
         elif key == 'load':
-            # TODO add URDF parsing
+
+            #  TODO fix bug after switching robot
+            robot_polygons, estimated_wheelbase = URDFParser.parse_string(update_dict['load'])
+            robot = DifferentialDriveRobot(robot_polygons, estimated_wheelbase)
+
+            # TODO provide native multi robot support
+            robot.reset(world.robots[0].current_pose)
+            world.robots[0] = robot
+
+            """
+            algorithm = world.controllers[0].search_algorithm
+            if isinstance(algorithm, SearchBased):
+                algorithm.discretization_step = estimated_wheelbase/2
+            """
 
             # Send world data to immediately show the new robot
             send_world_data(sid)
@@ -367,9 +389,16 @@ def handle_map_update(update_dict: dict):
 
     for key, value in update_dict.items():
         if key == 'load':
+
             data = update_dict['load']
-            world.map.load_map_from_json_data(data)
+            world.from_json(data)
+
+            # Signal to the frontend that the current algorithm has changed
+            # TODO provide multi robot native support
+            emit('notify_controller_update', data['controllers'][0], room=sid)
+
             logger.info(f'User {sid} map update request: loading new map based on provided json data')
+
         elif key == 'random':
 
             # Generate a forbidden circle for each robot
@@ -386,8 +415,7 @@ def handle_map_update(update_dict: dict):
     # Reset robots and their controller
     # world.reset_robots()
     for robot, controller in zip(world.robots, world.controllers):
-        controller.search_algorithm.start = robot.current_pose.as_point()
-        controller.reset()
+        controller.reset(robot.current_pose)
 
     # Stop the simulation
     sim_control['running'] = False
@@ -403,7 +431,7 @@ def handle_map_update(update_dict: dict):
 
 
 @socketio.on('controller_update')
-def handle_controller_update(algorithm: Literal['RRT', 'RRT*', 'A*']):
+def handle_controller_update(algorithm):
     """
     Handle controller update request from the client.
 
@@ -412,6 +440,35 @@ def handle_controller_update(algorithm: Literal['RRT', 'RRT*', 'A*']):
     """
 
     sid = request.sid
+
+    algorithm_class = None
+
+    sub_folders = ["search_based", "sampling_based"]
+    for sub_folder in sub_folders:
+
+        try:
+
+            # Build the full import path
+            module_path = f'model.controllers.{sub_folder}.{algorithm}'
+
+            # Try to import the module dynamically
+            algorithm_module = importlib.import_module(module_path)
+
+            # Get the class dynamically
+            algorithm_class = getattr(algorithm_module, algorithm)
+
+        except (ImportError, AttributeError) as e:
+            # logger.error(f"Error handling algorithm: {str(e)}")
+            pass
+
+    # TODO provide multi robot native support
+    world = client_data[sid]['data']
+    world.controllers[0] = Controller(
+        world.robots[0], algorithm_class(world.world_map, start=world.robots[0].current_pose.as_point())
+    )
+
+    send_world_data(sid)
+
     logger.info(f'User {sid} controller update request: selected algorithm {algorithm}')
 
 
@@ -429,14 +486,17 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
     sid = request.sid
     world = client_data[sid]['data']
 
-    obstacles_in_region = world.map.query_region(Circle(x, y, query_radius))
+    obstacles_in_region = world.map.query_polygon(Circle(x, y, query_radius))
     if len(obstacles_in_region) > 0:
         obstacle_id = obstacles_in_region[0]
         world.map.remove_obstacle(obstacle_id)
         logger.info(f'User {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
     else:  # No obstacle in region
-        world.map.generate_obstacle_on_coords(x, y)
+        world.map.spawn_obstacle_at(Point(x, y))
         logger.info(f'User {sid} obstacle control request: adding obstacle at ({x}, {y})')
+
+    # Send new world data to show new obstacles
+    send_world_data(sid)
 
 
 @socketio.on('goal_control')
@@ -451,8 +511,14 @@ def handle_goal_control(x: float, y: float):
 
     sid = request.sid
     world = client_data[sid]['data']
-    result = world.map.set_goal(x, y)
+    result = world.map.set_goal(Point(x, y), 0.2)
     if result:
+
+        for robot, controller in zip(world.robots, world.controllers):
+            controller.reset(robot.current_pose)
+
+        send_world_data(sid)
+
         logger.info(f'User {sid} goal control request: moving goal to ({x}, {y})')
     else:
         logger.info(f'User {sid} goal control request: failed to move goal to ({x}, {y})')

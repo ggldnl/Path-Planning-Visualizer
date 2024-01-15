@@ -50,6 +50,10 @@ class Pose:
             "theta": self.theta
         }
 
+    @classmethod
+    def from_dict(cls, pose_dict):
+        return Pose(pose_dict["x"], pose_dict["y"], pose_dict["theta"])
+
     def __str__(self):
         return f"Pose(x={self.x}, y={self.y}, theta={self.theta})"
 

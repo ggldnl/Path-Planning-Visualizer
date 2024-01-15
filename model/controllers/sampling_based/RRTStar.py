@@ -41,7 +41,7 @@ class RRTStar(SamplingBased):
         self.path = []
         self.draw_list = []
 
-        self.map.disable_moving_obstacles()
+        self.world_map.disable()
 
     def step_search(self):
 
@@ -83,8 +83,8 @@ class RRTStar(SamplingBased):
 
         if len(node_index) > 0:
             cost_list = [dist_list[i] + self.compute_cost(self.nodes[i]) for i in node_index
-                         if not self.nodes[i].point == self.map.goal and
-                         not self.check_collision(self.nodes[i].point, self.map.goal)]
+                         if not self.nodes[i].point == self.world_map.goal and
+                         not self.check_collision(self.nodes[i].point, self.world_map.goal)]
             return node_index[int(np.argmin(cost_list))]
 
         # return len(self.vertex) - 1
@@ -98,24 +98,24 @@ class RRTStar(SamplingBased):
 
         dist_table = [np.hypot(nd.point.x - node_new.point.x, nd.point.y - node_new.point.y) for nd in self.nodes]
         dist_table_index = [ind for ind in range(len(dist_table)) if dist_table[ind] <= r and
-                            not node_new.point == self.map.goal and
+                            not node_new.point == self.world_map.goal and
                             not self.check_collision(node_new.point, self.nodes[ind].point)]
 
         return dist_table_index
 
     def has_path(self):
-        return len(self.path) > 0 and self.path[-1] == self.map.goal
+        return len(self.path) > 0 and self.path[-1] == self.world_map.goal
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
             # 95% (by default) of the time, select a random point in space
-            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
+            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
 
         # Goal bias
         else:
             # 5% (by default) of the time, select the goal
-            x, y = self.map.goal
+            x, y = self.world_map.goal
 
         return Node(Point(x, y))
 
@@ -144,10 +144,10 @@ class RRTStar(SamplingBased):
         return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
 
     def distance_to_goal(self, node):
-        return node.point.distance(self.map.goal)
+        return node.point.distance(self.world_map.goal)
 
     def extract_path(self, node_end):
-        self.path = [Point(self.map.goal[0], self.map.goal[1])]
+        self.path = [Point(self.world_map.goal[0], self.world_map.goal[1])]
         node_now = node_end
 
         while node_now.parent is not None:

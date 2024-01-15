@@ -252,7 +252,7 @@ window.onload = function () {
 
         if (data !== undefined) {
 
-            for (var element of data['shapes']) {
+            data["view"].forEach(element => {
 
                 /*
                 // Iterate over key-value pairs and print them
@@ -269,7 +269,7 @@ window.onload = function () {
                 } else if (type == "segment") {
                     drawSegment(element["p1"], element["p2"], element["color"], element["line_width"]);
                 }
-            }
+            })
         }
 
         requestAnimationFrame(drawScreen);

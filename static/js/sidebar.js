@@ -45,7 +45,9 @@ check_buttons.forEach(function (button) {
     button.addEventListener('click', function () {
 
         // Send selection to backend
-        socket.emit('controller_update', {'algorithm': this.textContent})
+        const buttonText = button.textContent.replace(/\s/g, ''); // Remove spaces
+        socket.emit('controller_update', buttonText);
+        console.log('Selected algorithm:', buttonText)
 
         // Toggle check
         toggleCheck(this);
@@ -66,3 +68,12 @@ function toggleCheck(clickedButton) {
     // Add 'checked' class to the clicked button
     clickedButton.classList.add('checked');
 }
+
+socket.on('notify_controller_update', function (string_data) {
+    check_buttons.forEach(function(button, index) {
+        const buttonText = button.textContent.replace(/\s/g, ''); // Remove spaces
+        if (buttonText === string_data) {
+            toggleCheck(button)
+        }
+    });
+});

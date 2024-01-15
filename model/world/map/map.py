@@ -1,6 +1,12 @@
 from abc import abstractmethod
 
-# Geometry
+import numpy as np
+
+# Serialization
+import json
+import pickle
+
+# Local imports
 from model.geometry.point import Point
 from model.geometry.circle import Circle
 from model.geometry.polygon import Polygon
@@ -9,14 +15,18 @@ from model.geometry.intersection import check_intersection
 
 from model.world.map.obstacle import Obstacle
 
-# Serialization
-import json
-import pickle
-
-import numpy as np
-
 
 class Map:
+    """
+    The map should be generated first. Once generated, a goal and some obstacles
+    are added to it. Each obstacle has an ID and a dictionary containing
+    (obstacle_id: obstacle) key:value pairs is maintained in the Map interface.
+    The logic to efficiently query the obstacles space is implemented in the
+    subclasses (e.g. we can use a simple list to keep things simple or a quad
+    tree to efficiently retrieve all the obstacles in a particular region).
+    Queries on the obstacle space for a region (specified either by a bounds or
+    by a polygon) return the IDs of the obstacles that intersect the region.
+    """
 
     def __init__(self,
 
@@ -74,10 +84,13 @@ class Map:
         self.grid = grid
 
         # Initial obstacles
-        self._initial_obstacles = []
+        self._initial_obstacles = {}
 
         # Current obstacles
-        self._obstacles = []
+        self._obstacles = {}
+
+        # Obstacle ID
+        self._next_obstacle_id = 0
 
         # Goal
         self._current_goal = None
@@ -93,23 +106,62 @@ class Map:
 
     @property
     def obstacles(self):
-        return self._obstacles
+        return list(self._obstacles.values())
+    
+    def set_goal(self, goal, clearance):
+        """
+        Set a new goal only if there are no obstacles near it
+        """
+        obstacles_near_new_goal = self.query_polygon(Circle(goal.x, goal.y, clearance))
+        if len(obstacles_near_new_goal) == 0:
+            self._current_goal = goal
+            return True
+        return False
+
+    def add_obstacle(self, obstacle):
+        obstacle_id = self._next_obstacle_id
+        self._obstacles[obstacle_id] = obstacle
+        self._next_obstacle_id += 1
+
+        # Call to the private method
+        self._add_obstacle(obstacle)
+
+        return obstacle_id
 
     @abstractmethod
-    def add_obstacle(self, obstacle):
+    def _add_obstacle(self, obstacle):
+        """
+        We can use complex data structures to efficiently query the obstacle
+        space. This means we need to maintain other data structures in the
+        subclasses and update them when adding an obstacle
+        """
         pass
 
+    def remove_obstacle(self, obstacle_id):
+        if obstacle_id in self._obstacles:
+            del self._obstacles[obstacle_id]
+
+            # Update other data structures
+            self._remove_obstacle(obstacle_id)
+
+            return True
+        else:
+            return False
+
     @abstractmethod
-    def _can_add(self, new_obstacle):
+    def _remove_obstacle(self, obstacle_id):
         pass
 
     def add_obstacles(self, obstacles):
         for obstacle in obstacles:
             self.add_obstacle(obstacle)
 
-    @abstractmethod
     def spawn_obstacle_at(self, point):
-        pass
+        """
+        Generates a random obstacle centered in the specified point
+        """
+        polygon = self._generate_random_polygon(point)
+        self.add_obstacle(Obstacle(polygon))
 
     def enable(self):
         self.enable_changes = True
@@ -119,7 +171,7 @@ class Map:
 
     def query_bounds(self, bounds):
         """
-        Query the region defined by (minx, miny, maxx, maxy)
+        Query a region defined by (minx, miny, maxx, maxy)
         searching for all the polygons that intersect it
         """
 
@@ -143,32 +195,43 @@ class Map:
     def step_motion(self, dt):
         pass
 
-    @abstractmethod
     def reset(self):
         """
         Reset the map by recovering the initial state of the obstacles.
-        We may want to reset other data structures too, that is why
-        the method is abstract
+        We may want to reset other data structures too, that is why we call
+        the abstract _reset method
         """
-        pass
+        self._obstacles = self._initial_obstacles.copy()
+        self._next_obstacle_id = max(self._obstacles.keys(), default=0) + 1
+        self._reset()
 
     @abstractmethod
+    def _reset(self):
+        pass
+
     def clear(self):
         """
-        Clear the map by removing everything
+        Clear the map by removing everything. We may want to clear other data
+        structures too, that is why we call the abstract _clear method
         """
+        self._obstacles = {}
+        self._next_obstacle_id = 0
+        self._clear()
+
+    @abstractmethod
+    def _clear(self):
         pass
 
     def to_dict(self):
         return {
-            "obstacles": [obstacle.to_dict() for obstacle in self._initial_obstacles],
+            "obstacles": [{'id': oid, 'obstacle': o.to_dict()} for oid, o in self._obstacles.items()],
             "goal": self._current_goal.to_dict()
         }
 
     # ------------------------------------ IO ------------------------------------ #
 
     def load_map(self, filename):
-        self.load_map_from_json_file(filename)
+        self.load_from_json(filename)
 
     def save_map(self, filename):
         self.save_as_json(filename)
@@ -177,31 +240,30 @@ class Map:
         with open(filename, "wb") as file:
             pickle.dump(self, file)
 
+    def load_from_pickle(self, filename):
+        with open(filename, 'rb') as file:
+            obj = pickle.load(file)
+            self._initial_obstacles = obj._initial_obstacles.copy()
+            self._obstacles = obj._obstacles.copy()
+            self._next_obstacle_id = max(self._obstacles.keys(), default=0) + 1
+            self._current_goal = obj._current_goal
+
+    def load_from_json(self, filename):
+        with open(filename, 'rb') as file:
+            data = json.load(file)
+            self.load_from_json_data(data)
+
     def save_as_json(self, filename):
         data = self.to_dict()
 
         with open(filename, "w") as file:
             json.dump(data, file)
 
-    def load_map_from_pickle(self, filename):
-        with open(filename, 'rb') as file:
-            obj = pickle.load(file)
-            self._initial_obstacles = obj._initial_obstacles
-            self._obstacles = [obstacle.copy() for obstacle in self._initial_obstacles]
-            self._current_goal = obj._current_goal
-
-    def load_map_from_json_file(self, filename):
-        with open(filename, 'rb') as file:
-            data = json.load(file)
-            self.load_map_from_json_data(data)
-
-    def load_map_from_json_data(self, data):
-        self.reset()
+    def load_from_json_data(self, data):
         self._current_goal = Point.from_dict(data['goal'])
-        obstacle_data = data['obstacles']
-        for obstacle_dict in obstacle_data:
-            obstacle = Obstacle.from_dict(obstacle_dict)
-            self.add_obstacle(obstacle)
+        self._obstacles = {o_dict['id']: Obstacle.from_dict(o_dict['obstacle']) for o_dict in data['obstacles']}
+        self._initial_obstacles = self._obstacles.copy()
+        self._next_obstacle_id = max(self._obstacles.keys(), default=0) + 1
 
     # ------------------------------ Map generation ------------------------------ #
 
@@ -279,8 +341,9 @@ class Map:
                 obstacles.append(Obstacle(polygon))
 
         # Update the obstacles and the goal
-        self._obstacles = obstacles
-        self._initial_obstacles = [obstacle.copy() for obstacle in self._obstacles]
+        self._obstacles = {oid: o for oid, o in enumerate(obstacles)}
+        self._initial_obstacles = self._obstacles.copy()
+        self._next_obstacle_id = len(obstacles)
         self._current_goal = goal
 
 

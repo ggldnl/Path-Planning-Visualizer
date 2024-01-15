@@ -48,15 +48,17 @@ class Robot(metaclass=ABCMeta):
 
     def reset(self, pose):
 
-        x_diff = self.current_pose.x - pose.x
-        y_diff = self.current_pose.y - pose.y
+        delta_x = pose.x - self.current_pose.x
+        delta_y = pose.y - self.current_pose.y
+        delta_theta = pose.theta - self.current_pose.theta
 
         self.previous_pose = pose.copy()
         self.current_pose = pose.copy()
         self.target_pose = pose.copy()
 
         for body in self.bodies:
-            body.translate(x_diff, y_diff)
+            body.translate(delta_x, delta_y)
+            body.rotate_around(self.current_pose.x, self.current_pose.y, delta_theta)
 
         self._compute_outline()
 

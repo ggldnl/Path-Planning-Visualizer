@@ -42,8 +42,7 @@ document.getElementById('load-btn').addEventListener('click', function() {
     fileInput.click();
 });
 
-document.getElementById('load-URDF-btn').addEventListener('click', function() {
-
+document.getElementById('load-URDF-btn').addEventListener('click', function () {
     // Create a file input element
     var fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -59,11 +58,16 @@ document.getElementById('load-URDF-btn').addEventListener('click', function() {
                 var fileContent = e.target.result;
 
                 try {
-                    var jsonData = JSON.parse(fileContent);
-                    socket.emit('robot_update', {'load': jsonData});
-                    console.log('URDF Data:', jsonData);
+                    // Use DOMParser to parse XML content
+                    var parser = new DOMParser();
+                    var xmlDoc = parser.parseFromString(fileContent, 'application/xml');
+                    var xmlString = new XMLSerializer().serializeToString(xmlDoc);
+
+                    // Now you can send the XML content through the WebSocket
+                    socket.emit('robot_update', { 'load': xmlString });
+                    console.log('URDF Data: ', xmlString)
                 } catch (error) {
-                    console.error('Error parsing JSON:', error);
+                    console.error('Error parsing XML:', error);
                 }
             };
 

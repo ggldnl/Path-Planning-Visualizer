@@ -1,7 +1,6 @@
 from model.geometry.intersection import check_intersection
 
 from model.world.map.map import Map
-from model.world.map.obstacle import Obstacle
 
 
 class StandardMap(Map):
@@ -14,25 +13,11 @@ class StandardMap(Map):
 
         super().__init__(**kwargs)
 
-    def _can_add(self, new_obstacle):
-        for obstacle in self.obstacles:
-            if check_intersection(obstacle, new_obstacle):
-                return False
-            return True
-
-    def add_obstacle(self, obstacle):
-        if self._can_add(obstacle.get_bounds()):
-            self._obstacles.append(obstacle)
-
-    def spawn_obstacle_at(self, point):
-        polygon = self._generate_random_polygon(point)
-        self.add_obstacle(Obstacle(polygon))
-
     def query_polygon(self, region):
         result = []
-        for i in range(len(self._obstacles)):
-            if check_intersection(region, self._obstacles[i].polygon):
-                result.append(i)
+        for obstacle_id, obstacle in self._obstacles.items():
+            if check_intersection(region, obstacle.polygon):
+                result.append(obstacle_id)
         return result
 
     def step_motion(self, dt):
@@ -65,9 +50,14 @@ class StandardMap(Map):
         # Do nothing for this kind of map, obstacles should stay still
         pass
 
-    def reset(self):
-        self._obstacles = [obstacle.copy() for obstacle in self._initial_obstacles]
+    def _add_obstacle(self, obstacle):
+        return
 
-    def clear(self):
-        self._obstacles = []
-        self._initial_obstacles = []
+    def _remove_obstacle(self, obstacle_id):
+        return
+
+    def _reset(self):
+        return
+
+    def _clear(self):
+        return

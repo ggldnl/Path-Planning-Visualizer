@@ -3,16 +3,16 @@ from model.controllers.graph import Node
 from model.geometry.point import Point
 
 
-class BreadthFirstSearch(SearchBased):
+class DepthFirstSearch(SearchBased):
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(map, start, boundary, iterations, discretization_step)
+    def __init__(self, map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
+        super().__init__(map, start, margin, iterations, discretization_step)
 
     def pre_search(self):
         self.path = []
         self.draw_list = []
         self.generated_neighbors = set()
-        self.open_set = [Node(self.start)]  # Use a simple list as a queue
+        self.open_set = [Node(self.start)]  # Use a simple list as a stack
 
         self.map.disable_moving_obstacles()
 
@@ -21,7 +21,7 @@ class BreadthFirstSearch(SearchBased):
 
     def step_search(self):
 
-        current_node = self.open_set.pop(0)
+        current_node = self.open_set.pop(-1)
 
         if current_node.point == self.map.goal:
             # Goal reached, reconstruct the path
@@ -36,6 +36,18 @@ class BreadthFirstSearch(SearchBased):
 
             # Update the draw_list
             self.draw_list.append(self.get_view(neighbor))
+
+    # Uncomment to enable smoothing
+    """
+    def post_search(self):
+        # self.smooth()
+        return 0
+
+    def check_collision(self, start, end):
+        if start == end:
+            return False
+        return super().check_collision(start, end)
+    """
 
     def heuristic(self, point):
         pass

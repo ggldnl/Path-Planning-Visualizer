@@ -58,9 +58,7 @@ class DynamicRRT(SamplingBased):
     nodes from the waypoints cache when recomputing the path with a
     given probability. It has two phases: planning (finding the first path)
     and replanning (update the path if it is invalid). The replanning
-    generates a path very similar to the previous one and this is the
-    reason why this algorithm is not so great in our use case (obstacles
-    moves on the plane, they don't pop up in random positions).
+    generates a path very similar to the previous one
     """
 
     def __init__(self,
@@ -107,7 +105,7 @@ class DynamicRRT(SamplingBased):
         self.path_wrapper.set_path(new_path)
 
     def heuristic(self, point):
-        return point.distance(self.map.goal)
+        return point.distance(self.world_map.goal)
 
     def pre_search(self):
 
@@ -124,7 +122,7 @@ class DynamicRRT(SamplingBased):
         self.path = []
         self.draw_list = []
 
-        self.map.disable_moving_obstacles()
+        self.world_map.disable()
         self.moving_obstacles_enabled = False
         self.moving_obstacles_status = False
         self.moving_obstacles_status_before = self.moving_obstacles_status
@@ -134,7 +132,7 @@ class DynamicRRT(SamplingBased):
         Running conditions:
         1. iterations left -> self.current_iteration < self.max_iterations
         2. not found initial plan -> not self.planning_done
-        3. reached the goal -> self.planning_done and len(self.path) == 1 and self.path[0] == self.map.goal
+        3. reached the goal -> self.planning_done and len(self.path) == 1 and self.path[0] == self.world_map.goal
         """
         return self.current_iteration < self.max_iterations
 
@@ -146,10 +144,10 @@ class DynamicRRT(SamplingBased):
         if self.moving_obstacles_status != self.moving_obstacles_status_before:
             if self.moving_obstacles_enabled:
                 # print('Moving obstacles disabled')
-                self.map.disable_moving_obstacles()
+                self.world_map.disable()
             else:
                 # print('Moving obstacles enabled')
-                self.map.enable_moving_obstacles()
+                self.world_map.enable()
             self.moving_obstacles_enabled = not self.moving_obstacles_enabled
             self.moving_obstacles_status_before = self.moving_obstacles_status
 
@@ -269,7 +267,7 @@ class DynamicRRT(SamplingBased):
     def check_collision(self, start, end):
         if start == end:
             return False
-        if end.distance(self.map.goal) < self.map.min_goal_clearance:
+        if end.distance(self.world_map.goal) < self.world_map.goal_min_clearance:
             return False
         return super().check_collision(start, end)
 
@@ -294,11 +292,11 @@ class DynamicRRT(SamplingBased):
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
             # 95% (by default) of the time, select a random point in space
-            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
+            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
         else:
             # 5% (by default) of the time, select the goal
-            x, y = self.map.goal
+            x, y = self.world_map.goal
 
         return ValidNode(Point(x, y))
 
@@ -327,11 +325,11 @@ class DynamicRRT(SamplingBased):
         return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
 
     def distance_to_goal(self, node):
-        return node.point.distance(self.map.goal)
+        return node.point.distance(self.world_map.goal)
 
     def extract_path_and_waypoints(self, node_end):
 
-        goal_node = ValidNode(self.map.goal)
+        goal_node = ValidNode(self.world_map.goal)
         self.path_nodes = [goal_node]
         # self.waypoints = [goal_node]
         node_now = node_end
@@ -375,12 +373,12 @@ class DynamicRRT(SamplingBased):
     def generate_random_node_replanning(self):
         p = np.random.random()
         if p < self.goal_sample_rate:
-            return ValidNode(self.map.goal)
+            return ValidNode(self.world_map.goal)
         elif self.goal_sample_rate < p < self.goal_sample_rate + self.waypoint_sample_rate:
             return self.waypoints[np.random.randint(0, len(self.waypoints) - 1)]
         else:
-            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
+            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
             return ValidNode(Point(x, y))
 
     def extract_path_and_waypoints_replanning(self, node_end):
@@ -388,7 +386,7 @@ class DynamicRRT(SamplingBased):
         Rebuild the path going back until the parent node is the last_valid node
         """
 
-        goal_node = ValidNode(self.map.goal)
+        goal_node = ValidNode(self.world_map.goal)
         new_path_nodes = [goal_node]
         node_now = node_end
 
