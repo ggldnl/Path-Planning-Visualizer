@@ -102,6 +102,18 @@ class Controller:
         return self.search_algorithm.has_terminated() and len(self.search_algorithm.path) > 0
     """
 
-    def reset(self):
-        self.search_algorithm.start = self.robot.current_pose.as_point()
+    def reset(self, pose):
+        self.search_algorithm.start = pose.as_point()
         self.search_algorithm.reset()
+
+    def to_dict(self):
+        return {
+            "search_algorithm": self.search_algorithm.to_dict(),
+            "iterations": self.iterations
+        }
+
+    @classmethod
+    def from_dict(cls, robot, controller_dict):
+        search_algorithm = controller_dict["search_algorithm"]
+        iterations = controller_dict["iterations"]
+        return Controller(robot, search_algorithm, iterations=iterations)
