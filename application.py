@@ -135,20 +135,20 @@ def handle_connect():
     """
 
     with clients_lock:
-        # Add the new user
+        # Add the new client
         clients.add(request.sid)
 
         # Client dictionary
         client_data[request.sid] = {}
 
-        # Dictionary containing this user's preferences for the simulation
+        # Dictionary containing this client's preferences for the simulation
         client_data[request.sid]['sim_settings'] = {
             'show_path': True,
             'show_data_structures': True,
             'autostart': True,  # If True, automatically restart the planning sequence after the map is reset
         }
 
-        # Dictionary containing this user's simulation control variables
+        # Dictionary containing this client's simulation control variables
         client_data[request.sid]['sim_control'] = {
             'running': False,  # True once the play button is pressed
             'stepping': True,  # True when the stepping button is pressed, set false automatically after one iteration
@@ -291,7 +291,7 @@ def handle_simulation_control_update(command: Literal['start', 'stop', 'step', '
 
     # No need to send world data as these booleans will affect (stop/resume) the next iteration
 
-    logger.info(f'User {sid} simulation control update request: {command}')
+    logger.info(f'Client {sid} simulation control update request: {command}')
 
 
 @socketio.on('simulation_settings_update')
@@ -313,7 +313,7 @@ def handle_simulation_settings_update(update_dict: dict):
 
             # Set the new value
             current_settings[key] = value
-            logger.info(f'User {sid} simulation settings update request: {key}, {value}')
+            logger.info(f'Client {sid} simulation settings update request: {key}, {value}')
         else:
             logger.info(f'Invalid settings update request: {key}, {value}')
 
@@ -340,12 +340,12 @@ def handle_robot_update(update_dict: dict):
     for key, value in update_dict.items():
         if key == 'linear_velocity':
             linear_velocity = float(update_dict['linear_velocity'])
-            logger.info(f'User {sid} robot update request: {key}, {value}')
+            logger.info(f'Client {sid} robot update request: {key}, {value}')
             for robot in world.robots:
                 robot.linear_velocity = linear_velocity
         elif key == 'angular_velocity':
             angular_velocity = float(update_dict['angular_velocity'])
-            logger.info(f'User {sid} robot update request: {key}, {value}')
+            logger.info(f'Client {sid} robot update request: {key}, {value}')
             for robot in world.robots:
                 robot.angular_velocity = angular_velocity
         elif key == 'load':
@@ -367,7 +367,7 @@ def handle_robot_update(update_dict: dict):
             # Send world data to immediately show the new robot
             send_world_data(sid)
 
-            logger.info(f'User {sid} robot update request: loading new robot based on provided URDF data')
+            logger.info(f'Client {sid} robot update request: loading new robot based on provided URDF data')
         else:
             logger.info(f'Invalid robot update request: {key}, {value}')
 
@@ -398,7 +398,7 @@ def handle_map_update(update_dict: dict):
             # TODO provide multi robot native support
             # emit('notify_controller_update', data['controllers'][0], room=sid)
 
-            logger.info(f'User {sid} map update request: loading new map based on provided json data')
+            logger.info(f'Client {sid} map update request: loading new map based on provided json data')
 
         elif key == 'random':
 
@@ -409,7 +409,7 @@ def handle_map_update(update_dict: dict):
             # Generate a map
             world.world_map.generate(forbidden_zones)
 
-            logger.info(f'User {sid} map update request: generating new map')
+            logger.info(f'Client {sid} map update request: generating new map')
         else:
             logger.info(f'Invalid map update request: {key}, {value}')
 
@@ -470,7 +470,7 @@ def handle_controller_update(algorithm):
 
     send_world_data(sid)
 
-    logger.info(f'User {sid} controller update request: selected algorithm {algorithm}')
+    logger.info(f'Client {sid} controller update request: selected algorithm {algorithm}')
 
 
 @socketio.on('obstacle_control')
@@ -491,10 +491,10 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
     if len(obstacles_in_region) > 0:
         obstacle_id = obstacles_in_region[0]
         world.map.remove_obstacle(obstacle_id)
-        logger.info(f'User {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
+        logger.info(f'Client {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
     else:  # No obstacle in region
         world.map.spawn_obstacle_at(Point(x, y))
-        logger.info(f'User {sid} obstacle control request: adding obstacle at ({x}, {y})')
+        logger.info(f'Client {sid} obstacle control request: adding obstacle at ({x}, {y})')
 
     # Send new world data to show new obstacles
     send_world_data(sid)
@@ -520,9 +520,9 @@ def handle_goal_control(x: float, y: float):
 
         send_world_data(sid)
 
-        logger.info(f'User {sid} goal control request: moving goal to ({x}, {y})')
+        logger.info(f'Client {sid} goal control request: moving goal to ({x}, {y})')
     else:
-        logger.info(f'User {sid} goal control request: failed to move goal to ({x}, {y})')
+        logger.info(f'Client {sid} goal control request: failed to move goal to ({x}, {y})')
 
 
 if __name__ == '__main__':
