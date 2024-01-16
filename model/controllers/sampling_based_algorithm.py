@@ -7,12 +7,12 @@ from model.geometry.point import Point
 
 class SamplingBased(SearchAlgorithm):
 
-    def __init__(self, map, start=Point(0, 0), boundary=0.2, iterations=1):
+    def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1):
 
         self.nodes = []
         self.edges = []
 
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(world_map, start, boundary, iterations)
 
     def update_draw_list(self, node):
         child_point = node.point
