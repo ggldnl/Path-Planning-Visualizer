@@ -1,5 +1,82 @@
+from model.geometry.intersection import check_intersection
 
-class SpatialMap:
+from model.world.map.map import Map
 
-    def __init__(self):
+from model.world.map.quad_tree import QuadTree
+
+
+class SpatialMap(Map):
+
+    def __init__(self, **kwargs):
+        """
+        This implementation of the Map interface uses a quad tree to make spatial queries
+        """
+
+        super().__init__(**kwargs)
+
+        self.quad_tree = QuadTree(self.map_boundaries)
+
+    def _add_obstacle(self, obstacle):
+        """
+        Additional logic to handle the quad tree
+        """
+        self.quad_tree.insert(self._next_obstacle_id, obstacle.polygon)
+
+    def _remove_obstacle(self, obstacle_id):
+        """
+        Additional logic to handle the quad tree
+        """
+        self.quad_tree.delete(obstacle_id, self._obstacles[obstacle_id].polygon.get_bounds())
+
+    def query_polygon(self, polygon):
+        result = []
+        for obj_id in self.quad_tree.query_region(polygon.get_bounds()):
+
+            # Check if the actual geometry intersects with the query region
+            if check_intersection(polygon, self._obstacles[obj_id].polygon):
+                result.append(obj_id)
+
+        return result
+
+    def query_bounds(self, bounds):
+        """
+        Redefine query_bounds to make it more efficient
+        """
+        return self.quad_tree.query_region(bounds)
+
+    def step_motion(self, dt):
+        """
+        if self.enable_changes:
+
+            for obstacle in self._obstacles:
+
+                if self.map_boundaries is not None:
+
+                    # Try to compute the next pose
+                    x, y, z = obstacle.polygon.pose
+                    vx, vy, vz = obstacle.vel
+                    lsm = obstacle.linear_speed_multiplier
+
+                    new_x = x + vx * lsm * dt
+                    new_y = y + vy * lsm * dt
+
+                    minx, miny, maxx, maxy = self.map_boundaries
+                    if not minx <= new_x <= maxx:
+                        obstacle.vel = (-vx, vy, vz)
+
+                    if not miny <= new_y <= maxy:
+                        obstacle.vel = (vx, -vy, vz)
+
+                obstacle.step_motion(dt)
+        """
+
+        # Do nothing for this kind of map, obstacles should stay still
         pass
+
+    def _reset(self):
+        self.quad_tree = QuadTree(self.map_boundaries)
+        for obstacle_id, obstacle in self._obstacles.items():
+            self.quad_tree.insert(obstacle_id, obstacle.polygon.get_bounds())
+
+    def _clear(self):
+        self.quad_tree = QuadTree(self.map_boundaries)

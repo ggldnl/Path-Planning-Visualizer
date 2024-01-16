@@ -119,14 +119,22 @@ class Map:
         return False
 
     def add_obstacle(self, obstacle):
-        obstacle_id = self._next_obstacle_id
-        self._obstacles[obstacle_id] = obstacle
-        self._next_obstacle_id += 1
 
-        # Call to the private method
-        self._add_obstacle(obstacle)
+        # if not obstacle.polygon.check_nearness(Circle(self.goal.x, self.goal.y, self.goal_min_clearance)):
+        if len(self.query_polygon(Circle(self.goal.x, self.goal.y, 0.1))) == 0:
 
-        return obstacle_id
+            obstacle_id = self._next_obstacle_id
+            self._obstacles[obstacle_id] = obstacle
+
+            # Call to the private method
+            self._add_obstacle(obstacle)
+
+            # Increment the index for the next polygon
+            self._next_obstacle_id += 1
+
+            return obstacle_id
+
+        return -1
 
     @abstractmethod
     def _add_obstacle(self, obstacle):
