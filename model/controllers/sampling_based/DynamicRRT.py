@@ -73,13 +73,8 @@ class DynamicRRT(SamplingBased):
                  ):
 
         self.step_length = step_length
-        self.max_iterations = max_iterations
         self.goal_sample_rate = goal_sample_rate
         self.waypoint_sample_rate = waypoint_sampling_rate
-
-        self.current_iteration = 0
-
-        self.planning_done = False
 
         # The obstacles are disabled until the first path is found
         self.moving_obstacles_enabled = False
@@ -94,7 +89,7 @@ class DynamicRRT(SamplingBased):
         # Uniform with the interface (it expects the path to contain points)
         self.path_wrapper = PathWrapper()
 
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(map, start, boundary, iterations, max_iterations)
 
     @property
     def path(self):
@@ -126,15 +121,6 @@ class DynamicRRT(SamplingBased):
         self.moving_obstacles_enabled = False
         self.moving_obstacles_status = False
         self.moving_obstacles_status_before = self.moving_obstacles_status
-
-    def can_run(self):
-        """
-        Running conditions:
-        1. iterations left -> self.current_iteration < self.max_iterations
-        2. not found initial plan -> not self.planning_done
-        3. reached the goal -> self.planning_done and len(self.path) == 1 and self.path[0] == self.world_map.goal
-        """
-        return self.current_iteration < self.max_iterations
 
     def handle_moving_obstacles(self):
         """
@@ -249,21 +235,6 @@ class DynamicRRT(SamplingBased):
                 return True
         return False
 
-    def update_draw_list(self, placeholder):
-
-        self.draw_list = []
-        for node in self.nodes:
-            if node.parent is not None:
-                self.draw_list.append(node.point)
-                self.draw_list.append(Segment(node.parent.point, node.point))
-
-                """
-                # Add segment buffers to the drawing list 
-                line = Segment(node.parent.point, node.point)
-                buffer = Polygon.get_segment_buffer(line, left_margin=self.boundary/2, right_margin=self.boundary/2)
-                self.draw_list.append(buffer)
-                """
-
     def check_collision(self, start, end):
         if start == end:
             return False
@@ -289,17 +260,6 @@ class DynamicRRT(SamplingBased):
             # Update drawing list
             self.update_draw_list(None)
 
-    def generate_random_node(self):
-        if np.random.random() > self.goal_sample_rate:
-            # 95% (by default) of the time, select a random point in space
-            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
-            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
-        else:
-            # 5% (by default) of the time, select the goal
-            x, y = self.world_map.goal
-
-        return ValidNode(Point(x, y))
-
     def nearest_neighbor(self, n):
         return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
 
@@ -317,15 +277,6 @@ class DynamicRRT(SamplingBased):
         node_new.parent = node_start
 
         return node_new
-
-    @staticmethod
-    def get_distance_and_angle(node_start, node_end):
-        dx = node_end.point.x - node_start.point.x
-        dy = node_end.point.y - node_start.point.y
-        return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
-
-    def distance_to_goal(self, node):
-        return node.point.distance(self.world_map.goal)
 
     def extract_path_and_waypoints(self, node_end):
 

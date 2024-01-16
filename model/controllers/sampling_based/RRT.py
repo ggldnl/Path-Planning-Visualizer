@@ -5,6 +5,8 @@ from model.geometry.point import Point
 
 import numpy as np
 
+from model.geometry.segment import Segment
+
 
 class RRT(SamplingBased):
 
@@ -20,8 +22,6 @@ class RRT(SamplingBased):
 
         self.step_length = step_length
         self.goal_sample_rate = goal_sample_rate
-        self.max_iterations = max_iterations
-        self.current_iteration = 0
 
         super().__init__(world_map, start, boundary, iterations)
 
@@ -68,19 +68,6 @@ class RRT(SamplingBased):
     def post_search(self):
         return 0
 
-    def generate_random_node(self):
-        if np.random.random() > self.goal_sample_rate:
-            # 95% (by default) of the time, select a random point in space
-            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
-            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
-
-        # Goal bias
-        else:
-            # 5% (by default) of the time, select the goal
-            x, y = self.world_map.goal
-
-        return Node(Point(x, y))
-
     def nearest_neighbor(self, n):
         return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
 
@@ -99,15 +86,6 @@ class RRT(SamplingBased):
 
         return node_new
 
-    @staticmethod
-    def get_distance_and_angle(node_start, node_end):
-        dx = node_end.point.x - node_start.point.x
-        dy = node_end.point.y - node_start.point.y
-        return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
-
-    def distance_to_goal(self, node):
-        return node.point.distance(self.world_map.goal)
-
     def extract_path(self, node):
 
         self.path = [self.world_map.goal]
@@ -118,3 +96,10 @@ class RRT(SamplingBased):
             self.path.append(Point(node_now.point.x, node_now.point.y))
 
         self.path = self.path[::-1]
+
+    def update_draw_list(self, node):
+        child_point = node.point
+        parent_point = node.parent.point if node.parent is not None else None
+        self.draw_list.append(child_point)
+        if parent_point is not None:
+            self.draw_list.append(Segment(parent_point, child_point))

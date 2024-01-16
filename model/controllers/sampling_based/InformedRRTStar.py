@@ -1,13 +1,15 @@
+import random
+
 from model.controllers.sampling_based_algorithm import SamplingBased
 from model.controllers.graph import Node
 
 from model.geometry.segment import Segment
 from model.geometry.point import Point
-
+import math
 import numpy as np
 
 
-class RRTStar(SamplingBased):
+class InformedRRTStar(SamplingBased):
 
     def __init__(self,
                  map,
@@ -19,12 +21,24 @@ class RRTStar(SamplingBased):
                  max_iterations=1000,
                  goal_sample_rate=0.05,
                  ):
+        super().__init__(map, start, boundary, iterations)
 
         self.step_length = step_length
         self.search_radius = search_radius
         self.goal_sample_rate = goal_sample_rate
 
-        super().__init__(map, start, boundary, iterations, max_iterations)
+        self.max_iterations = max_iterations
+        self.current_iteration = 0
+
+        self.C = None
+        self.dist = None
+        self.theta = None
+        self.solution_nodes = None
+        self.center_node = None
+
+    @property
+    def map(self):
+        return self.world_map
 
     def heuristic(self, point):
         return 0
@@ -38,10 +52,17 @@ class RRTStar(SamplingBased):
         self.path = []
         self.draw_list = []
 
-        self.world_map.disable()
+        self.map.disable_moving_obstacles()
+
+        self.center_node = np.array([[(self.start.x + self.world_map.goal.x) / 2.0],
+                                     [(self.start.y + self.world_map.goal.y) / 2.0], [0.0]])
+
+        self.solution_nodes = set()
+
+        self.dist, self.theta = self.get_distance_and_angle(self.start, self.map.goal)
+        self.C = self.calculate_rotation_matrix_to_world_frame()
 
     def step_search(self):
-
         self.current_iteration += 1
 
         node_rand = self.generate_random_node()
@@ -49,22 +70,28 @@ class RRTStar(SamplingBased):
         node_new = self.new_state(node_near, node_rand)
 
         if node_new and not self.check_collision(node_near.point, node_new.point):
+            nodes_near_index = self.find_neighborhood(node_new)
+            self.choose_parent(node_new, nodes_near_index)
+            self.rewire(node_new, nodes_near_index)
 
-            neighbor_index = self.find_neighborhood(node_new)
+            if self.distance_to_goal(node_new) < self.step_length:
+                if not self.check_collision(node_new, self.map.goal):
+                    self.solution_nodes.add(node_new)
 
-            self.nodes.append(node_new)
-
-            if neighbor_index:
-                self.choose_parent(node_new, neighbor_index)
-                self.rewire(node_new, neighbor_index)
-
-            self.update_draw_list(None)
+        self.update_draw_list(None)
 
     def post_search(self):
 
         index = self.search_goal_parent()
         if index > 0:
             self.extract_path(self.nodes[index])
+
+    def get_new_cost(self, node_start, node_end):
+        dist, _ = self.get_distance_and_angle(node_start, node_end)
+        return self.compute_cost(node_start) + dist
+
+    def can_run(self):
+        return self.current_iteration < self.max_iterations
 
     def check_collision(self, point_start, point_end):
         if point_start == point_end:
@@ -77,28 +104,23 @@ class RRTStar(SamplingBased):
 
         if len(node_index) > 0:
             cost_list = [dist_list[i] + self.compute_cost(self.nodes[i]) for i in node_index
-                         if not self.nodes[i].point == self.world_map.goal and
-                         not self.check_collision(self.nodes[i].point, self.world_map.goal)]
+                         if not self.nodes[i].point == self.map.goal and
+                         not self.check_collision(self.nodes[i].point, self.map.goal)]
             return node_index[int(np.argmin(cost_list))]
-
-        # return len(self.vertex) - 1
         return -1
 
     def find_neighborhood(self, node_new):
-
-        # n = len(self.nodes) + 1
-        # r = min(self.search_radius * np.sqrt((np.log(n) / n)), self.discretization_step)
-        r = self.search_radius
-
         dist_table = [np.hypot(nd.point.x - node_new.point.x, nd.point.y - node_new.point.y) for nd in self.nodes]
-        dist_table_index = [ind for ind in range(len(dist_table)) if dist_table[ind] <= r and
-                            not node_new.point == self.world_map.goal and
+        dist_table_index = [ind for ind in range(len(dist_table)) if dist_table[ind] <= self.search_radius and
+                            not node_new.point == self.map.goal and
                             not self.check_collision(node_new.point, self.nodes[ind].point)]
 
         return dist_table_index
 
     def has_path(self):
-        return len(self.path) > 0 and self.path[-1] == self.world_map.goal
+        return len(self.path) > 0 and self.path[-1] == self.map.goal
+
+
 
     def nearest_neighbor(self, n):
         return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
@@ -110,16 +132,13 @@ class RRTStar(SamplingBased):
         new_x = node_start.point.x + dist * np.cos(theta)
         new_y = node_start.point.y + dist * np.sin(theta)
 
-        # new_y = round(new_y / self.search_step, 2) * self.search_step
-        # new_x = round(new_x / self.search_step, 2) * self.search_step
-
         node_new = Node(Point(new_x, new_y))
         node_new.parent = node_start
 
         return node_new
 
     def extract_path(self, node_end):
-        self.path = [Point(self.world_map.goal[0], self.world_map.goal[1])]
+        self.path = [Point(self.map.goal[0], self.map.goal[1])]
         node_now = node_end
 
         while node_now.parent is not None:
@@ -140,6 +159,4 @@ class RRTStar(SamplingBased):
             if self.compute_cost(node_neighbor) > self.get_new_cost(node_new, node_neighbor):
                 node_neighbor.parent = node_new
 
-    def get_new_cost(self, node_start, node_end):
-        dist, _ = self.get_distance_and_angle(node_start, node_end)
-        return self.compute_cost(node_start) + dist
+
