@@ -166,6 +166,7 @@ def handle_connect():
         world_map = (MapBuilder()
                      .set_obs_count(40)
                      .set_map_boundaries((-5.0, -5.0, 5.0, 5.0))
+                     # .set_data_structure("quadtree")
                      .build())
 
         # Generate a forbidden circle for each robot
@@ -176,9 +177,9 @@ def handle_connect():
 
         # Take a controller
         controllers = [
-            # Controller(robot, AStarSearch(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
-            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):
@@ -395,7 +396,7 @@ def handle_map_update(update_dict: dict):
 
             # Signal to the frontend that the current algorithm has changed
             # TODO provide multi robot native support
-            emit('notify_controller_update', data['controllers'][0], room=sid)
+            # emit('notify_controller_update', data['controllers'][0], room=sid)
 
             logger.info(f'User {sid} map update request: loading new map based on provided json data')
 
