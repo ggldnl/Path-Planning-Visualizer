@@ -12,7 +12,7 @@ import numpy as np
 class InformedRRTStar(SamplingBased):
 
     def __init__(self,
-                 map,
+                 world_map,
                  start=Point(0, 0),
                  boundary=0.2,
                  iterations=1,
@@ -21,24 +21,11 @@ class InformedRRTStar(SamplingBased):
                  max_iterations=1000,
                  goal_sample_rate=0.05,
                  ):
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(world_map, start, boundary, iterations, max_iterations)
 
         self.step_length = step_length
         self.search_radius = search_radius
         self.goal_sample_rate = goal_sample_rate
-
-        self.max_iterations = max_iterations
-        self.current_iteration = 0
-
-        self.C = None
-        self.dist = None
-        self.theta = None
-        self.solution_nodes = None
-        self.center_node = None
-
-    @property
-    def map(self):
-        return self.world_map
 
     def heuristic(self, point):
         return 0
@@ -53,14 +40,7 @@ class InformedRRTStar(SamplingBased):
         self.draw_list = []
 
         self.map.disable_moving_obstacles()
-
-        self.center_node = np.array([[(self.start.x + self.world_map.goal.x) / 2.0],
-                                     [(self.start.y + self.world_map.goal.y) / 2.0], [0.0]])
-
-        self.solution_nodes = set()
-
-        self.dist, self.theta = self.get_distance_and_angle(self.start, self.map.goal)
-        self.C = self.calculate_rotation_matrix_to_world_frame()
+        self.planning_done = False
 
     def step_search(self):
         self.current_iteration += 1
@@ -76,22 +56,15 @@ class InformedRRTStar(SamplingBased):
 
             if self.distance_to_goal(node_new) < self.step_length:
                 if not self.check_collision(node_new, self.map.goal):
-                    self.solution_nodes.add(node_new)
+                    self.nodes.append(node_new)
 
-        self.update_draw_list(None)
+            self.update_draw_list(None)
 
     def post_search(self):
 
         index = self.search_goal_parent()
         if index > 0:
             self.extract_path(self.nodes[index])
-
-    def get_new_cost(self, node_start, node_end):
-        dist, _ = self.get_distance_and_angle(node_start, node_end)
-        return self.compute_cost(node_start) + dist
-
-    def can_run(self):
-        return self.current_iteration < self.max_iterations
 
     def check_collision(self, point_start, point_end):
         if point_start == point_end:
