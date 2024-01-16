@@ -27,7 +27,7 @@ class StandardMap(Map):
 
             for obstacle in self._obstacles:
 
-                if self.boundaries is not None:
+                if self.map_boundaries is not None:
 
                     # Try to compute the next pose
                     x, y, z = obstacle.polygon.pose
@@ -37,7 +37,7 @@ class StandardMap(Map):
                     new_x = x + vx * lsm * dt
                     new_y = y + vy * lsm * dt
 
-                    minx, miny, maxx, maxy = self.boundaries
+                    minx, miny, maxx, maxy = self.map_boundaries
                     if not minx <= new_x <= maxx:
                         obstacle.vel = (-vx, vy, vz)
 
