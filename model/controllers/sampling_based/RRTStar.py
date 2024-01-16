@@ -24,10 +24,7 @@ class RRTStar(SamplingBased):
         self.search_radius = search_radius
         self.goal_sample_rate = goal_sample_rate
 
-        self.max_iterations = max_iterations
-        self.current_iteration = 0
-
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(map, start, boundary, iterations, max_iterations)
 
     def heuristic(self, point):
         return 0
@@ -69,9 +66,6 @@ class RRTStar(SamplingBased):
         if index > 0:
             self.extract_path(self.nodes[index])
 
-    def can_run(self):
-        return self.current_iteration < self.max_iterations
-
     def check_collision(self, point_start, point_end):
         if point_start == point_end:
             return False
@@ -106,19 +100,6 @@ class RRTStar(SamplingBased):
     def has_path(self):
         return len(self.path) > 0 and self.path[-1] == self.world_map.goal
 
-    def generate_random_node(self):
-        if np.random.random() > self.goal_sample_rate:
-            # 95% (by default) of the time, select a random point in space
-            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
-            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
-
-        # Goal bias
-        else:
-            # 5% (by default) of the time, select the goal
-            x, y = self.world_map.goal
-
-        return Node(Point(x, y))
-
     def nearest_neighbor(self, n):
         return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
 
@@ -136,15 +117,6 @@ class RRTStar(SamplingBased):
         node_new.parent = node_start
 
         return node_new
-
-    @staticmethod
-    def get_distance_and_angle(node_start, node_end):
-        dx = node_end.point.x - node_start.point.x
-        dy = node_end.point.y - node_start.point.y
-        return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
-
-    def distance_to_goal(self, node):
-        return node.point.distance(self.world_map.goal)
 
     def extract_path(self, node_end):
         self.path = [Point(self.world_map.goal[0], self.world_map.goal[1])]
@@ -171,21 +143,3 @@ class RRTStar(SamplingBased):
     def get_new_cost(self, node_start, node_end):
         dist, _ = self.get_distance_and_angle(node_start, node_end)
         return self.compute_cost(node_start) + dist
-
-    @staticmethod
-    def compute_cost(node):
-        n = node
-        cost = 0.0
-        while n.parent:
-            cost += n.point.distance(n.parent.point)
-            n = n.parent
-        return cost
-
-    def update_draw_list(self, placeholder):
-        # Overload the method to empty the draw_list first, getting rid of old segments.
-        # Placeholder is discarded
-        self.draw_list = []
-        for node in self.nodes:
-            if node.parent is not None:
-                self.draw_list.append(node.point)
-                self.draw_list.append(Segment(node.parent.point, node.point))
