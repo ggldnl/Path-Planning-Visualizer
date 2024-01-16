@@ -47,6 +47,9 @@ function updateCurrentAlgorithmButton(algorithm) {
     foundButton.classList.add('checked');
 }
 
+// Magic tool we will need later (strumentopolo misterioso)
+const track_btn = document.getElementById('track-btn');
+
 document.getElementById('save-btn').addEventListener('click', function() {
 
     // Create a Blob with the JSON data
@@ -89,6 +92,21 @@ window.onload = function () {
     const min_scale = 10;
     const max_scale = 500;
     const initial_scale = scale;
+
+    track_btn.onclick = function (event) {
+        // TODO provide multi robot native support
+        // Robot coordinates
+        var pose = data['robots'][0]['pose']
+        var robot_coords = {
+            x: pose['x'],
+            y: pose['y']
+        }
+        console.log(robot_coords)
+
+        pixelOffset.x = robot_coords.x * scale;
+        pixelOffset.y = -robot_coords.y * scale;
+        scale = max_scale;
+    }
 
     function drawScreen() {
 

@@ -9,7 +9,7 @@ import numpy as np
 class RRT(SamplingBased):
 
     def __init__(self,
-                 map,
+                 world_map,
                  start=Point(0, 0),
                  boundary=0.2,
                  iterations=1,
@@ -23,7 +23,7 @@ class RRT(SamplingBased):
         self.max_iterations = max_iterations
         self.current_iteration = 0
 
-        super().__init__(map, start, boundary, iterations)
+        super().__init__(world_map, start, boundary, iterations)
 
     def heuristic(self, point):
         return 0
@@ -37,7 +37,7 @@ class RRT(SamplingBased):
         self.path = []
         self.draw_list = []
 
-        self.map.disable_moving_obstacles()
+        self.world_map.disable()
 
     def step_search(self):
 
@@ -71,13 +71,13 @@ class RRT(SamplingBased):
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
             # 95% (by default) of the time, select a random point in space
-            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            x = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
+            y = np.random.uniform(-2 * self.world_map.obs_max_dist, 0) + self.world_map.obs_max_dist
 
         # Goal bias
         else:
             # 5% (by default) of the time, select the goal
-            x, y = self.map.goal
+            x, y = self.world_map.goal
 
         return Node(Point(x, y))
 
@@ -106,11 +106,11 @@ class RRT(SamplingBased):
         return node_start.point.distance(node_end.point), np.arctan2(dy, dx)
 
     def distance_to_goal(self, node):
-        return node.point.distance(self.map.goal)
+        return node.point.distance(self.world_map.goal)
 
     def extract_path(self, node):
 
-        self.path = [self.map.goal]
+        self.path = [self.world_map.goal]
         node_now = node
 
         while node_now.parent is not None:

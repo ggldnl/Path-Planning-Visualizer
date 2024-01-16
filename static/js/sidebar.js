@@ -5,6 +5,7 @@ import { socket } from './websocket.js';
 const left_sidebar = document.getElementById("left-sidebar");
 const left_open_btn = document.getElementById('left-open-btn');
 const home_btn = document.getElementById('home-btn');
+const track_btn = document.getElementById('track-btn');
 
 left_open_btn.onclick = function (event) {
 
@@ -12,11 +13,13 @@ left_open_btn.onclick = function (event) {
         left_sidebar.style.width = '0';
         left_open_btn.classList.remove('shifted');
         home_btn.classList.remove('shifted');
+        track_btn.classList.remove('shifted');
         left_open_btn.innerHTML = '<i class="fas fa-bars"></i>';
     } else {
         left_sidebar.style.width = '250px';
         left_open_btn.classList.add('shifted');
         home_btn.classList.add('shifted');
+        track_btn.classList.add('shifted');
         left_open_btn.innerHTML = '<i class="fas fa-times"></i>';;
     }
 

@@ -74,7 +74,7 @@
 }
 */
 
-#left-open-btn, #right-open-btn, #home-btn {
+#left-open-btn, #right-open-btn, #home-btn, #track-btn{
     width: 50px;
     height: 50px;
     border-radius: 5px;
@@ -108,6 +108,11 @@
     left: 90px; /* 20px (margin from open-btn) + 50px (width of open-btn) + 20px (gap) */
 }
 
+#track-btn {
+    top: 20px;
+    left: 160px;
+}
+
 #left-open-btn.shifted {
     left: 270px; /* 250px (opened sidebar) + 20px (gap) */
 }
@@ -118,4 +123,8 @@
 
 #home-btn.shifted {
     left: 340px; /* 250px (opened sidebar) + 20px (gap 1) + 50px (open-btn) + 20px (gap 2) */
+}
+
+#track-btn.shifted {
+    left: 410px;
 }
