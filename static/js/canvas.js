@@ -5,6 +5,7 @@ import { socket } from './websocket.js';
 
 // Data variable that will contain the shapes to show
 var json_data;
+var algorithm;
 var data;
 
 // Double click
@@ -14,7 +15,37 @@ var clickTimer;
 socket.on('real_time_data', function (string_data) {
     json_data = string_data;
     data = JSON.parse(string_data);
+
+    // TODO provide multi robot native support
+    if (algorithm !== data['controllers'][0]) {
+        algorithm = data['controllers'][0];
+        updateCurrentAlgorithmButton(algorithm);
+    }
+
+    // console.log('Algorithm:', data['controllers'][0])
 });
+
+function updateCurrentAlgorithmButton(algorithm) {
+
+    var buttons = document.querySelectorAll('.radio-button');
+    var foundButton = null;
+
+    buttons.forEach(function (button) {
+
+        // Remove the checked class
+        button.classList.remove('checked');
+
+        // Get the text content of the button and remove spaces
+        var buttonTextWithoutSpaces = button.textContent.replace(/\s/g, '');
+
+        // Check if the text without spaces matches the provided text
+        if (buttonTextWithoutSpaces === algorithm) {
+            foundButton = button; // Set the matching button
+        }
+    });
+
+    foundButton.classList.add('checked');
+}
 
 document.getElementById('save-btn').addEventListener('click', function() {
 
