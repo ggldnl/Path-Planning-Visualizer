@@ -33,6 +33,7 @@ Sampling-based Planning
 - [x] Uniform query and query_region methods in Map class
 - [x] Provide thread safe rtree implementation
 - [x] Rework world json to use map serialization instead of plain polygons serialization
+- [ ] Fix bug with search algorithms and new map (seems like sampling doesn't care about obstacles)
 - [ ] Add missing search algorithms
 - [x] Redefine world serialization
 - [x] Finish left sidebar
