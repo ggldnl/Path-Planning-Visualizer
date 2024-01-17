@@ -289,7 +289,7 @@ def handle_simulation_control_update(command: Literal['start', 'stop', 'step', '
         world.reset_robots()
         world.map.reset()
 
-    # No need to send world data as these booleans will affect (stop/resume) the next iteration
+    send_world_data(sid)
 
     logger.info(f'Client {sid} simulation control update request: {command}')
 
@@ -487,14 +487,25 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
     sid = request.sid
     world = client_data[sid]['data']
 
+    # Take all the obstacles in the region
     obstacles_in_region = world.map.query_polygon(Circle(x, y, query_radius))
-    if len(obstacles_in_region) > 0:
-        obstacle_id = obstacles_in_region[0]
-        world.map.remove_obstacle(obstacle_id)
-        logger.info(f'Client {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
-    else:  # No obstacle in region
-        world.map.spawn_obstacle_at(Point(x, y))
-        logger.info(f'Client {sid} obstacle control request: adding obstacle at ({x}, {y})')
+
+    # Take all the robots in the region
+    robots_in_region = [robot for robot in world.robots if robot.current_pose.as_point().distance(Point(x, y)) < 0.5]
+
+    if len(robots_in_region) > 0:
+        logger.info(f'Client {sid} obstacle control request: unable to add obstacle at ({x}, {y}) - too close to robot')
+    else:
+        if len(obstacles_in_region) > 0:
+            obstacle_id = obstacles_in_region[0]
+            world.map.remove_obstacle(obstacle_id)
+            logger.info(f'Client {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
+        else:  # No obstacle in region
+            result = world.map.spawn_obstacle_at(Point(x, y))
+            if result:
+                logger.info(f'Client {sid} obstacle control request: adding obstacle at ({x}, {y})')
+            else:
+                logger.info(f'Client {sid} obstacle control request: unable to add obstacle at ({x}, {y})')
 
     # Send new world data to show new obstacles
     send_world_data(sid)
