@@ -107,32 +107,43 @@ class Map:
     @property
     def obstacles(self):
         return list(self._obstacles.values())
-    
+
     def set_goal(self, goal, clearance):
         """
         Set a new goal only if there are no obstacles near it
         """
-        obstacles_near_new_goal = self.query_polygon(Circle(goal.x, goal.y, clearance))
-        if len(obstacles_near_new_goal) == 0:
-            self._current_goal = goal
-            return True
+        if (self.map_boundaries[0] < goal.x < self.map_boundaries[2] and
+                self.map_boundaries[1] < goal.y < self.map_boundaries[3]):
+
+            obstacles_near_new_goal = self.query_polygon(Circle(goal.x, goal.y, clearance))
+            if len(obstacles_near_new_goal) == 0:
+                self._current_goal = goal
+                return True
+            return False
         return False
 
     def add_obstacle(self, obstacle):
 
-        # if not obstacle.polygon.check_nearness(Circle(self.goal.x, self.goal.y, self.goal_min_clearance)):
-        if len(self.query_polygon(Circle(self.goal.x, self.goal.y, 0.1))) == 0:
+        # If we enabled changes to the map
+        if self.enable_changes:
 
-            obstacle_id = self._next_obstacle_id
-            self._obstacles[obstacle_id] = obstacle
+            # If the obstacle is inside the map boundaries
+            if (self.map_boundaries[0] < obstacle.polygon.pose.x < self.map_boundaries[2] and
+                    self.map_boundaries[1] < obstacle.polygon.pose.y < self.map_boundaries[3]):
 
-            # Call to the private method
-            self._add_obstacle(obstacle)
+                # If there are no obstacles near the new one
+                # if not obstacle.polygon.check_nearness(Circle(self.goal.x, self.goal.y, self.goal_min_clearance)):
+                if len(self.query_polygon(Circle(self.goal.x, self.goal.y, 0.1))) == 0:
+                    obstacle_id = self._next_obstacle_id
+                    self._obstacles[obstacle_id] = obstacle
 
-            # Increment the index for the next polygon
-            self._next_obstacle_id += 1
+                    # Call to the private method
+                    self._add_obstacle(obstacle)
 
-            return obstacle_id
+                    # Increment the index for the next polygon
+                    self._next_obstacle_id += 1
+
+                    return obstacle_id
 
         return -1
 
@@ -146,15 +157,18 @@ class Map:
         pass
 
     def remove_obstacle(self, obstacle_id):
-        if obstacle_id in self._obstacles:
-            del self._obstacles[obstacle_id]
 
-            # Update other data structures
-            self._remove_obstacle(obstacle_id)
+        if self.enable_changes:
 
-            return True
-        else:
-            return False
+            if obstacle_id in self._obstacles:
+                del self._obstacles[obstacle_id]
+
+                # Update other data structures
+                self._remove_obstacle(obstacle_id)
+
+                return True
+
+        return False
 
     @abstractmethod
     def _remove_obstacle(self, obstacle_id):
@@ -169,7 +183,7 @@ class Map:
         Generates a random obstacle centered in the specified point
         """
         polygon = self._generate_random_polygon(point)
-        self.add_obstacle(Obstacle(polygon))
+        return self.add_obstacle(Obstacle(polygon))
 
     def enable(self):
         self.enable_changes = True
@@ -353,5 +367,3 @@ class Map:
         self._initial_obstacles = self._obstacles.copy()
         self._next_obstacle_id = len(obstacles)
         self._current_goal = goal
-
-
