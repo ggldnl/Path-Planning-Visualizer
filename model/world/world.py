@@ -154,7 +154,7 @@ class World:
             for robot, controller in zip(self.robots, self.controllers):
                 path = controller.search_algorithm.path
                 if len(path) > 0:
-                    shapes.extend(view.get_path_view_dict([robot.current_pose] + path))
+                    shapes.extend(view.get_path_view_dict([robot.current_pose.as_point()] + path))
 
         # return json.dumps(shapes_list)
         return shapes
