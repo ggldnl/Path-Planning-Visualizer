@@ -138,7 +138,7 @@ class Polygon(Shape):
         return Polygon(points)
 
     def to_dict(self):
-        return {'points': [point.to_dict() for point in self.points]}
+        return {'points': [point.to_dict() for point in self.points], 'pose': self.pose.to_dict()}
 
     def get_edges(self):
         """
