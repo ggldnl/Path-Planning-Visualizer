@@ -1,7 +1,7 @@
 #left-sidebar, #right-sidebar {
     height: 100%;
-    width: 0;
-    position: fixed;
+    width: 250px;
+    position: absolute;
     top: 0;
     background: #303030;
     overflow-x: hidden;
@@ -14,8 +14,16 @@
     font-size: 18px;
 }
 
+#left-sidebar.shifted {
+    left: 0px;
+}
+
+#right-sidebar.shifted {
+    right: 0px;
+}
+
 #left-sidebar {
-    left: 0;
+    left: -250px;
 
     display: flex;
     flex-direction: column;
@@ -50,7 +58,7 @@
 }
 
 #right-sidebar {
-    right: 0;
+    right: -250px;
     /* Right sidebar content is vertically aligned */
     display: flex;
     flex-direction: column;
