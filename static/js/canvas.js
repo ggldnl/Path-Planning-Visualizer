@@ -59,7 +59,7 @@ document.getElementById('save-btn').addEventListener('click', function() {
     var link = document.createElement("a");
 
     // Set the download attribute with the desired filename
-    link.download = "map.json";
+    link.download = "world.json";
 
     // Create a URL for the Blob and set it as the href attribute
     link.href = window.URL.createObjectURL(blob);
