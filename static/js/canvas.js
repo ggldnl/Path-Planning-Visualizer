@@ -75,6 +75,12 @@ document.getElementById('save-btn').addEventListener('click', function() {
 
 });
 
+// Whether to show or not obstacle IDs
+var show_obstacle_ids = true;
+document.getElementById('show-obstacle-ids-chk').addEventListener('change', function() {
+    show_obstacle_ids = this.checked;
+});
+
 window.onload = function () {
 
     var canvas = document.getElementById("canvas");
@@ -83,6 +89,12 @@ window.onload = function () {
 
     var width = canvas.width = window.innerWidth;
     var height = canvas.height = window.innerHeight;
+
+    // Text offset from a point
+    const textDisplacement = {
+        x: 5,
+        y: 5
+    }
 
     var pixelOffset = {
         x: 0,
@@ -144,12 +156,6 @@ window.onload = function () {
             ctx.fillStyle = fontColor;
             var leftEdge = Math.floor(-(width / 2 - pixelOffset.x) / scale);
             var rightEdge = Math.ceil((width / 2 + pixelOffset.x) / scale);
-
-            // Text offset of the ticks text from the axis
-            const textDisplacement = {
-                x: 5,
-                y: 5
-            }
 
             for (var x = leftEdge; x <= rightEdge; x++) {
                 var px = pixelOrigin.x + scale * x;
@@ -319,6 +325,21 @@ window.onload = function () {
                     drawSegment(element["p1"], element["p2"], element["color"], element["line_width"]);
                 }
             })
+
+            if (show_obstacle_ids) {
+
+                // Set the text color
+                ctx.fillStyle = fontColor;
+
+                data["map"]["obstacles"].forEach(obstacle_dict => {
+                    var x = obstacle_dict["obstacle"]["polygon"]["pose"]["x"];
+                    var y = obstacle_dict["obstacle"]["polygon"]["pose"]["y"];
+                    var id = obstacle_dict["id"];
+                    var px = pixelOrigin.x + scale * x;
+                    var py = pixelOrigin.y - scale * y;
+                    ctx.fillText(id, px, py);
+                })
+            }
         }
 
         requestAnimationFrame(drawScreen);
