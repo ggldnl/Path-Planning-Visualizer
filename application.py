@@ -151,7 +151,7 @@ def handle_connect():
         # Dictionary containing this client's simulation control variables
         client_data[request.sid]['sim_control'] = {
             'running': False,  # True once the play button is pressed
-            'stepping': True,  # True when the stepping button is pressed, set false automatically after one iteration
+            'stepping': False,  # True when the stepping button is pressed, set false automatically after one iteration
         }
 
         # Generate the world
@@ -166,7 +166,7 @@ def handle_connect():
         world_map = (MapBuilder()
                      .set_obs_count(40)
                      .set_map_boundaries((-5.0, -5.0, 5.0, 5.0))
-                     # .set_data_structure("quadtree")
+                     .set_data_structure("quadtree")
                      .build())
 
         # Generate a forbidden circle for each robot
@@ -177,9 +177,9 @@ def handle_connect():
 
         # Take a controller
         controllers = [
-            Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
-            # Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):
@@ -188,6 +188,9 @@ def handle_connect():
         world.set_map(world_map)
 
         client_data[request.sid]['data'] = world
+
+        # Send world data
+        send_world_data(request.sid)
 
         # Log the new connection
         logger.info(f'Client {request.sid} connected')
@@ -279,11 +282,11 @@ def handle_simulation_control_update(command: Literal['start', 'stop', 'step', '
     elif command == 'reset':
 
         sim_control['running'] = False
-        sim_control['stepping'] = True
+        sim_control['stepping'] = False
 
         if sim_settings['autostart']:
             sim_control['running'] = True
-            sim_control['stepping'] = False
+            # sim_control['stepping'] = False
 
         world = client_data[sid]['data']
         world.reset_robots()
@@ -523,7 +526,7 @@ def handle_goal_control(x: float, y: float):
 
     sid = request.sid
     world = client_data[sid]['data']
-    result = world.map.set_goal(Point(x, y), 0.2)
+    result = world.map.set_goal(Point(x, y), clearance=0.2)
     if result:
 
         for robot, controller in zip(world.robots, world.controllers):
