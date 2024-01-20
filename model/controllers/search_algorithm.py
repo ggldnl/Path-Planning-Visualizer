@@ -20,7 +20,7 @@ class SearchAlgorithm(ABC):
     sa.post_search()
     """
 
-    def __init__(self, world_map, start, margin, iterations=1):
+    def __init__(self, world_map, start, margin, iterations_per_step=1):
 
         # Map
         self.world_map = world_map
@@ -32,7 +32,7 @@ class SearchAlgorithm(ABC):
         self.margin = margin
 
         # Number of steps to execute each time (default = 1)
-        self.iterations = iterations
+        self.iterations_per_step = iterations_per_step
 
         # List of points from start (first) to goal (last)
         self.path = []
@@ -140,7 +140,7 @@ class SearchAlgorithm(ABC):
         if the search loop has not ended yet and the post search only once if the loop has ended
         and the post search has not been executed.
         """
-        for _ in range(self.iterations):
+        for _ in range(self.iterations_per_step):
 
             # If the algorithm has not yet terminated (while search time/space remaining)
             if self.can_run():
@@ -165,18 +165,18 @@ class SearchAlgorithm(ABC):
 class TestSearchAlgorithm(SearchAlgorithm):
     """
     This test class aims to simulate the implementation of the SearchAlgorithm interface.
-    It goes on for #fake_iterations iterations and then draw a number in range [0, 1) at random:
+    It goes on for #fake_iterations_per_step iterations_per_step and then draw a number in range [0, 1) at random:
     if the number is < 0.2, it sets a path.
     The termination condition is to find a path or to exit on time constraint violation.
     """
 
-    def __init__(self, world_map, start, margin=0.2, iterations=1, max_iterations=10):
+    def __init__(self, world_map, start, margin=0.2, iterations_per_step=1, max_iterations=10):
 
         self.max_iterations = max_iterations
         self.current_iteration = 0
         self.goal_found = False
 
-        super().__init__(world_map, start, margin, iterations)
+        super().__init__(world_map, start, margin, iterations_per_step)
 
     def can_run(self):
         # Termination condition = goal found or times up
@@ -205,10 +205,10 @@ if __name__ == '__main__':
     test_search_algorithm = TestSearchAlgorithm(None, None)
 
     iteration = 0
-    iterations = 10
+    iterations_per_step = 10
 
     # Infinite loop
-    while iteration <= iterations:
+    while iteration <= iterations_per_step:
 
         test_search_algorithm.step()
 
