@@ -14,14 +14,14 @@ class InformedRRTStar(SamplingBased):
     def __init__(self,
                  world_map,
                  start=Point(0, 0),
-                 boundary=0.2,
-                 iterations=1,
+                 margin=0.2,
+                 iterations_per_step=1,
                  step_length=0.2,
                  search_radius=0.5,
                  max_iterations=1000,
                  goal_sample_rate=0.05,
                  ):
-        super().__init__(world_map, start, boundary, iterations, max_iterations)
+        super().__init__(world_map, start, margin, iterations_per_step, max_iterations)
 
         self.step_length = step_length
         self.search_radius = search_radius

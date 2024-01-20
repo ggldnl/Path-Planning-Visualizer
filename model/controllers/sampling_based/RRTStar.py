@@ -10,10 +10,10 @@ import numpy as np
 class RRTStar(SamplingBased):
 
     def __init__(self,
-                 map,
+                 world_map,
                  start=Point(0, 0),
-                 boundary=0.2,
-                 iterations=1,
+                 margin=0.2,
+                 iterations_per_step=1,
                  step_length=0.2,
                  search_radius=0.5,
                  max_iterations=1000,
@@ -22,9 +22,8 @@ class RRTStar(SamplingBased):
 
         self.step_length = step_length
         self.search_radius = search_radius
-        self.goal_sample_rate = goal_sample_rate
 
-        super().__init__(map, start, boundary, iterations, max_iterations)
+        super().__init__(world_map, start, margin, iterations_per_step, max_iterations, goal_sample_rate)
 
     def heuristic(self, point):
         return 0

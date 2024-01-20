@@ -62,10 +62,10 @@ class DynamicRRT(SamplingBased):
     """
 
     def __init__(self,
-                 map,
+                 world_map,
                  start=Point(0, 0),
-                 boundary=0.2,
-                 iterations=1,
+                 margin=0.2,
+                 iterations_per_step=1,
                  step_length=0.2,
                  max_iterations=5000,
                  goal_sample_rate=0.05,
@@ -86,14 +86,16 @@ class DynamicRRT(SamplingBased):
         self.last_valid = None  # Points to the last valid point in the path
         self.node_current = None  # Points to the current node (first element of the path)
 
+        self.planning_done = False
+
         # Uniform with the interface (it expects the path to contain points)
         self.path_wrapper = PathWrapper()
 
-        super().__init__(map, start, boundary, iterations, max_iterations)
+        super().__init__(world_map, start, margin, iterations_per_step, max_iterations)
 
     @property
     def path(self):
-        return self.path_wrapper
+        return [node.point for node in self.path_wrapper.path]
 
     @path.setter
     def path(self, new_path):
