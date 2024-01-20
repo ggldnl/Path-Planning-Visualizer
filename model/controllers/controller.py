@@ -25,11 +25,10 @@ class Controller:
         ro.step_motion(dt)
     """
 
-    def __init__(self, robot, search_algorithm, iterations=1):
+    def __init__(self, robot, search_algorithm):
 
         self.robot = robot
         self.search_algorithm = search_algorithm
-        self.iterations = iterations
 
     def step(self):
 
@@ -108,12 +107,10 @@ class Controller:
 
     def to_dict(self):
         return {
-            "search_algorithm": self.search_algorithm.to_dict(),
-            "iterations": self.iterations
+            "search_algorithm": self.search_algorithm.to_dict()
         }
 
     @classmethod
     def from_dict(cls, robot, controller_dict):
         search_algorithm = controller_dict["search_algorithm"]
-        iterations = controller_dict["iterations"]
-        return Controller(robot, search_algorithm, iterations=iterations)
+        return Controller(robot, search_algorithm)
