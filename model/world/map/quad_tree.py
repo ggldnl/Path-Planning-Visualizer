@@ -15,9 +15,6 @@ class QuadTreeNode:
 
     def insert(self, polygon_id, polygon):
 
-        if polygon_id == 10:
-            print('-')
-
         if not self.in_bounds(polygon.get_bounds()):
             return False
 
@@ -30,18 +27,20 @@ class QuadTreeNode:
             self.split()
 
         # Recursively insert the polygon into one of the children
+        """
         for i in range(len(self.children)):
             if self.children[i].insert(polygon_id, polygon):
                 return True
+        """
+        inserted = []
+        for i in range(len(self.children)):
+            inserted.append(self.children[i].insert(polygon_id, polygon))
+
+        return any(inserted)
 
     def remove(self, polygon_id):
         # Remove the polygon with the specified ID from the node
         self.polygons = [polygon for polygon in self.polygons if polygon[0] != polygon_id]
-
-        """
-        for polygon in self.polygons:
-            print(f'{polygon}')
-        """
 
         # Recursively remove the polygon from the children
         for child in self.children:
@@ -55,18 +54,8 @@ class QuadTreeNode:
         if not self.in_bounds(query_bounds):
             return result
 
-        print(f'Scanning polygons: {[polygon_id for polygon_id, polygon in self.polygons]}')
-        print(f'Children polygons:')
-        for child in self.children:
-            print(f'\t{[pid for pid, p in child.polygons] if child is not None else "None"}')
-        print('-'*100)
-
         # Add IDs of polygons in the node that intersect with the query region
         for polygon_id, polygon in self.polygons:
-            if polygon_id == 10:
-                print('-----------')
-                print(polygon.get_bounds())
-                print(query_bounds)
             if self.intersects(polygon.get_bounds(), query_bounds):
                 result.append(polygon_id)
 
@@ -96,7 +85,7 @@ class QuadTreeNode:
             for child in self.children:
                 if child.in_bounds(polygon.get_bounds()):
                     child.insert(polygon_id, polygon)
-                    break
+                    # break
 
         self.polygons = []  # Clear polygons from the current node
 
@@ -161,7 +150,7 @@ class QuadTreeNode:
             # Add text annotation in the middle of the polygon
             center_x = (p_min_x + p_max_x) / 2
             center_y = (p_min_y + p_max_y) / 2
-            ax.text(center_x, center_y, str(polygon_id), ha='center', va='center', color='blue')
+            ax.text(center_x, center_y, str(polygon_id), ha='center', va='center', color='r')
 
 
 class QuadTree:
@@ -1628,15 +1617,22 @@ if __name__ == "__main__":
     start = Point(2.8, -0.46)
     end = Point(2.9, -0.6)
     segment = Segment(start, end)
-    query_polygon = Polygon.segment_buffer(segment, 0.2, 0.2)
+    query_polygon = Polygon.segment_buffer(segment, 0.5, 0.5)
     query_bounds = query_polygon.get_bounds()
 
     result = quad_tree.query_region(query_bounds)
     print(f'Result: {result}')
+    print(query_polygon)
 
     # Draw the quad tree
     ax = quad_tree.draw()
 
+    # Draw the segment buffer
+    x = [point.x for point in query_polygon.points] + [query_polygon.points[0].x]
+    y = [point.y for point in query_polygon.points] + [query_polygon.points[0].y]
+    ax.plot(x, y, color='g', linewidth=1)
+
+    # Draw the query region
     p_min_x, p_min_y, p_max_x, p_max_y = query_bounds
     rect = patches.Rectangle((p_min_x, p_min_y), p_max_x - p_min_x, p_max_y - p_min_y, linewidth=1,
                              edgecolor='g', facecolor='none')
