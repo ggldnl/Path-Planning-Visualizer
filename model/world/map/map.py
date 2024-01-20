@@ -108,7 +108,7 @@ class Map:
     def obstacles(self):
         return list(self._obstacles.values())
 
-    def set_goal(self, goal, clearance):
+    def set_goal(self, goal, clearance=0.2):
         """
         Set a new goal only if there are no obstacles near it
         """
@@ -123,6 +123,9 @@ class Map:
         return False
 
     def add_obstacle(self, obstacle):
+
+        if self.goal is None:
+            raise RuntimeError('Map has not a goal yet!')
 
         # If we enabled changes to the map
         if self.enable_changes:
@@ -269,6 +272,11 @@ class Map:
             self._obstacles = obj._obstacles.copy()
             self._next_obstacle_id = max(self._obstacles.keys(), default=0) + 1
             self._current_goal = obj._current_goal
+            self._load_from_pickle()
+
+    @abstractmethod
+    def _load_from_pickle(self):
+        pass
 
     def load_from_json(self, filename):
         with open(filename, 'rb') as file:
@@ -286,6 +294,11 @@ class Map:
         self._obstacles = {o_dict['id']: Obstacle.from_dict(o_dict['obstacle']) for o_dict in data['obstacles']}
         self._initial_obstacles = self._obstacles.copy()
         self._next_obstacle_id = max(self._obstacles.keys(), default=0) + 1
+        self._load_from_json_data()
+
+    @abstractmethod
+    def _load_from_json_data(self):
+        pass
 
     # ------------------------------ Map generation ------------------------------ #
 
@@ -325,10 +338,6 @@ class Map:
         return polygon
 
     def generate(self, forbidden_zones):
-
-        # clear the map
-        self._obstacles = []
-        self._initial_obstacles = []
 
         # Generate the goal
         goal_dist_range = self.goal_max_dist - self.goal_min_dist
