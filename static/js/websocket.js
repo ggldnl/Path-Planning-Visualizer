@@ -122,3 +122,9 @@ document.getElementById('show-data-structures-chk').addEventListener('change', f
 document.getElementById('autostart-chk').addEventListener('change', function() {
     socket.emit('simulation_settings_update', {'autostart': this.checked});
 });
+
+document.getElementById('iterations-per-step-slider').addEventListener('input', function() {
+    var value = this.value;
+    console.log('iterations-per-step: ', value);
+    socket.emit('algorithm_update', {'iterations_per_step': value});
+});

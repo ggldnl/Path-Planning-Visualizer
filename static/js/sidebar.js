@@ -49,7 +49,7 @@ check_buttons.forEach(function (button) {
 
         // Send selection to backend
         const buttonText = button.textContent.replace(/\s/g, ''); // Remove spaces
-        socket.emit('controller_update', buttonText);
+        socket.emit('algorithm_control', buttonText);
         // console.log('Selected algorithm:', buttonText)
 
         // Toggle check

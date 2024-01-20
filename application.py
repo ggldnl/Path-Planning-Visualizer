@@ -434,8 +434,22 @@ def handle_map_update(update_dict: dict):
     send_world_data(sid)
 
 
-@socketio.on('controller_update')
-def handle_controller_update(algorithm):
+@socketio.on('algorithm_update')
+def handle_controller_update(update_dict):
+
+    sid = request.sid
+    world = client_data[sid]['data']
+
+    for key, value in update_dict.items():
+        if key == 'iterations_per_step':
+
+            iterations_per_step = int(update_dict['iterations_per_step'])
+            world.controllers[0].search_algorithm.iterations_per_step = iterations_per_step
+            logger.info(f'Client {sid} algorithm update request: setting iterations per step to [{iterations_per_step}]')
+
+
+@socketio.on('algorithm_control')
+def handle_algorithm_control(algorithm):
     """
     Handle controller update request from the client.
 
