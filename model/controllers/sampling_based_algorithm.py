@@ -8,15 +8,24 @@ from model.controllers.graph import Node
 
 class SamplingBased(SearchAlgorithm):
 
-    def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, max_iterations=5000):
+    def __init__(self,
+                 world_map,
+                 start=Point(0, 0),
+                 margin=0.2,
+                 iterations_per_step=1,
+                 max_iterations=5000,
+                 goal_sample_rate=0.05
+                 ):
 
         self.nodes = []
         self.edges = []
 
         self.max_iterations = max_iterations
         self.current_iteration = 0
+        self.goal_sample_rate = goal_sample_rate
 
-        super().__init__(world_map, start, boundary, iterations)
+        #                world_map, start, margin, iterations
+        super().__init__(world_map, start, margin, iterations_per_step)
 
     @property
     def map(self):
