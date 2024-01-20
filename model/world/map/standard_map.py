@@ -61,3 +61,9 @@ class StandardMap(Map):
 
     def _clear(self):
         return
+
+    def _load_from_pickle(self):
+        return
+
+    def _load_from_json_data(self):
+        return
