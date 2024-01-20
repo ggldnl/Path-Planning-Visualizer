@@ -354,6 +354,6 @@ class Polygon(Shape):
         F = A - right_margin * n_AB
 
         # Create a polygon from the four corners of the rectangle
-        buffer = Polygon([C, D, E, F, C])
+        buffer = Polygon([C, D, E, F])
 
         return buffer
