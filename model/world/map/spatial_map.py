@@ -26,7 +26,7 @@ class SpatialMap(Map):
         """
         Additional logic to handle the quad tree
         """
-        self.quad_tree.delete(obstacle_id, self._obstacles[obstacle_id].polygon.get_bounds())
+        self.quad_tree.remove(obstacle_id)
 
     def query_polygon(self, polygon):
         result = []
@@ -76,7 +76,23 @@ class SpatialMap(Map):
     def _reset(self):
         self.quad_tree = QuadTree(self.map_boundaries)
         for obstacle_id, obstacle in self._obstacles.items():
-            self.quad_tree.insert(obstacle_id, obstacle.polygon.get_bounds())
+            self.quad_tree.insert(obstacle_id, obstacle.polygon)
 
     def _clear(self):
         self.quad_tree = QuadTree(self.map_boundaries)
+
+    def _restore_from_obstacles_dict(self):
+        for obstacle_id, obstacle in self._obstacles.items():
+            self.quad_tree.insert(obstacle_id, obstacle.polygon)
+
+    def generate(self, forbidden_zones):
+        super().generate(forbidden_zones)
+        self._restore_from_obstacles_dict()
+        for obs_id, o in self._obstacles.items():
+            print(f'{obs_id}: {o}')
+
+    def _load_from_pickle(self):
+        self._restore_from_obstacles_dict()
+
+    def _load_from_json_data(self):
+        self._restore_from_obstacles_dict()
