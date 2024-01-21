@@ -19,7 +19,7 @@ class SearchBased(SearchAlgorithm):
     def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
 
         if world_map.map_boundaries is None:
-            raise ValueError('The map should be bounded for search based algorithms, unless you want to go on forever')
+            raise ValueError('The map should be bounded for search based algorithms')
 
         # Side of the area that each node covers
         self.discretization_step = discretization_step
@@ -47,6 +47,17 @@ class SearchBased(SearchAlgorithm):
                   point.y + self.discretization_step / 2),
         ])
         return tile
+
+    def cell_contains(self, center, point):
+        """
+        Returns True if the cell centered in center and with side self.discretization_step
+        contains the point, False otherwise
+        """
+        return (center.x - self.discretization_step / 2 <= point.x <= center.x + self.discretization_step / 2 and
+                center.y - self.discretization_step / 2 <= point.y <= center.y + self.discretization_step / 2)
+
+    def has_path(self):
+        return len(self.path) > 0 and self.cell_contains(self.path[-1], self.world_map.goal)
 
     @abstractmethod
     def heuristic(self, point):
