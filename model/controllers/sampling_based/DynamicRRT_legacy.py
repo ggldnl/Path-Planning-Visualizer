@@ -91,7 +91,14 @@ class DynamicRRT(SamplingBased):
         # Uniform with the interface (it expects the path to contain points)
         self.path_wrapper = PathWrapper()
 
-        super().__init__(world_map, start, margin, iterations_per_step, max_iterations)
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            dynamic=True,
+            max_iterations=max_iterations
+        )
 
     @property
     def path(self):

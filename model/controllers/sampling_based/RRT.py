@@ -5,8 +5,6 @@ from model.geometry.point import Point
 
 import numpy as np
 
-from model.geometry.segment import Segment
-
 
 class RRT(SamplingBased):
 
@@ -24,7 +22,15 @@ class RRT(SamplingBased):
         self.node_new = None
         self.new_node_to_goal_dist = 0
 
-        super().__init__(world_map, start, margin, iterations_per_step, max_iterations, goal_sample_rate)
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            max_iterations=max_iterations,
+            dynamic=False,
+            goal_sample_rate=goal_sample_rate
+        )
 
     def heuristic(self, point):
         return 0
@@ -40,8 +46,6 @@ class RRT(SamplingBased):
 
         self.path = []
         self.draw_list = []
-
-        self.world_map.disable()
 
     def step_search(self):
 

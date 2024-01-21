@@ -23,7 +23,15 @@ class RRTStar(SamplingBased):
         self.step_length = step_length
         self.search_radius = search_radius
 
-        super().__init__(world_map, start, margin, iterations_per_step, max_iterations, goal_sample_rate)
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            dynamic=False,
+            max_iterations=max_iterations,
+            goal_sample_rate=goal_sample_rate
+        )
 
     def heuristic(self, point):
         return 0
@@ -36,8 +44,6 @@ class RRTStar(SamplingBased):
 
         self.path = []
         self.draw_list = []
-
-        self.world_map.disable()
 
     def step_search(self):
 

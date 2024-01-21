@@ -13,8 +13,9 @@ class SamplingBased(SearchAlgorithm):
                  start=Point(0, 0),
                  margin=0.2,
                  iterations_per_step=1,
+                 dynamic=False,
                  max_iterations=5000,
-                 goal_sample_rate=0.05
+                 goal_sample_rate=0.05,
                  ):
 
         self.nodes = []
@@ -25,7 +26,7 @@ class SamplingBased(SearchAlgorithm):
         self.goal_sample_rate = goal_sample_rate
 
         #                world_map, start, margin, iterations
-        super().__init__(world_map, start, margin, iterations_per_step)
+        super().__init__(world_map, start, margin, iterations_per_step, dynamic)
 
     @property
     def map(self):

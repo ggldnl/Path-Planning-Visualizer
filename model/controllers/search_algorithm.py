@@ -20,7 +20,7 @@ class SearchAlgorithm(ABC):
     sa.post_search()
     """
 
-    def __init__(self, world_map, start, margin, iterations_per_step=1):
+    def __init__(self, world_map, start, margin, iterations_per_step=1, dynamic=False):
 
         # Map
         self.world_map = world_map
@@ -45,6 +45,14 @@ class SearchAlgorithm(ABC):
         # State variables
         self.post_search_performed = False
 
+        # Algorithms that work in dynamic environments should respond
+        # to changes in the map, other algorithms does not have this
+        # requirement. We can disable changes in the map during the
+        # search step and enable them only before the search starts
+        self.dynamic = dynamic
+        self.map_changes_enabled = True
+        self.world_map.enable()
+
         # Perform the pre-search steps
         self.pre_search()
 
@@ -52,7 +60,10 @@ class SearchAlgorithm(ABC):
         """
         Reset the search algorithm (alias for init).
         """
-        # State variables
+
+        self.map_changes_enabled = True
+        self.world_map.enable()
+
         self.post_search_performed = False
         self.pre_search()
 
@@ -140,6 +151,11 @@ class SearchAlgorithm(ABC):
         if the search loop has not ended yet and the post search only once if the loop has ended
         and the post search has not been executed.
         """
+
+        if not self.dynamic:
+            self.map_changes_enabled = False
+            self.world_map.disable()
+
         for _ in range(self.iterations_per_step):
 
             # If the algorithm has not yet terminated (while search time/space remaining)

@@ -16,7 +16,14 @@ class SearchBased(SearchAlgorithm):
     yet expanded and avoid adding them multiple times to the open_set
     """
 
-    def __init__(self, world_map, start=Point(0, 0), boundary=0.2, iterations=1, discretization_step=0.2):
+    def __init__(self,
+                 world_map,
+                 start=Point(0, 0),
+                 margin=0.2,
+                 iterations_per_step=1,
+                 dynamic=False,
+                 discretization_step=0.2
+                 ):
 
         if world_map.map_boundaries is None:
             raise ValueError('The map should be bounded for search based algorithms')
@@ -33,7 +40,7 @@ class SearchBased(SearchAlgorithm):
         # to avoid adding it twice to the open_set
         self.generated_neighbors = set()
 
-        super().__init__(world_map, start, boundary, iterations)
+        super().__init__(world_map, start, margin, iterations_per_step, dynamic)
 
     def get_view(self, point):
         tile = Polygon([

@@ -5,16 +5,28 @@ from model.geometry.point import Point
 
 class DepthFirstSearch(SearchBased):
 
-    def __init__(self, map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(map, start, margin, iterations, discretization_step)
+    def __init__(self,
+                 world_map,
+                 start=Point(0, 0),
+                 margin=0.2,
+                 iterations_per_step=1,
+                 discretization_step=0.2
+                 ):
+
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            dynamic=False,
+            discretization_step=discretization_step
+        )
 
     def pre_search(self):
         self.path = []
         self.draw_list = []
         self.generated_neighbors = set()
         self.open_set = [Node(self.start)]  # Use a simple list as a stack
-
-        self.world_map.disable()
 
     def can_run(self):
         return self.open_set and not self.has_path()

@@ -8,8 +8,22 @@ from model.geometry.point import Point
 
 class BestFirstSearch(SearchBased):
 
-    def __init__(self, world_map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(world_map, start, margin, iterations, discretization_step)
+    def __init__(self, 
+                 world_map, 
+                 start=Point(0, 0), 
+                 margin=0.2, 
+                 iterations_per_step=1, 
+                 discretization_step=0.2
+                 ):
+        
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            dynamic=False,
+            discretization_step=discretization_step
+        )
 
     def pre_search(self):
         self.path = []
@@ -17,8 +31,6 @@ class BestFirstSearch(SearchBased):
         self.generated_neighbors = set()
         self.open_set = PriorityQueue()
         self.open_set.put((0, Node(self.start)))
-
-        self.world_map.disable()
 
     def heuristic(self, point):
         return point.distance(self.world_map.goal)

@@ -8,8 +8,22 @@ from model.controllers.graph import Node
 
 class AStar(SearchBased):
 
-    def __init__(self, world_map, start=Point(0, 0), margin=0.2, iterations=1, discretization_step=0.2):
-        super().__init__(world_map, start, margin, iterations, discretization_step)
+    def __init__(self, 
+                 world_map, 
+                 start=Point(0, 0), 
+                 margin=0.2, 
+                 iterations_per_step=1, 
+                 discretization_step=0.2
+                 ):
+        
+        super().__init__(
+            world_map, 
+            start, 
+            margin=margin, 
+            iterations_per_step=iterations_per_step,
+            dynamic=False,
+            discretization_step=discretization_step
+        )
 
     def pre_search(self):
 
@@ -22,9 +36,6 @@ class AStar(SearchBased):
         start_node = Node(self.start, cost=0, heuristic=self.heuristic(self.start))
 
         self.open_set.put((start_node.cost + start_node.heuristic, start_node))  # Priority queue with f(n) as priority
-
-        # self.world_map.disable_moving_obstacles()
-        self.world_map.disable()
 
     def heuristic(self, point):
         return point.distance(self.world_map.goal)
