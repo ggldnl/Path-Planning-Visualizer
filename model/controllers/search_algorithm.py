@@ -7,7 +7,7 @@ from model.geometry.polygon import Polygon
 
 class SearchAlgorithm(ABC):
     """
-    This interface will represent all the search algorithms. Every algorithm has an initial
+    This interface represents all the search algorithms. Every algorithm has an initial
     phase in which data structures are set up, a search loop in which algorithm-specific
     logic is repeatedly executed to gather necessary information and a post loop phase
     in which the gathered information is processed in order to produce the path.
@@ -205,10 +205,10 @@ if __name__ == '__main__':
     test_search_algorithm = TestSearchAlgorithm(None, None)
 
     iteration = 0
-    iterations_per_step = 10
+    max_iterations = 10
 
     # Infinite loop
-    while iteration <= iterations_per_step:
+    while iteration <= max_iterations:
 
         test_search_algorithm.step()
 
