@@ -31,7 +31,7 @@ class AStar(SearchBased):
 
     def can_run(self):
         # Termination condition is that the highest priority element (nearest to the goal) is the goal itself
-        return not self.open_set.empty() and not self.open_set.queue[0][1].point == self.world_map.goal
+        return not self.open_set.empty() and not self.cell_contains(self.open_set.queue[0][1].point, self.world_map.goal)
 
     def step_search(self):
 
@@ -63,6 +63,10 @@ class AStar(SearchBased):
         # Reconstruct the path by backtracking through the parent pointers
         self.path = []
         current_node = goal_node
+
+        # Change the point from the center of the cell that contains the goal to the goal itself
+        current_node.point = self.world_map.goal
+
         while current_node is not None:
             self.path.insert(0, current_node.point)
             current_node = current_node.parent
