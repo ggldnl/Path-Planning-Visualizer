@@ -18,7 +18,7 @@ class BestFirstSearch(SearchBased):
         self.open_set = PriorityQueue()
         self.open_set.put((0, Node(self.start)))
 
-        self.world_map.disable_moving_obstacles()
+        self.world_map.disable()
 
     def heuristic(self, point):
         return point.distance(self.world_map.goal)
@@ -30,7 +30,7 @@ class BestFirstSearch(SearchBased):
 
         _, current_node = self.open_set.get()
 
-        if current_node.point == self.world_map.goal:
+        if self.cell_contains(current_node.point, self.world_map.goal):
             # Goal reached, reconstruct the path
             self.reconstruct_path(current_node)
             return
@@ -51,6 +51,10 @@ class BestFirstSearch(SearchBased):
         """
         path = []
         current_node = goal_node
+
+        # Change the point from the center of the cell that contains the goal to the goal itself
+        current_node.point = self.world_map.goal
+
         while current_node is not None:
             path.append(current_node.point)
             current_node = current_node.parent
