@@ -436,6 +436,9 @@ def handle_map_update(update_dict: dict):
 
 @socketio.on('algorithm_update')
 def handle_controller_update(update_dict):
+    """
+    Updates current controller (without changing the underlying algorithm)
+    """
 
     sid = request.sid
     world = client_data[sid]['data']
@@ -519,7 +522,7 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
             logger.info(f'Client {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
         else:  # No obstacle in region
             result = world.map.spawn_obstacle_at(Point(x, y))
-            if result:
+            if result != -1:
                 logger.info(f'Client {sid} obstacle control request: adding obstacle at ({x}, {y})')
             else:
                 logger.info(f'Client {sid} obstacle control request: unable to add obstacle at ({x}, {y})')
