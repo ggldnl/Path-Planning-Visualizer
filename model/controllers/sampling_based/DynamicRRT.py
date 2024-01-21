@@ -227,7 +227,7 @@ class DynamicRRT(SamplingBased):
         self.path_wrapper.set_path(self.path_nodes)
         self.nodes = [node for node in self.nodes if node.valid]
 
-        self.update_draw_list(None)
+        self.update_draw_list()
 
     def is_path_invalid(self):
         if not self.has_path():
@@ -260,7 +260,7 @@ class DynamicRRT(SamplingBased):
                 return
 
             # Update drawing list
-            self.update_draw_list(None)
+            self.update_draw_list()
 
     def nearest_neighbor(self, n):
         return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
@@ -321,7 +321,7 @@ class DynamicRRT(SamplingBased):
                 return
 
             # Update drawing list
-            self.update_draw_list(None)
+            self.update_draw_list()
 
     def generate_random_node_replanning(self):
         p = np.random.random()

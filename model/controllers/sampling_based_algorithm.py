@@ -50,13 +50,12 @@ class SamplingBased(SearchAlgorithm):
             n = n.parent
         return cost
 
-    def update_draw_list(self, placeholder):
+    def update_draw_list(self):
         # Overload the method to empty the draw_list first, getting rid of old segments.
-        # Placeholder is discarded
         self.draw_list = []
         for node in self.nodes:
-            if node.parent is not None:
-                self.draw_list.append(node.point)
+            self.draw_list.append(node.point)
+            if node.parent is not None and node.parent.point is not None:
                 self.draw_list.append(Segment(node.parent.point, node.point))
 
     def generate_random_node(self):

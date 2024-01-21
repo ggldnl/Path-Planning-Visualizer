@@ -57,7 +57,7 @@ class RRTStar(SamplingBased):
                 self.choose_parent(node_new, neighbor_index)
                 self.rewire(node_new, neighbor_index)
 
-            self.update_draw_list(None)
+            self.update_draw_list()
 
     def post_search(self):
 

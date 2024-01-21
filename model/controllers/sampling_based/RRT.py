@@ -56,7 +56,7 @@ class RRT(SamplingBased):
             self.new_node_to_goal_dist = self.distance_to_goal(self.node_new)
 
             # Update drawing list
-            self.update_draw_list(self.node_new)
+            self.update_draw_list()
 
     def can_run(self):
         """
@@ -110,9 +110,11 @@ class RRT(SamplingBased):
 
         self.path = self.path[::-1]
 
+    """
     def update_draw_list(self, node):
         child_point = node.point
         parent_point = node.parent.point if node.parent is not None else None
         self.draw_list.append(child_point)
         if parent_point is not None:
             self.draw_list.append(Segment(parent_point, child_point))
+    """
