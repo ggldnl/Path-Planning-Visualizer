@@ -88,8 +88,6 @@ class SpatialMap(Map):
     def generate(self, forbidden_zones):
         super().generate(forbidden_zones)
         self._restore_from_obstacles_dict()
-        for obs_id, o in self._obstacles.items():
-            print(f'{obs_id}: {o}')
 
     def _load_from_pickle(self):
         self._restore_from_obstacles_dict()
