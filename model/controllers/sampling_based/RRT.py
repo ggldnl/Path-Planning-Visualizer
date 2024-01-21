@@ -21,6 +21,8 @@ class RRT(SamplingBased):
                  ):
 
         self.step_length = step_length
+        self.node_new = None
+        self.new_node_to_goal_dist = 0
 
         super().__init__(world_map, start, margin, iterations_per_step, max_iterations, goal_sample_rate)
 
@@ -29,7 +31,10 @@ class RRT(SamplingBased):
 
     def pre_search(self):
 
-        self.nodes = [Node(self.start)]
+        self.node_new = Node(self.start)
+        self.nodes = [self.node_new]
+        self.new_node_to_goal_dist = self.node_new.point.distance(self.world_map.goal)
+
         self.edges = []
         self.current_iteration = 0
 
@@ -44,28 +49,37 @@ class RRT(SamplingBased):
 
         node_rand = self.generate_random_node()
         node_near = self.nearest_neighbor(node_rand)
-        node_new = self.new_state(node_near, node_rand)
+        self.node_new = self.new_state(node_near, node_rand)
 
-        if node_new and not self.check_collision(node_near.point, node_new.point):
-            self.nodes.append(node_new)
-            dist = self.distance_to_goal(node_new)
-
-            if dist <= self.step_length:
-                self.extract_path(node_new)
+        if self.node_new and not self.check_collision(node_near.point, self.node_new.point):
+            self.nodes.append(self.node_new)
+            self.new_node_to_goal_dist = self.distance_to_goal(self.node_new)
 
             # Update drawing list
-            self.update_draw_list(node_new)
+            self.update_draw_list(self.node_new)
 
     def can_run(self):
         """
-        Terminates when the goal is found or we exceed the number of iterations.
+        Algorithm terminates when:
+         1. the goal is found;
+         2. we exceed the maximum number of iterations;
+         3. the distance of the newly generated node from the goal is less than the step length;
+        Algorithm can thus run until:
+         1. the goal has not been found yet (we don't have a full path);
+         2. we have iterations left;
+         3. the distance of the newly generated node from the goal is greater than the step length;
+
         We don't have memory constraints, but we have time constraints specified in
         number of iterations.
         """
-        return not self.has_path() and self.current_iteration < self.max_iterations
+        return (
+                not self.has_path() and
+                self.current_iteration < self.max_iterations and
+                self.new_node_to_goal_dist > self.step_length
+        )
 
     def post_search(self):
-        return 0
+        self.extract_path(self.node_new)
 
     def nearest_neighbor(self, n):
         return min(self.nodes, key=lambda nd: nd.point.distance(n.point))
