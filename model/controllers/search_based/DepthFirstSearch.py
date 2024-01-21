@@ -14,7 +14,7 @@ class DepthFirstSearch(SearchBased):
         self.generated_neighbors = set()
         self.open_set = [Node(self.start)]  # Use a simple list as a stack
 
-        self.map.disable_moving_obstacles()
+        self.world_map.disable()
 
     def can_run(self):
         return self.open_set and not self.has_path()
@@ -23,7 +23,7 @@ class DepthFirstSearch(SearchBased):
 
         current_node = self.open_set.pop(-1)
 
-        if current_node.point == self.map.goal:
+        if self.cell_contains(current_node.point, self.world_map.goal):
             # Goal reached, reconstruct the path
             self.reconstruct_path(current_node)
             return
@@ -56,6 +56,10 @@ class DepthFirstSearch(SearchBased):
         # Reconstruct the path by backtracking through the parent pointers
         self.path = []
         current_node = goal_node
+
+        # Change the point from the center of the cell that contains the goal to the goal itself
+        current_node.point = self.world_map.goal
+
         while current_node is not None:
             self.path.insert(0, current_node.point)
             current_node = current_node.parent
