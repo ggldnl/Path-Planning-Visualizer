@@ -61,8 +61,8 @@ class SamplingBased(SearchAlgorithm):
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
-            x = np.random.uniform(-2 * self.world_map.map_boundaries[0], 0) + self.world_map.map_boundaries[2]
-            y = np.random.uniform(-2 * self.world_map.map_boundaries[1], 0) + self.world_map.map_boundaries[3]
+            x = np.random.uniform(self.world_map.map_boundaries[0], self.world_map.map_boundaries[2])
+            y = np.random.uniform(self.world_map.map_boundaries[1], self.world_map.map_boundaries[3])
         else:
             x, y = self.world_map.goal
 
