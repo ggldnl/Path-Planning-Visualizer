@@ -61,15 +61,15 @@ class SamplingBased(SearchAlgorithm):
 
     def generate_random_node(self):
         if np.random.random() > self.goal_sample_rate:
-            x = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
-            y = np.random.uniform(-2 * self.map.obs_max_dist, 0) + self.map.obs_max_dist
+            x = np.random.uniform(-2 * self.world_map.boundaries[0], 0) + self.world_map.boundaries[2]
+            y = np.random.uniform(-2 * self.world_map.boundaries[1], 0) + self.world_map.boundaries[3]
         else:
-            x, y = self.map.goal
+            x, y = self.world_map.goal
 
         return Node(Point(x, y))
 
     def distance_to_goal(self, node):
-        return node.point.distance(self.map.goal)
+        return node.point.distance(self.world_map.goal)
 
     def can_run(self):
         """
