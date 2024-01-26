@@ -152,7 +152,7 @@ class SearchAlgorithm(ABC):
         and the post search has not been executed.
         """
 
-        if not self.dynamic:
+        if not self.dynamic and self.map_changes_enabled:
             self.map_changes_enabled = False
             self.world_map.disable()
 
