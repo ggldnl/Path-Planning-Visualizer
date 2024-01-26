@@ -82,7 +82,7 @@
 }
 */
 
-#left-open-btn, #right-open-btn, #home-btn, #track-btn{
+#left-open-btn, #right-open-btn, #home-btn, #track-btn, #go-to-btn{
     width: 50px;
     height: 50px;
     border-radius: 5px;
@@ -111,6 +111,18 @@
     right: 20px;
 }
 
+/* Horizontally aligned after right-open-btn
+#go-to-btn {
+    bottom: 60px;
+    right: 90px;
+}
+*/
+
+#go-to-btn {
+    bottom: 130px;
+    right: 20px;
+}
+
 #home-btn {
     top: 20px;
     left: 90px; /* 20px (margin from open-btn) + 50px (width of open-btn) + 20px (gap) */
@@ -127,6 +139,16 @@
 
 #right-open-btn.shifted {
     right: 270px; /* 250px (opened sidebar) + 20px (gap) */
+}
+
+/* Horizontally aligned after right-open-btn
+#go-to-btn.shifted {
+    right: 340px;
+}
+*/
+
+#go-to-btn.shifted {
+    right: 270px;
 }
 
 #home-btn.shifted {

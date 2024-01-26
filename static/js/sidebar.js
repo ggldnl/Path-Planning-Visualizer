@@ -27,16 +27,19 @@ left_open_btn.onclick = function (event) {
 
 const right_sidebar = document.getElementById("right-sidebar");
 const right_open_btn = document.getElementById('right-open-btn');
+const go_to_btn = document.getElementById('go-to-btn');
 
 right_open_btn.onclick = function (event) {
 
     if (right_sidebar.classList.contains('shifted')) {
         right_sidebar.classList.remove('shifted');
         right_open_btn.classList.remove('shifted');
+        go_to_btn.classList.remove('shifted');
         right_open_btn.innerHTML = '<i class="fas fa-gamepad"></i>';
     } else {
         right_sidebar.classList.add('shifted');
         right_open_btn.classList.add('shifted');
+        go_to_btn.classList.add('shifted');
         right_open_btn.innerHTML = '<i class="fas fa-times"></i>';;
     }
 

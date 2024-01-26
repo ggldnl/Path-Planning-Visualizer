@@ -128,3 +128,7 @@ document.getElementById('iterations-per-step-slider').addEventListener('input', 
     console.log('iterations-per-step: ', value);
     socket.emit('algorithm_update', {'iterations_per_step': value});
 });
+
+document.getElementById('go-to-btn').addEventListener('click', function() {
+    socket.emit('algorithm_update', {'expire': true})
+});
