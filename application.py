@@ -177,9 +177,9 @@ def handle_connect():
 
         # Take a controller
         controllers = [
-            # Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
-            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):
@@ -398,7 +398,7 @@ def handle_map_update(update_dict: dict):
             world.from_json(data)
 
             # Signal to the frontend that the current algorithm has changed
-            # TODO provide multi robot native support
+            # TODO provide native multi robot support
             # emit('notify_controller_update', data['controllers'][0], room=sid)
 
             logger.info(f'Client {sid} map update request: loading new map based on provided json data')
@@ -410,7 +410,7 @@ def handle_map_update(update_dict: dict):
                                in world.robots]
 
             # Generate a map
-            world.world_map.generate(forbidden_zones)
+            world.map.generate(forbidden_zones)
 
             logger.info(f'Client {sid} map update request: generating new map')
         else:
@@ -446,9 +446,21 @@ def handle_controller_update(update_dict):
     for key, value in update_dict.items():
         if key == 'iterations_per_step':
 
+            # TODO provide native multi robot support
             iterations_per_step = int(update_dict['iterations_per_step'])
             world.controllers[0].search_algorithm.iterations_per_step = iterations_per_step
             logger.info(f'Client {sid} algorithm update request: setting iterations per step to [{iterations_per_step}]')
+
+        elif key == 'expire':
+
+            # TODO provide native multi robot support
+            search_algorithm = world.controllers[0].search_algorithm
+
+            # Only for sampling based algorithms
+            if hasattr(search_algorithm, 'max_iterations'):
+                search_algorithm.current_iteration = search_algorithm.max_iterations
+                logger.info(
+                    f'Client {sid} algorithm update request: expiring iterations')
 
 
 @socketio.on('algorithm_control')
@@ -482,10 +494,10 @@ def handle_algorithm_control(algorithm):
             # logger.error(f"Error handling algorithm: {str(e)}")
             pass
 
-    # TODO provide multi robot native support
+    # TODO provide native multi robot support
     world = client_data[sid]['data']
     world.controllers[0] = Controller(
-        world.robots[0], algorithm_class(world.world_map, start=world.robots[0].current_pose.as_point())
+        world.robots[0], algorithm_class(world.map, start=world.robots[0].current_pose.as_point())
     )
 
     send_world_data(sid)
@@ -521,7 +533,7 @@ def handle_obstacle_control(x: float, y: float, query_radius: float = 0.1):
             world.map.remove_obstacle(obstacle_id)
             logger.info(f'Client {sid} obstacle control request: removing obstacle [{obstacle_id}] at ({x}, {y})')
         else:  # No obstacle in region
-            result = world.map.spawn_obstacle_at(Point(x, y))
+            result = world.world_map.spawn_obstacle_at(Point(x, y))
             if result != -1:
                 logger.info(f'Client {sid} obstacle control request: adding obstacle at ({x}, {y})')
             else:
