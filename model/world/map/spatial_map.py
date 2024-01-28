@@ -86,6 +86,7 @@ class SpatialMap(Map):
             self.quad_tree.insert(obstacle_id, obstacle.polygon)
 
     def generate(self, forbidden_zones):
+        self.quad_tree.reset()
         super().generate(forbidden_zones)
         self._restore_from_obstacles_dict()
 
