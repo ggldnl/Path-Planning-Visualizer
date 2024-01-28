@@ -156,7 +156,11 @@ class QuadTreeNode:
 class QuadTree:
 
     def __init__(self, bounds):
+        self.initial_bounds = bounds
         self.root = QuadTreeNode(bounds)
+
+    def reset(self):
+        self.root = QuadTreeNode(self.initial_bounds)
 
     def insert(self, polygon_id, polygon):
         return self.root.insert(polygon_id, polygon)
