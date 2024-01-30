@@ -37,8 +37,8 @@ class DynamicRRT(SamplingBased):
                  margin=0.2,
                  iterations_per_step=1,
                  max_iterations=5000,
-                 step_length=0.2,
                  goal_sample_rate=0.05,
+                 step_length=0.2,
                  waypoint_sampling_rate=0.5
                  ):
 
@@ -80,20 +80,10 @@ class DynamicRRT(SamplingBased):
             goal_sample_rate=goal_sample_rate
         )
 
-    def heuristic(self, point):
-        return 0
-
-    def can_run(self):
-        return self.current_iteration < self.max_iterations
-
     def pre_search(self):
 
         self.nodes = [VNode(self.start)]
         self.edges = []
-        self.current_iteration = 0
-
-        self.path = []
-        self.draw_list = []
 
         self.waypoints = []
         self.path_nodes = []
@@ -102,8 +92,6 @@ class DynamicRRT(SamplingBased):
         self.num_obstacles = len(self.world_map.obstacles)
 
     def step_search(self):
-
-        self.current_iteration += 1
 
         if self.need_for_path:
 

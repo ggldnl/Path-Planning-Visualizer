@@ -10,6 +10,7 @@ class DepthFirstSearch(SearchBased):
                  start=Point(0, 0),
                  margin=0.2,
                  iterations_per_step=1,
+                 max_iterations=5000,
                  discretization_step=0.2
                  ):
 
@@ -18,14 +19,12 @@ class DepthFirstSearch(SearchBased):
             start,
             margin=margin,
             iterations_per_step=iterations_per_step,
+            max_iterations=max_iterations,
             dynamic=False,
             discretization_step=discretization_step
         )
 
     def pre_search(self):
-        self.path = []
-        self.draw_list = []
-        self.generated_neighbors = set()
         self.open_set = [Node(self.start)]  # Use a simple list as a stack
 
     def can_run(self):
@@ -60,9 +59,6 @@ class DepthFirstSearch(SearchBased):
             return False
         return super().check_collision(start, end)
     """
-
-    def heuristic(self, point):
-        pass
 
     def reconstruct_path(self, goal_node):
         # Reconstruct the path by backtracking through the parent pointers

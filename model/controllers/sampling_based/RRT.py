@@ -7,15 +7,14 @@ import numpy as np
 
 
 class RRT(SamplingBased):
-
     def __init__(self,
                  world_map,
                  start=Point(0, 0),
                  margin=0.2,
                  iterations_per_step=1,
-                 max_iterations=8000,
-                 step_length=0.2,
+                 max_iterations=5000,
                  goal_sample_rate=0.05,
+                 step_length=0.2,
                  ):
 
         self.step_length = step_length
@@ -32,24 +31,13 @@ class RRT(SamplingBased):
             goal_sample_rate=goal_sample_rate
         )
 
-    def heuristic(self, point):
-        return 0
-
     def pre_search(self):
 
         self.node_new = Node(self.start)
         self.nodes = [self.node_new]
         self.new_node_to_goal_dist = self.node_new.point.distance(self.world_map.goal)
 
-        self.edges = []
-        self.current_iteration = 0
-
-        self.path = []
-        self.draw_list = []
-
     def step_search(self):
-
-        self.current_iteration += 1
 
         node_rand = self.generate_random_node()
         node_near = self.nearest_neighbor(node_rand)
@@ -77,9 +65,8 @@ class RRT(SamplingBased):
         number of iterations.
         """
         return (
-                not self.has_path() and
-                self.current_iteration < self.max_iterations and
-                self.new_node_to_goal_dist > self.step_length
+            self.new_node_to_goal_dist > self.step_length and
+            self.current_iteration < self.max_iterations
         )
 
     def post_search(self):
@@ -113,12 +100,3 @@ class RRT(SamplingBased):
             self.path.append(Point(node_now.point.x, node_now.point.y))
 
         self.path = self.path[::-1]
-
-    """
-    def update_draw_list(self, node):
-        child_point = node.point
-        parent_point = node.parent.point if node.parent is not None else None
-        self.draw_list.append(child_point)
-        if parent_point is not None:
-            self.draw_list.append(Segment(parent_point, child_point))
-    """

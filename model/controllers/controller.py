@@ -112,5 +112,9 @@ class Controller:
 
     @classmethod
     def from_dict(cls, robot, controller_dict):
-        search_algorithm = controller_dict["search_algorithm"]
+        # TODO provide native multi robot support
+        # TODO useless bit of code, probably (SearchAlgorithm has nothing)
+        search_algorithm_max_iterations = controller_dict["search_algorithm"]["max_iterations"]
+        search_algorithm_class = controller_dict["search_algorithm"]["class"]
+        search_algorithm = search_algorithm_class(None, max_iterations=search_algorithm_max_iterations)
         return Controller(robot, search_algorithm)

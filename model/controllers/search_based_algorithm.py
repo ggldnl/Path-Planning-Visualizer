@@ -21,12 +21,10 @@ class SearchBased(SearchAlgorithm):
                  start=Point(0, 0),
                  margin=0.2,
                  iterations_per_step=1,
+                 max_iterations=5000,
                  dynamic=False,
                  discretization_step=0.2
                  ):
-
-        if world_map.map_boundaries is None:
-            raise ValueError('The map should be bounded for search based algorithms')
 
         # Side of the area that each node covers
         self.discretization_step = discretization_step
@@ -40,7 +38,20 @@ class SearchBased(SearchAlgorithm):
         # to avoid adding it twice to the open_set
         self.generated_neighbors = set()
 
-        super().__init__(world_map, start, margin, iterations_per_step, dynamic)
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            max_iterations=max_iterations,
+            dynamic=dynamic,
+        )
+
+    def reset(self):
+        self.open_set = None
+        self.closed_set = None
+        self.generated_neighbors = set()
+        super().reset()
 
     def get_view(self, point):
         tile = Polygon([
@@ -66,9 +77,11 @@ class SearchBased(SearchAlgorithm):
     def has_path(self):
         return len(self.path) > 0 and self.cell_contains(self.path[-1], self.world_map.goal)
 
-    @abstractmethod
     def heuristic(self, point):
-        pass
+        """
+        Heuristic function. Leave this as it is if you are not planning to use it
+        """
+        return 0
 
     def get_neighbors(self, point, include_current=False):
 
@@ -110,3 +123,8 @@ class SearchBased(SearchAlgorithm):
                         self.generated_neighbors.add(neighbor)
 
         return neighbors
+
+    @abstractmethod
+    def step_search(self):
+        pass
+

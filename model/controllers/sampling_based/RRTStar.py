@@ -14,10 +14,10 @@ class RRTStar(SamplingBased):
                  start=Point(0, 0),
                  margin=0.2,
                  iterations_per_step=1,
-                 step_length=0.2,
-                 search_radius=0.5,
                  max_iterations=1000,
                  goal_sample_rate=0.05,
+                 step_length=0.2,
+                 search_radius=0.5,
                  ):
 
         self.step_length = step_length
@@ -28,26 +28,17 @@ class RRTStar(SamplingBased):
             start,
             margin=margin,
             iterations_per_step=iterations_per_step,
-            dynamic=False,
             max_iterations=max_iterations,
+            dynamic=False,
             goal_sample_rate=goal_sample_rate
         )
-
-    def heuristic(self, point):
-        return 0
 
     def pre_search(self):
 
         self.nodes = [Node(self.start)]
         self.edges = []
-        self.current_iteration = 0
-
-        self.path = []
-        self.draw_list = []
 
     def step_search(self):
-
-        self.current_iteration += 1
 
         node_rand = self.generate_random_node()
         node_near = self.nearest_neighbor(node_rand)

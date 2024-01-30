@@ -20,7 +20,14 @@ class SearchAlgorithm(ABC):
     sa.post_search()
     """
 
-    def __init__(self, world_map, start, margin, iterations_per_step=1, dynamic=False):
+    def __init__(self,
+                 world_map,
+                 start,
+                 margin=0.2,  # Minimum margin between center of the path and closer obstacle
+                 iterations_per_step=1,  # Iterations of the algorithm per step performed
+                 max_iterations=5000,  # Maximum iterations available
+                 dynamic=False,  # Dynamic algorithm
+                 ):
 
         # Map
         self.world_map = world_map
@@ -51,21 +58,46 @@ class SearchAlgorithm(ABC):
         # search step and enable them only before the search starts
         self.dynamic = dynamic
         self.map_changes_enabled = True
-        self.world_map.enable()
+        self.enable_map_changes()
+
+        self.current_iteration = 0
+        self.max_iterations = max_iterations
 
         # Perform the pre-search steps
         self.pre_search()
+
+    def enable_map_changes(self):
+        self.map_changes_enabled = True
+        if self.world_map is not None:
+            self.world_map.enable()
+
+    def disable_map_changes(self):
+        self.map_changes_enabled = False
+        if self.world_map is not None:
+            self.world_map.disable()
 
     def reset(self):
         """
         Reset the search algorithm (alias for init).
         """
 
-        self.map_changes_enabled = True
-        self.world_map.enable()
+        # Enable map changes
+        self.enable_map_changes()
 
+        # Unlock post search method
         self.post_search_performed = False
+
+        # Reset the path
+        self.path = []
+
+        # Reset draw list
+        self.draw_list = []
+
+        # Perform pre search
         self.pre_search()
+
+        # Reset available iterations
+        self.current_iteration = 0
 
     def smooth(self):
         """
@@ -99,36 +131,31 @@ class SearchAlgorithm(ABC):
         """
         return len(self.path) > 0 and self.path[-1] == self.world_map.goal
 
-    def has_terminated(self):
-        """
-        True if the algorithm has terminated. In its basic form an algorithm
-        is finished when it cannot run anymore. This does not take into account
-        the fact that the algorith has found the path or not.
-        """
-        return not self.can_run()
-
-    @abstractmethod
     def can_run(self):
         """
         Condition until which the search loop can go on. In some cases the search
         loop will end when the first path is found (condition = path found or no
         more resources) and in some other cases we should go on until termination
         condition (the more we go on, the better is the outcome, like in RRT*).
+        In its basic form, a search algorithm will go on until the time constraint
+        is violated (we don't apply memory constraints)
         """
-        pass
+        return self.current_iteration < self.max_iterations
+
+    def has_terminated(self):
+        return not self.can_run()
 
     def pre_search(self):
         """
         Init the search algorithm by instantiating all the necessary data structures
-        (at creation/reset time) and make initial steps. This routine is called also
-        when the reset method is invoked.
+        (at creation/reset time) and making initial steps
         """
         pass
 
     def post_search(self):
         """
         Steps to be performed after the search loop. Some algorithms have nothing to do
-        after the search loop, some others has to reconstruct the path, ...
+        after the search loop, some others has to reconstruct the path and so on
         """
         return
 
@@ -138,9 +165,8 @@ class SearchAlgorithm(ABC):
         Search step. Our world has an update loop in which the state of the system is advanced.
         We leverage this (outer) loop to call the step() method of a controller. A controller
         (check Controller class) has a search algorithm and is responsible for:
-        1. making progress computing the path one step at a time;
+        1. making progress computing the path one step at a time (stepping the search algorithm);
         2. talking to the robot by streaming the path (if found) or by making it hold its position;
-        3. drawing on screen insights on what the search algorithm is doing;
         """
         pass
 
@@ -153,29 +179,42 @@ class SearchAlgorithm(ABC):
         """
 
         if not self.dynamic and self.map_changes_enabled:
-            self.map_changes_enabled = False
-            self.world_map.disable()
+            self.disable_map_changes()
 
         for _ in range(self.iterations_per_step):
 
             # If the algorithm has not yet terminated (while search time/space remaining)
             if self.can_run():
 
+                # Update the iteration counter
+                self.current_iteration += 1
+
                 # Progress the search
                 self.step_search()
-
-                # Eventually, step_search will set the step_search_done flag to True
-                # and the step loop will end -> post_search
 
             # Else, if the algorithm has terminated
             else:
 
                 # Perform final steps only if we haven't exceeded time constraints
                 if not self.post_search_performed:
+
+                    # Perform post search
                     self.post_search()
                     self.post_search_performed = True
 
+                    # Disable map changes: when the path is done, we can't change the environment
+                    self.disable_map_changes()
+
         # At this point we either have a path or an empty list
+
+    def to_dict(self):
+        return {
+            "class": self.__class__.__name__,
+            "margin": self.margin,
+            "current_iteration": self.current_iteration,
+            "max_iterations": self.max_iterations,
+            "iterations_per_step": self.iterations_per_step
+        }
 
 
 class TestSearchAlgorithm(SearchAlgorithm):
@@ -188,14 +227,11 @@ class TestSearchAlgorithm(SearchAlgorithm):
 
     def __init__(self, world_map, start, margin=0.2, iterations_per_step=1, max_iterations=10):
 
-        self.max_iterations = max_iterations
-        self.current_iteration = 0
+        super().__init__(world_map, start, margin, iterations_per_step, dynamic=False, max_iterations=max_iterations)
         self.goal_found = False
 
-        super().__init__(world_map, start, margin, iterations_per_step)
-
     def can_run(self):
-        # Termination condition = goal found or times up
+        # Termination condition: goal found or time's up
         return not self.goal_found and self.current_iteration < self.max_iterations
 
     def pre_search(self):
@@ -204,7 +240,6 @@ class TestSearchAlgorithm(SearchAlgorithm):
     def step_search(self):
 
         print('Searching...')
-        self.current_iteration += 1
 
         n = random.random()
         if n < 0.2:
@@ -220,17 +255,14 @@ if __name__ == '__main__':
 
     test_search_algorithm = TestSearchAlgorithm(None, None)
 
-    iteration = 0
-    max_iterations = 10
+    dt = 0.05
+    time = 0
+    end_time = 1
 
-    # Infinite loop
-    while iteration <= max_iterations:
+    while time <= end_time:
+
+        print(f'Time: {time}')
 
         test_search_algorithm.step()
 
-        """
-        if test_search_algorithm.has_terminated():
-            break
-        """
-
-        iteration += 1
+        time += dt

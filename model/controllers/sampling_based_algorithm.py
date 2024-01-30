@@ -13,28 +13,24 @@ class SamplingBased(SearchAlgorithm):
                  start=Point(0, 0),
                  margin=0.2,
                  iterations_per_step=1,
-                 dynamic=False,
                  max_iterations=5000,
+                 dynamic=False,
                  goal_sample_rate=0.05,
                  ):
 
         self.nodes = []
         self.edges = []
 
-        self.max_iterations = max_iterations
-        self.current_iteration = 0
         self.goal_sample_rate = goal_sample_rate
 
-        #                world_map, start, margin, iterations
-        super().__init__(world_map, start, margin, iterations_per_step, dynamic)
-
-    @property
-    def map(self):
-        return self.world_map
-
-    @abstractmethod
-    def heuristic(self, point):
-        pass
+        super().__init__(
+            world_map,
+            start,
+            margin=margin,
+            iterations_per_step=iterations_per_step,
+            max_iterations=max_iterations,
+            dynamic=dynamic,
+        )
 
     @staticmethod
     def get_distance_and_angle(node_start, node_end):
@@ -71,11 +67,12 @@ class SamplingBased(SearchAlgorithm):
     def distance_to_goal(self, node):
         return node.point.distance(self.world_map.goal)
 
-    def can_run(self):
-        """
-        Running conditions:
-        1. iterations left -> self.current_iteration < self.max_iterations
-        2. not found initial plan -> not self.planning_done
-        3. reached the goal -> self.planning_done and len(self.path) == 1 and self.path[0] == self.world_map.goal
-        """
-        return self.current_iteration < self.max_iterations
+    def reset(self):
+        self.nodes = []
+        self.edges = []
+        super().reset()
+
+    @abstractmethod
+    def step_search(self):
+        pass
+

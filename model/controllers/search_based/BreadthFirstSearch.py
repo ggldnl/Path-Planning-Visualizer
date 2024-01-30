@@ -23,9 +23,6 @@ class BreadthFirstSearch(SearchBased):
         )
 
     def pre_search(self):
-        self.path = []
-        self.draw_list = []
-        self.generated_neighbors = set()
         self.open_set = [Node(self.start)]  # Use a simple list as a queue
 
     def can_run(self):
@@ -48,9 +45,6 @@ class BreadthFirstSearch(SearchBased):
 
             # Update the draw_list
             self.draw_list.append(self.get_view(neighbor))
-
-    def heuristic(self, point):
-        pass
 
     def reconstruct_path(self, goal_node):
         # Reconstruct the path by backtracking through the parent pointers

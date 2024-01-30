@@ -12,7 +12,8 @@ class BestFirstSearch(SearchBased):
                  world_map, 
                  start=Point(0, 0), 
                  margin=0.2, 
-                 iterations_per_step=1, 
+                 iterations_per_step=1,
+                 max_iterations=5000,
                  discretization_step=0.2
                  ):
         
@@ -21,14 +22,12 @@ class BestFirstSearch(SearchBased):
             start,
             margin=margin,
             iterations_per_step=iterations_per_step,
+            max_iterations=max_iterations,
             dynamic=False,
             discretization_step=discretization_step
         )
 
     def pre_search(self):
-        self.path = []
-        self.draw_list = []
-        self.generated_neighbors = set()
         self.open_set = PriorityQueue()
         self.open_set.put((0, Node(self.start)))
 
