@@ -46,10 +46,8 @@ from model.world.robot.differential_drive_robot import DifferentialDriveRobot
 from model.world.robot.robots.cobalt.cobalt import Cobalt
 from model.world.robot.URDF_parser import URDFParser
 
-# Controller and search algorithms
+# Controller and initial search algorithm
 from model.controllers.controller import Controller
-from model.controllers.search_based.AStar import AStar
-from model.controllers.sampling_based.DynamicRRT import DynamicRRT
 from model.controllers.sampling_based.RRTStar import RRTStar
 
 # ---------------------------------- config ---------------------------------- #
@@ -177,9 +175,10 @@ def handle_connect():
 
         # Take a controller
         controllers = [
-            Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, RRT(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
-            # Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):

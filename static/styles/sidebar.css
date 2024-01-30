@@ -158,3 +158,18 @@
 #track-btn.shifted {
     left: 410px;
 }
+
+#progress-container {
+    width: 80%;
+    margin: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#progress-bar {
+    width: 0;
+    height: 30px;
+    background-color: #0069d9;
+    text-align: center;
+    line-height: 30px;
+}

@@ -85,13 +85,13 @@ document.getElementById('random-btn').addEventListener('click', function() {
 
 document.getElementById('robots-linear-velocity-slider').addEventListener('input', function() {
     var value = this.value;
-    console.log('robots-linear-velocity: ', value);
+    // console.log('robots-linear-velocity: ', value);
     socket.emit('robot_update', {'linear_velocity': value});
 });
 
 document.getElementById('robots-angular-velocity-slider').addEventListener('input', function() {
     var value = this.value;
-    console.log('robots-angular-velocity: ', value);
+    // console.log('robots-angular-velocity: ', value);
     socket.emit('robot_update', {'angular_velocity': value});
 });
 
@@ -125,7 +125,7 @@ document.getElementById('autostart-chk').addEventListener('change', function() {
 
 document.getElementById('iterations-per-step-slider').addEventListener('input', function() {
     var value = this.value;
-    console.log('iterations-per-step: ', value);
+    // console.log('iterations-per-step: ', value);
     socket.emit('algorithm_update', {'iterations_per_step': value});
 });
 

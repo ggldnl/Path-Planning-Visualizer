@@ -6,6 +6,7 @@ import { socket } from './websocket.js';
 // Data variable that will contain the shapes to show
 var json_data;
 var algorithm;
+var iterationsPerStep;
 var data;
 
 // Double click
@@ -15,12 +16,33 @@ var clickTimer;
 socket.on('real_time_data', function (string_data) {
     json_data = string_data;
     data = JSON.parse(string_data);
+    // console.log(data);
 
-    // TODO provide multi robot native support
-    if (algorithm !== data['controllers'][0]) {
-        algorithm = data['controllers'][0];
-        updateCurrentAlgorithmButton(algorithm);
-    }
+    var controllers = data['controllers'];
+    controllers.forEach(function (controller) {
+
+        var searchAlgorithm = controller['search_algorithm'];
+
+        // Update currently selected search algorithm
+        var searchAlgorithmClass = searchAlgorithm["class"];
+        if (searchAlgorithmClass != algorithm) {
+            algorithm = searchAlgorithmClass;
+            updateCurrentAlgorithmButton(searchAlgorithmClass);
+        }
+
+        // Update iterations_per_step slider
+        var searchAlgorithmIterationsPerStep = searchAlgorithm['iterations_per_step']
+        if (searchAlgorithmIterationsPerStep != iterationsPerStep) {
+            iterationsPerStep = searchAlgorithmIterationsPerStep;
+            updateIterationsPerStepSlider(iterationsPerStep);
+        }
+
+        // Update the progress bar
+        var currentIteration = searchAlgorithm["current_iteration"];
+        var maxIteration = searchAlgorithm["max_iterations"];
+        updateProgressBar(currentIteration, maxIteration);
+
+    });
 
     // console.log('Algorithm:', data['controllers'][0])
 });
@@ -45,6 +67,28 @@ function updateCurrentAlgorithmButton(algorithm) {
     });
 
     foundButton.classList.add('checked');
+}
+
+function updateIterationsPerStepSlider(iterationsPerStep) {
+
+    var slider = document.getElementById('iterations-per-step-slider');
+    slider.value = iterationsPerStep;
+
+}
+
+function updateProgressBar(currentIteration, maxIteration) {
+
+    var progressBar = document.getElementById('progress-bar');
+
+    var percentage = (currentIteration / maxIteration) * 100;
+    console.log(currentIteration);
+    console.log(maxIteration);
+    console.log(percentage);
+    console.log('---------------------------');
+
+    progressBar.style.width = percentage + '%';
+    progressBar.textContent = percentage.toFixed(2) + '%';
+
 }
 
 // Magic tool we will need later (strumentopolo misterioso)

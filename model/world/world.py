@@ -122,7 +122,7 @@ class World:
                 } for robot in self.robots
             ],
             # TODO serialize controller parameters
-            "controllers": [controller.search_algorithm.__class__.__name__ for controller in self.controllers],
+            "controllers": [controller.to_dict() for controller in self.controllers],
             "dt": self.dt,
             "view": self.world_view(add_path=add_path, add_data_structures=add_data_structures)
         }
@@ -174,10 +174,15 @@ class World:
 
         # Load the controllers
         controllers = json_data["controllers"]
+        # TODO for now, only one controller is present
+        # TODO provide native multi robot support (multiple robots -> multiple controllers)
         for current_controller, loaded_controller in zip(self.controllers, controllers):
+
             # TODO serialize controller parameters
 
-            algorithm_class = None
+            search_algorithm_dict = loaded_controller["search_algorithm"]
+            search_algorithm_class_name = search_algorithm_dict["class"]
+            search_algorithm_class = None
 
             sub_folders = ["search_based", "sampling_based"]
             for sub_folder in sub_folders:
@@ -185,19 +190,30 @@ class World:
                 try:
 
                     # Build the full import path
-                    module_path = f'model.controllers.{sub_folder}.{loaded_controller}'
+                    module_path = f'model.controllers.{sub_folder}.{search_algorithm_class_name}'
 
                     # Try to import the module dynamically
                     algorithm_module = importlib.import_module(module_path)
 
                     # Get the class dynamically
-                    algorithm_class = getattr(algorithm_module, loaded_controller)
+                    search_algorithm_class = getattr(algorithm_module, search_algorithm_class_name)
 
                 except (ImportError, AttributeError) as e:
                     # logger.error(f"Error handling algorithm: {str(e)}")
                     pass
 
-            current_controller.search_algorithm = algorithm_class(self.world_map)
+            # Other search algorithm parameters
+            margin = search_algorithm_dict["margin"]
+            max_iterations = search_algorithm_dict["max_iterations"]
+            iterations_per_step = search_algorithm_dict["iterations_per_step"]
+
+            current_controller.search_algorithm = search_algorithm_class(
+                self.world_map,
+                current_controller.robot.current_pose.as_point(),
+                margin=margin,
+                max_iterations=max_iterations,
+                iterations_per_step=iterations_per_step
+            )
 
         for robot, controller in zip(self.robots, self.controllers):
             controller.reset(robot.current_pose)
