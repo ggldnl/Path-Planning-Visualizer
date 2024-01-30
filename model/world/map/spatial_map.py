@@ -91,7 +91,9 @@ class SpatialMap(Map):
         self._restore_from_obstacles_dict()
 
     def _load_from_pickle(self):
+        self.quad_tree.reset()
         self._restore_from_obstacles_dict()
 
     def _load_from_json_data(self):
+        self.quad_tree.reset()
         self._restore_from_obstacles_dict()
