@@ -81,10 +81,6 @@ function updateProgressBar(currentIteration, maxIteration) {
     var progressBar = document.getElementById('progress-bar');
 
     var percentage = (currentIteration / maxIteration) * 100;
-    console.log(currentIteration);
-    console.log(maxIteration);
-    console.log(percentage);
-    console.log('---------------------------');
 
     progressBar.style.width = percentage + '%';
     progressBar.textContent = percentage.toFixed(2) + '%';
