@@ -37,6 +37,18 @@ def _segment_dict(p1, p2, color, line_width):
     }
 
 
+def __ellipse_dict(p1, p2, c, fill_color, border_color, line_width):
+    return {
+        "type": "ellipse",
+        "p1": [p1.x, p1.y],
+        "p2": [p2.x, p2.y],
+        "c": c,
+        "fill_color": fill_color,
+        "border_color": border_color,
+        "line_width": line_width
+    }
+
+
 def get_obstacle_view_dict(obstacle):
     return _polygon_dict(obstacle.polygon.to_point_array(), obstacle_fill_color, obstacle_border_color, 1.0)
 
@@ -80,3 +92,7 @@ def get_path_view_dict(path):
             _segment_dict(path[i-1], path[i], path_color, 1.0)
         )
     return shapes_list
+
+
+def get_ellipse_view_dict(ellipse):
+    return __ellipse_dict(ellipse.f1, ellipse.f2, ellipse.c, 'transparent', ellipse_color, 0.5)

@@ -2,9 +2,7 @@ import importlib
 import json
 
 from model.exceptions.collision_exception import CollisionException
-from model.world.map.map_builder import MapBuilder
 from model.geometry.intersection import check_intersection
-from model.geometry.circle import Circle
 from model.geometry.pose import Pose
 from model.world import view
 
@@ -155,6 +153,12 @@ class World:
                 path = controller.search_algorithm.path
                 if len(path) > 0:
                     shapes.extend(view.get_path_view_dict([robot.current_pose.as_point()] + path))
+
+        # Add the ellipse if the current algorithm is the InformedRRT
+        for controller in self.controllers:
+            if hasattr(controller.search_algorithm, 'ellipse'):
+                ellipse = controller.search_algorithm.ellipse
+                shapes.append(view.get_ellipse_view_dict(ellipse))
 
         # return json.dumps(shapes_list)
         return shapes
