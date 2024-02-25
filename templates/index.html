@@ -24,7 +24,6 @@
         <label class="description-label">Robot control</label>
 
         <div></div>
-        <div></div>
         <div class="vertical-content-div">
 
             <label>Linear velocity</label>
@@ -47,6 +46,15 @@
             <div class="icon-button" id="save-btn"><i class="fas fa-save"></i></div>
             <div class="icon-button" id="load-btn"><i class="fas fa-upload"></i></div>
             <div class="icon-button" id="random-btn"><i class="fas fa-dice"></i></div>
+        </div>
+
+        <div></div>
+        <div></div>
+        <label class="description-label">Controller iterations</label>
+
+        <div></div>
+        <div class="vertical-content-div">
+            <input type="range" id="iterations-per-step-slider" min="1" max="10" step="1" value="1">
         </div>
 
         <div></div>
@@ -76,9 +84,6 @@
 
     <!-- Right sidebar -->
     <div id="right-sidebar">
-
-        <label>Iterations/step</label>
-        <input type="range" id="iterations-per-step-slider" min="1" max="10" step="1" value="1">
 
         <button class="radio-button">Best First Search</button>
         <button class="radio-button">Breadth First Search</button>
