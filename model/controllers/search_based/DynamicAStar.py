@@ -4,6 +4,10 @@ from model.geometry.segment import Segment
 from model.geometry.point import Point
 from enum import Enum
 
+"""
+May the code in this file rest eternally unseen, forgotten in the annals of time as a testament to its own ugliness.
+"""
+
 
 class State(Enum):
     NEW = 0
@@ -11,9 +15,16 @@ class State(Enum):
     OPEN = 2
 
 
+class Step(Enum):
+    PLANNING = 0
+    REPLANNING = 1
+    UPDATING_COST = 2
+    DONE = 3
+
+
 class Node:
 
-    def __init__(self, point, state=State.NEW, k=0.0, h=float('inf'), parent=None):
+    def __init__(self, point, state=State.NEW, k=0.0, h=float('inf'), parent=None, occupied=False):
         self.point = point
         self.state = state
 
@@ -22,11 +33,12 @@ class Node:
         self.k = k
         self.h = h
         self.parent = parent
+        self.occupied = occupied
 
     def __eq__(self, other):
         if not isinstance(other, Node):
             return False
-        return self.point == other.point and self.state == other.state
+        return self.point == other.point  # and self.state == other.state
 
     def __hash__(self):
         return hash(self.point)
@@ -65,9 +77,12 @@ class DynamicAStar(SearchBased):
         self.start_node = None
         self.goal_node = None
 
-        # Boolean used to know if we need a path (planning/replanning)
-        # or we need to look for updates
-        self.need_for_path = True
+        # Enum used to know if we need a path (planning), if we had a path and
+        # we need to modify it (replanning) or if we need to update the costs
+        self.algorithm_step = None
+
+        self.replanning_current_node = None  # This will come in handy later ;)
+        self.cost_updated = False  # This too ;)
 
         # Whenever we have a path and self.has_path() returns True, the robot
         # will start moving towards the goal. We want instead the robot to move
@@ -98,7 +113,7 @@ class DynamicAStar(SearchBased):
 
     def initialize_grid(self):
         """
-        Initialize the grid with the size of the map
+        Initialize the cell grid
         """
 
         min_x, min_y, max_x, max_y = self.world_map.map_boundaries
@@ -126,9 +141,10 @@ class DynamicAStar(SearchBased):
         self.open_set = set()
         self.closed_set = set()
 
-        # Boolean used to know if we need a path (planning/replanning)
-        # or we need to look for updates
-        self.need_for_path = True
+        self.algorithm_step = Step.PLANNING
+
+        self.replanning_current_node = None
+        self.cost_updated = False
 
         # Number of obstacles. This will be used to check if something has
         # changed and we need to trim the tree/update the path
@@ -202,9 +218,6 @@ class DynamicAStar(SearchBased):
 
     def extract_path(self):
 
-        # We don't need to further search for the path
-        self.need_for_path = False
-
         # Reset the path
         self.temp_path = []
 
@@ -239,17 +252,26 @@ class DynamicAStar(SearchBased):
         return False
 
     def step_search(self):
+        """
+        I'm loosing my sanity
+        """
 
-        if self.need_for_path:
+        if self.algorithm_step == Step.PLANNING:
 
-            self.world_map.disable()  # At every iteration, ensure map changes are not enabled
+            # At every iteration, ensure map changes are not enabled
+            self.world_map.disable()
 
-            self.planning()  # Will eventually set need_for_path to False
+            self.planning()
 
             if self.start_node.state == State.CLOSED:
+
                 self.extract_path()
 
-        else:  # We have the path, we start checking for map updates
+                # We don't need to further search for the path
+                self.algorithm_step = Step.DONE
+
+        # We have the path, we start checking for wmap updates
+        elif self.algorithm_step == Step.DONE:
 
             self.world_map.enable()  # Ensure map changes are enabled
 
@@ -260,7 +282,45 @@ class DynamicAStar(SearchBased):
                 self.num_obstacles = len(self.world_map.obstacles)
 
                 # Check if the path is invalid
-                self.replanning()
+                if self.is_temp_path_invalid():
+                    self.algorithm_step = Step.REPLANNING
+                    self.closed_set = set()
+                    self.temp_path = []
+
+        elif self.algorithm_step == Step.REPLANNING:
+            """
+            s = self.start_node
+            while s != self.goal_node:
+                if self.check_collision(s.point, s.parent.point):
+                    self.modify(s)
+                    continue
+                s = s.parent
+    
+            self.extract_path()
+            """
+
+            self.world_map.disable()
+
+            if self.replanning_current_node is None:
+                self.replanning_current_node = self.start_node
+
+            elif self.replanning_current_node != self.goal_node:
+                if self.check_collision(self.replanning_current_node.point, self.replanning_current_node.parent.point):
+                    self.modify_cost(self.replanning_current_node)
+                    self.algorithm_step = Step.UPDATING_COST
+                else:
+                    self.replanning_current_node = self.replanning_current_node.parent
+
+            elif self.replanning_current_node == self.goal_node:
+                self.extract_path()
+                self.replanning_current_node = None
+                self.algorithm_step = Step.DONE
+
+        elif self.algorithm_step == Step.UPDATING_COST:
+
+            k_min = self.planning()
+            if k_min >= self.replanning_current_node.h:
+                self.algorithm_step = Step.REPLANNING
 
         # Update drawing list
         self.update_draw_list()
