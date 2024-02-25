@@ -167,7 +167,7 @@
 }
 
 #progress-bar {
-    width: 0;
+    width: 0px;
     height: 30px;
     background-color: #0069d9;
     text-align: center;
