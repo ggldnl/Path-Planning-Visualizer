@@ -63,6 +63,7 @@ class DynamicAStar(SearchBased):
         # simple as the overally complexity is much higher than other algorithms
         self.grid = None
         self.start_node = None
+        self.goal_node = None
 
         # Boolean used to know if we need a path (planning/replanning)
         # or we need to look for updates
@@ -121,9 +122,6 @@ class DynamicAStar(SearchBased):
 
     def pre_search(self):
 
-        self.initialize_grid()
-        self.start_node = self.get_from_grid(self.start)
-
         # Initialize the sets
         self.open_set = set()
         self.closed_set = set()
@@ -138,12 +136,15 @@ class DynamicAStar(SearchBased):
 
         self.temp_path = []
 
+        self.initialize_grid()
+        self.start_node = self.get_from_grid(self.start)
+
         # Set goal node's h value to 0
-        goal_node = self.get_from_grid(self.world_map.goal)
-        goal_node.h = 0
+        self.goal_node = self.get_from_grid(self.world_map.goal)
+        self.goal_node.h = 0
 
         # Insert goal node into open set
-        self.insert(goal_node, 0)
+        self.insert(self.goal_node, 0)
 
     def delete(self, node):
         """
@@ -201,7 +202,11 @@ class DynamicAStar(SearchBased):
 
     def extract_path(self):
 
+        # We don't need to further search for the path
         self.need_for_path = False
+
+        # Reset the path
+        self.temp_path = []
 
         current_point = self.start_node
         while current_point is not None:
@@ -227,6 +232,12 @@ class DynamicAStar(SearchBased):
                             neighbors.add(neighbor_node)
         return neighbors
 
+    def is_temp_path_invalid(self):
+        for i in range(1, len(self.temp_path)):
+            if self.check_collision(self.temp_path[i - 1], self.temp_path[i]):
+                return True
+        return False
+
     def step_search(self):
 
         if self.need_for_path:
@@ -240,8 +251,6 @@ class DynamicAStar(SearchBased):
 
         else:  # We have the path, we start checking for map updates
 
-            print(f'The path is: {self.path}')
-
             self.world_map.enable()  # Ensure map changes are enabled
 
             # Changes occurred (different number of obstacles)
@@ -250,11 +259,8 @@ class DynamicAStar(SearchBased):
                 # Update the number of obstacles in the map
                 self.num_obstacles = len(self.world_map.obstacles)
 
-                """
                 # Check if the path is invalid
-                if self.is_path_invalid():
-                    self.need_for_path = True
-                """
+                self.replanning()
 
         # Update drawing list
         self.update_draw_list()
@@ -319,6 +325,38 @@ class DynamicAStar(SearchBased):
                         self.insert(neighbor, neighbor.h)
 
         return self.get_k_min()
+
+    def replanning(self):
+
+        s = self.start_node
+        while s != self.goal_node:
+            if self.check_collision(s.point, s.parent.point):
+                self.modify(s)
+                continue
+            s = s.parent
+
+        self.extract_path()
+
+    def modify(self, node):
+        """
+        Start processing from the node
+        """
+
+        self.modify_cost(node)
+
+        while True:
+            k_min = self.planning()
+            if k_min >= node.h:
+                break
+
+    def modify_cost(self, s):
+        """
+        If the node is in the closed set, put it into open set.
+        Since cost may be changed between s - s.parent, calc cost(s, s.p) again
+        """
+
+        if s.state == State.CLOSED:
+            self.insert(s, s.parent.h + self.cost(s, s.parent))
 
     def update_draw_list(self):
         # Overload the method to empty the draw_list first, getting rid of old segments.
