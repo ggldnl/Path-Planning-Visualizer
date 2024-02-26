@@ -14,14 +14,27 @@ class Ellipse(Shape):
         self.b = b  # Semiminor axis
         self.phi = phi  # Rotation angle of the major axis
 
-        self.points = [self.calculate_point(theta) for theta in np.linspace(0, 2 * np.pi, 24)]
+    def generate_point_inside(self):
+        # Generate a random angle
+        theta = np.random.uniform(0, 2 * np.pi)
+        # Generate a random radius
+        r = np.sqrt(np.random.uniform(0, 1))
 
-    def calculate_point(self, theta):
-        x = self.a * np.cos(theta)
-        y = self.b * np.sin(theta)
-        x_rot = x * np.cos(self.phi) - y * np.sin(self.phi)
-        y_rot = x * np.sin(self.phi) + y * np.cos(self.phi)
-        return Point(self.pose.x + x_rot, self.pose.y + y_rot)
+        # Scale by the semi-axes
+        x_prime = self.a * r * np.cos(theta)
+        y_prime = self.b * r * np.sin(theta)
+
+        # Rotate by phi
+        cos_phi = np.cos(self.phi)
+        sin_phi = np.sin(self.phi)
+        x_rotated = x_prime * cos_phi - y_prime * sin_phi
+        y_rotated = x_prime * sin_phi + y_prime * cos_phi
+
+        # Translate to the center
+        x = self.pose.x + x_rotated
+        y = self.pose.y + y_rotated
+
+        return {'x': x, 'y': y}
 
     def get_bounds(self):
         # Approximate bounds by calculating points and finding min/max
@@ -37,6 +50,25 @@ class Ellipse(Shape):
         x_rot = cos_phi * (point.x - self.pose.x) - sin_phi * (point.y - self.pose.y)
         y_rot = sin_phi * (point.x - self.pose.x) + cos_phi * (point.y - self.pose.y)
         return (x_rot / self.a) ** 2 + (y_rot / self.b) ** 2 <= 1
+
+    @staticmethod
+    def from_path_points(a1, b1, a2, b2, c):
+        # Compute ellipse parameters
+        a = c / 2  # Semimajor axis
+        x0 = (a1 + a2) / 2  # Center x-value
+        y0 = (b1 + b2) / 2  # Center y-value
+        f = np.sqrt((a1 - x0) ** 2 + (b1 - y0) ** 2)  # Distance from center to focus
+
+        # Check if the expression inside np.sqrt is non-negative
+        if a ** 2 - f ** 2 < 0:
+            # If negative, set b to a small positive value
+            b = 0.01
+        else:
+            b = np.sqrt(a ** 2 - f ** 2)  # Semiminor axis
+
+        phi = np.arctan2((b2 - b1), (a2 - a1))  # Angle betw major axis and x-axis
+
+        return Ellipse(x0, y0, a, b, phi)
 
     def rotate(self, theta):
         self.phi += theta

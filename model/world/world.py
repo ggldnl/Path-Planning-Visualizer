@@ -158,7 +158,8 @@ class World:
         for controller in self.controllers:
             if hasattr(controller.search_algorithm, 'ellipse'):
                 ellipse = controller.search_algorithm.ellipse
-                shapes.append(view.get_ellipse_view_dict(ellipse))
+                if ellipse is not None:
+                    shapes.append(view.get_ellipse_view_dict(ellipse))
 
         # return json.dumps(shapes_list)
         return shapes

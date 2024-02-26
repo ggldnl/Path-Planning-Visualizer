@@ -341,24 +341,16 @@ window.onload = function () {
             ctx.stroke();
         }
 
-        function drawEllipse(focus1, focus2, c, fillColor, borderColor, lineWidth) {
-
+        function drawEllipse(centerX, centerY, a, b, phi, fillColor, borderColor, lineWidth) {
             ctx.lineWidth = lineWidth;
 
-            // Calculate the center and major axis of the ellipse
-            var centerX = (focus1[0] + focus2[0]) / 2;
-            var centerY = (focus1[1] + focus2[1]) / 2;
-            var majorAxis = Math.sqrt(Math.pow(focus2[0] - focus1[0], 2) + Math.pow(focus2[1] - focus1[1], 2)) + c;
-
-            // Calculate the angle of rotation for the ellipse
-            var angle = Math.atan2(focus2[1] - focus1[1], focus2[0] - focus1[0]);
-
+            // Translate and rotate the context to draw the rotated ellipse
             ctx.translate(pixelOrigin.x + centerX * scale, pixelOrigin.y - centerY * scale);
-            ctx.rotate(angle);
+            ctx.rotate(phi);
 
             // Draw the ellipse
             ctx.beginPath();
-            ctx.arc(0, 0, majorAxis * scale, 0, 2 * Math.PI);
+            ctx.ellipse(0, 0, a * scale, b * scale, 0, 0, 2 * Math.PI);
             ctx.closePath();
 
             // Fill the ellipse
@@ -371,8 +363,10 @@ window.onload = function () {
             } else {
                 ctx.strokeStyle = borderColor;
             }
-
             ctx.stroke();
+
+            // Reset the transformation
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
 
 
