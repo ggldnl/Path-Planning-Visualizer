@@ -1,43 +1,76 @@
-button, input {
-	margin: 2px 2px; /* exterior */
+.button {
 	padding: 10px 20px; /* interior */
 	height: 50px;
-	background: #262626;
-	color: white;
-	font-family: "Roboto", sans-serif;
-	font-size: 18px;
-	text-align: center;
+
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
+    text-align: center;
     vertical-align: middle;
-	border: 1px solid #262626;
-	border-radius: 5px;
-	cursor: pointer;
+
+	background: #262626;
+    color: #fff;
+    border: none;
+
+    cursor: pointer;
+    /* border: 1px solid #262626; */
+
+    border-radius: 5px;
 }
 
-#home_btn {
-    position: absolute;
-	width: 50px;
-    padding: 0;
-    margin: 0;
-    left: 90px;
-    top: 20px;
-    transition: all .5s ease;
+.button:hover {
+    background: #161616;
 }
 
-/* The home button is moved to the end of the sidebar
- */
-#sidebar-checkbox:checked ~ #home_btn{
-    left: 340px;
+.icon-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #262626;
+    color: #fff;
+    border: none;
+
+    cursor: pointer;
+    outline: none;
 }
 
-/* To disable a button, make it inherit this class
- */
-.grayed-out-button {
-    background-color: #ccc;
-    color: #888;
-    cursor: not-allowed;
-    pointer-events: none;
+.icon-button:hover {
+    background: #161616;
 }
 
-.highlighted-button {
-    border: 2px solid #ffffff;
+/* Radio buttons */
+
+.radio-button {
+	padding-left: 10px; /* interior */
+	height: 50px;
+	width: 80%;
+
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
+    text-align: left;
+    vertical-align: middle;
+
+	background: #303030;
+    color: #fff;
+    border: none;
+
+    cursor: pointer;
+    /* border: 1px solid #262626; */
+
+    border-radius: 5px;
+}
+
+.radio-button:hover {
+/*
+    background: #161616
+    color: #808080;
+*/
+}
+
+.checked {
+    background: #0069d9;
 }

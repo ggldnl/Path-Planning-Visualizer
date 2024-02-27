@@ -4,8 +4,22 @@ from model.geometry.point import Point
 class Segment:
 
     def __init__(self, start, end):
-        self.start = start
-        self.end = end
+        self.start = Point(start[0], start[1])
+        self.end = Point(end[0], end[1])
+
+    @property
+    def bounds(self):
+        min_x = min(self.start.x, self.end.x)
+        max_x = max(self.start.x, self.end.x)
+        min_y = min(self.start.y, self.end.y)
+        max_y = max(self.start.y, self.end.y)
+        return min_x, min_y, max_x, max_y
+
+    def get_edges(self):
+        return [self.copy()]
+
+    def copy(self):
+        return Segment(self.start.copy(), self.end.copy())
 
     def __getitem__(self, item):
         if item == 0:
@@ -28,6 +42,9 @@ class Segment:
 
     def __iter__(self):
         return iter([self.start, self.end])
+
+    def midpoint(self):
+        return Point((self.start.x + self.end.x) / 2, (self.start.y + self.end.y) / 2)
 
     def normal(self):
         """
@@ -66,3 +83,12 @@ class Segment:
             return self.end
         else:
             return Point(x1 + t * dx, y1 + t * dy)
+
+    def __str__(self):
+        return f'Segment {self.start} - {self.end}'
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        return self.start.distance(self.end)

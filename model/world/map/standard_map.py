@@ -1,56 +1,69 @@
-from model.world.map.map import Map
-from model.geometry.point import Point
-from model.world.map.obstacle import Obstacle
+from model.geometry.intersection import check_intersection
 
-import pickle
-import json
+from model.world.map.map import Map
 
 
 class StandardMap(Map):
 
     def __init__(self, **kwargs):
+        """
+        This implementation of the Map interface only relies on a simple list to
+        manage the obstacles. This results in very slow queries and overall latency
+        """
+
         super().__init__(**kwargs)
 
-        self.obstacles = []
-        self.initial_obstacles = []
+    def query_polygon(self, region):
+        result = []
+        for obstacle_id, obstacle in self._obstacles.items():
+            if check_intersection(region, obstacle.polygon):
+                result.append(obstacle_id)
+        return result
+
+    def step_motion(self, dt):
+
+        """
+        if self.enable_changes:
+
+            for obstacle in self._obstacles:
+
+                if self.map_boundaries is not None:
+
+                    # Try to compute the next pose
+                    x, y, z = obstacle.polygon.pose
+                    vx, vy, vz = obstacle.vel
+                    lsm = obstacle.linear_speed_multiplier
+
+                    new_x = x + vx * lsm * dt
+                    new_y = y + vy * lsm * dt
+
+                    minx, miny, maxx, maxy = self.map_boundaries
+                    if not minx <= new_x <= maxx:
+                        obstacle.vel = (-vx, vy, vz)
+
+                    if not miny <= new_y <= maxy:
+                        obstacle.vel = (vx, -vy, vz)
+
+                obstacle.step_motion(dt)
+        """
+
+        # Do nothing for this kind of map, obstacles should stay still
+        pass
 
     def _add_obstacle(self, obstacle):
-        self.obstacles.append(obstacle)
-        self.initial_obstacles.append(obstacle.copy())
+        return
 
-    def reset_map(self):
-        self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
+    def _remove_obstacle(self, obstacle_id):
+        return
 
-    def save_as_pickle(self, filename):
-        with open(filename, "wb") as file:
-            pickle.dump(self.initial_obstacles, file)
-            pickle.dump(self.current_goal, file)
+    def _reset(self):
+        return
 
-    def save_as_json(self, filename):
-        data = {
-            "initial_obstacles": [obstacle.to_dict() for obstacle in self.initial_obstacles],
-            "current_goal": self.current_goal.to_dict()
-        }
+    def _clear(self):
+        return
 
-        with open(filename, "w") as file:
-            json.dump(data, file)
+    def _load_from_pickle(self):
+        return
 
-    def load_map_from_pickle(self, filename):
-        with open(filename, "rb") as file:
-            self.initial_obstacles = pickle.load(file)
-            self.obstacles = [obstacle.copy() for obstacle in self.initial_obstacles]
-            self.current_goal = pickle.load(file)
-
-    def load_map_from_json_data(self, data):
-
-        self.current_goal = Point.from_dict(data['current_goal'])
-
-        obstacle_data = data['initial_obstacles']
-        obstacles = []
-        for obstacle_dictionary in obstacle_data:
-            obstacle = Obstacle.from_dict(obstacle_dictionary)
-            obstacles.append(obstacle)
-
-        self.obstacles = obstacles
-        self.initial_obstacles = [obstacle.copy() for obstacle in self.obstacles]
-        print('Map updated!')
+    def _load_from_json_data(self):
+        return

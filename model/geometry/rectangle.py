@@ -1,5 +1,6 @@
 from model.geometry.point import Point
 from model.geometry.polygon import Polygon
+import numpy as np
 
 
 class Rectangle(Polygon):
@@ -13,10 +14,10 @@ class Rectangle(Polygon):
             raise ValueError(f'Invalid height: {height}')
 
         points = [
-            Point(0, 0),
-            Point(0, height),
-            Point(width, height),
-            Point(width, 0)
+            Point(-width/2, -height/2),
+            Point(-width/2, height/2),
+            Point(width/2, height/2),
+            Point(width/2, -height/2)
         ]
 
         super().__init__(points)

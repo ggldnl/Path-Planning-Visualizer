@@ -34,6 +34,37 @@ class Pose:
     def __iter__(self):
         return iter([self.x, self.y, self.theta])
 
+    def __len__(self):
+        return 3
+
+    def as_point(self):
+        return Point(self.x, self.y)
+
+    def as_tuple(self):
+        return self.x, self.y
+
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "theta": self.theta
+        }
+
+    @classmethod
+    def from_dict(cls, pose_dict):
+        return Pose(pose_dict["x"], pose_dict["y"], pose_dict["theta"])
+
+    def __str__(self):
+        return f"Pose(x={self.x}, y={self.y}, theta={self.theta})"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if isinstance(other, Pose):
+            return self.x == other.x and self.y == other.y and self.theta == other.theta
+        return False
+
     def copy(self):
         return Pose(self.x, self.y, self.theta)
 

@@ -8,7 +8,7 @@ from model.geometry.pose import Pose
 
 class Robot(metaclass=ABCMeta):
 
-    def __init__(self, name, bodies, motors=None):
+    def __init__(self, name, bodies):
 
         # Name of the robot
         self.name = name
@@ -21,16 +21,23 @@ class Robot(metaclass=ABCMeta):
         # Odometry
         self.estimated_pose = Pose(0, 0, 0)
 
-        self.linear_velocity = 0.2  # m/s
-        self.angular_velocity = 0.005  # rad/s
+        self.linear_velocity = 0.4  # m/s
+        self.angular_velocity = 1.0  # rad/s
 
         # Robot base consists of multiple polygons
         self.bodies = bodies
 
+        self._compute_outline()
+
+        # Define tolerance in translation/rotation
+        self.TRANSLATION_EPSILON = 0.05
+        self.ROTATION_EPSILON = 0.2
+
+    def _compute_outline(self):
         # The polygon is the outline of the entire robot. It will
-        # serve to check collisions
+        # serve to check for collisions
         points = []
-        for body in bodies:
+        for body in self.bodies:
             for point in body.points:
                 points.append(point.to_array())
 
@@ -39,22 +46,21 @@ class Robot(metaclass=ABCMeta):
         outermost_points = [points[i] for i in hull.vertices]
         self.outline = Polygon(outermost_points)
 
-        # Sensor objects
-        self.sensors = []
+    def reset(self, pose):
 
-        # Motor objects
-        self.motors = []
+        delta_x = pose.x - self.current_pose.x
+        delta_y = pose.y - self.current_pose.y
+        delta_theta = pose.theta - self.current_pose.theta
 
-        # Define tolerance in translation/rotation
-        self.ROTATION_EPSILON = 5  # 5 deg
+        self.previous_pose = pose.copy()
+        self.current_pose = pose.copy()
+        self.target_pose = pose.copy()
 
-    def add_sensor(self, sensor, pose):
+        for body in self.bodies:
+            body.translate(delta_x, delta_y)
+            body.rotate_around(self.current_pose.x, self.current_pose.y, delta_theta)
 
-        # The pose is relative to the center of the robot
-        # sensor.polygon.rotate_around(0, 0, pose.theta)
-        # sensor.polygon.translate(pose.x, pose.y)
-        sensor.polygon.transform(pose)
-        self.sensors.append(sensor)
+        self._compute_outline()
 
     def step_motion(self, dt):
         """
@@ -89,16 +95,6 @@ class Robot(metaclass=ABCMeta):
         self.outline.translate(dx, dy)
         self.outline.rotate_around(current_x, current_y, dtheta)
 
-        # Update the sensor polygons
-        for sensor in self.sensors:
-            sensor.polygon.translate(dx, dy)
-            sensor.polygon.rotate_around(current_x, current_y, dtheta)
-
-        # Update the motor polygons
-        for motor in self.motors:
-            motor.polygon.translate(dx, dy)
-            motor.polygon.rotate_around(current_x, current_y, dtheta)
-
     @abstractmethod
     def apply_dynamics(self, dt):
         return
@@ -107,7 +103,5 @@ class Robot(metaclass=ABCMeta):
     def compute_odometry(self, dt):
         return
 
-    @abstractmethod
-    def add_motor(self, motor, pose):
-        # Number of motors is constrained based on the type of the robot
-        return
+    def is_at_target(self):
+        return self.current_pose == self.target_pose

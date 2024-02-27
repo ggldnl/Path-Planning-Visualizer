@@ -9,26 +9,41 @@
     $ conda env create -f environment.yml
     $ conda activate robot_simulator
 
+## Algorithms
+
+```
+Search-based Planning
+├── Breadth-First Searching (BFS)
+├── Depth-First Searching (DFS)
+├── Best-First Searching
+└── A*
+Sampling-based Planning
+├── RRT
+├── Dynamic-RRT
+└── RRT*
+```
+
 ## TODO
 
-- [x] write URDF for cobalt
-- [x] define environment
-- [ ] remove annoying checkbox (upper left corner) that loads before the rest of the page 
-- [ ] redefine communication between backend and frontend (make it lighter)
-- [x] replace buttons with radio buttons for controller and planner menus
-- [x] highlight the current choice in controller and planner menus
-- [x] disable the planner menu if the current planner is joystick
-- [ ] update documentation
-- [ ] add save capabilities
-- [x] add load capabilities
-- [ ] ~~add sensors support to URDF parser~~
-- [ ] fix inverted angles in link origin (URDF parser)
-- [x] scale the map to match real world measures
-- [ ] move from current, complex, translation and scale logic to
-    translate() and scale() on sort of a contextManager object in javascript
-- [ ] add typing and input checking
-- [ ] ~~add radar in gui to see sensors read from the robot~~
-- [ ] provide more control on map generation (e.g. number of each type of obstacles, how to spatially align the static ones and so on...)
-- [ ] interact with obstacles on mouse click (accelerate them, stop them, ...) 
-- [ ] make the robot follow the shortest angle
-- [ ] remove linalg/utils and incorporate their methods inside geometry
+- [x] Strip unnecessary stuff from robot stack (e.g. sensors, motors, etc)
+- [x] Rework map and remove moving obstacles. Add obstacles on mouse click instead
+- [x] Add obstacles on mouse click
+- [x] Redefine/Uniform websocket channels names
+- [x] Fix bug with region query in Map class
+- [x] Uniform query and query_region methods in Map class
+- [x] Provide thread safe rtree implementation
+- [x] Rework world json to use map serialization instead of plain polygons serialization
+- [x] Fix bug with search algorithms and new map (seems like sampling doesn't care about obstacles)
+- [ ] Algorithms can't find the goal if we set it to positions outside the grid
+- [ ] Add missing search algorithms
+- [x] Redefine world serialization
+- [x] Finish left sidebar
+- [x] Add another load button to left sidebar to load a custom URDF
+- [x] Make the save button actually save the last map data received
+- [ ] Provide multi robot support
+- [ ] Fix bugs with urdf loading (robot stops moving after few steps, maybe step size)
+- [ ] Find a way to specify obstacles shape (rectangle, polygon, ...)
+- [ ] Find a way to choose the behavior of the map (moving/spawning obstacles)
+- [ ] Fix inverted angles in link origin (URDF parser)
+- [ ] Add typing and input checking 
+- [ ] Update documentation

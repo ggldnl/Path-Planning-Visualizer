@@ -16,6 +16,9 @@ class Obstacle:
         self.linear_speed_multiplier = 1
         self.angular_speed_multiplier = 1
 
+    def get_bounds(self):
+        return self.polygon.get_bounds()
+
     def set_random_velocity_vector(self):
         self.vel = (random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5))
 
@@ -50,6 +53,12 @@ class Obstacle:
         polygon = Polygon.from_dict(dictionary['polygon'])
         vel = tuple(dictionary['vel'])
         return Obstacle(polygon, vel)
+
+    def __str__(self):
+        return f'Obstacle {self.polygon.points}'
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class RectangularObstacle(Obstacle):

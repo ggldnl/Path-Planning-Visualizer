@@ -12,3 +12,7 @@ dependencies:
   - numpy>=1.26.0
   - scipy>=1.11.3
   - shapely>=2.0.1
+  - pip:
+      - flask-compress==1.14
+      - rtree==1.1.0
+      - flask_socketio==5.3.6

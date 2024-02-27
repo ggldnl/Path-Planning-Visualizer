@@ -1,5 +1,6 @@
 from model.geometry.polygon import Polygon
 from model.geometry.circle import Circle
+from model.geometry.rectangle import Rectangle
 from model.geometry.segment import Segment
 
 
@@ -9,14 +10,7 @@ def polygon_intersects_circle(polygon, circle):
         min1, max1 = polygon.project(axis)
         min2, max2 = circle.project(axis)
 
-        """
-        # TODO: Maybe the opposite?
         if min2 < min1 or max2 > max1:
-            return False
-        """
-
-        if max1 < min2 or max2 < min1:
-            # If there is a gap along this axis, the polygons do not intersect
             return False
 
     return True
@@ -102,16 +96,16 @@ def check_intersection(obj_1, obj_2):
     if isinstance(obj_1, Circle):
         if isinstance(obj_2, Circle):
             return circle_intersects_circle(obj_1, obj_2)
-        elif isinstance(obj_2, Polygon):
+        elif isinstance(obj_2, Polygon) or isinstance(obj_2, Rectangle):
             return circle_intersects_polygon(obj_1, obj_2)
         elif isinstance(obj_2, Segment):
             return circle_intersects_segment(obj_1, obj_2)
         else:
             raise ValueError(f'Unsupported geometry type: {type(obj_2)}')
-    elif isinstance(obj_1, Polygon):
+    elif isinstance(obj_1, Polygon) or isinstance(obj_2, Rectangle):
         if isinstance(obj_2, Circle):
             return polygon_intersects_circle(obj_1, obj_2)
-        elif isinstance(obj_2, Polygon):
+        elif isinstance(obj_2, Polygon) or isinstance(obj_2, Rectangle):
             return polygon_intersects_polygon(obj_1, obj_2)
         elif isinstance(obj_2, Segment):
             return polygon_intersects_segment(obj_1, obj_2)
@@ -120,7 +114,7 @@ def check_intersection(obj_1, obj_2):
     elif isinstance(obj_1, Segment):
         if isinstance(obj_2, Circle):
             return segment_intersects_circle(obj_1, obj_2)
-        elif isinstance(obj_2, Polygon):
+        elif isinstance(obj_2, Polygon) or isinstance(obj_2, Rectangle):
             return segment_intersects_polygon(obj_1, obj_2)
         elif isinstance(obj_2, Segment):
             return segment_intersects_segment(obj_1, obj_2)

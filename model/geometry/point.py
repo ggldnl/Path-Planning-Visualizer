@@ -11,6 +11,13 @@ class Point:
     def __str__(self):
         return f"Point(x={self.x}, y={self.y})"
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        # Hash based on the tuple (x, y)
+        return hash((self.x, self.y))
+
     def __eq__(self, other):
         if not isinstance(other, Point):
             return False
@@ -141,6 +148,9 @@ class Point:
 
     def __rmul__(self, other):
         return self.__mul__(other)
+
+    def __iter__(self):
+        return iter([self.x, self.y])
 
     def distance(self, other):
         if isinstance(other, Point):

@@ -1,115 +1,175 @@
-*{
-    margin: 0;
-    padding: 0;
-    text-decoration: none;
-}
-
-/* Sidebar style
- */
-.sidebar{
-    text-align: center; /* Center inline or inline-block elements */
-    position: fixed;
-    left: -250px;
+#left-sidebar, #right-sidebar {
+    height: 100%;
     width: 250px;
-    height:100%;
-    background: #1e1e1e;
-    /* text-align: center; /* Center the content horizontally */
-    line-height: 25px;
-    overflow: auto; /* Add overflow property to enable scrolling */
-    transition: all .5s ease;
+    position: absolute;
+    top: 0;
+    background: #303030;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+    color: white;
+    z-index: 1;
+
     font-family: "Roboto", sans-serif;
     font-size: 18px;
-
-    /* Rounded floating sidebar */
-    top: 20px;
-    height:85%;
-    width: 240px;
-    margin-left: 10px;
-    padding-top: 10px;
-    border-radius: 10px;
-
 }
 
-/* Label style */
-.sidebar_label{
-    color: #ffffff;
+#left-sidebar.shifted {
+    left: 0px;
+}
+
+#right-sidebar.shifted {
+    right: 0px;
+}
+
+#left-sidebar {
+    left: -250px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.description-label {
+    padding-left: 20px;
+}
+
+.horizontal-content-div {
+
+    display: flex;
+    flex-direction: row;
+
+    gap: 5px;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.vertical-content-div {
+
+    margin-left: 40px;
+    margin-right: 40px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+#right-sidebar {
+    right: -250px;
+    /* Right sidebar content is vertically aligned */
+    display: flex;
+    flex-direction: column;
+    /* Gap between buttons */
+    gap: 10px;
+    align-items: center;
+}
+
+#sidebar a {
+    padding: 8px 8px 8px 8px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
     display: block;
-    margin: 10px 20px;
+    transition: 0.3s;
 }
 
-/* Slider style */
-.custom_slider{
-    color: white;
-    height: 5px;
+/*
+#sidebar a:hover {
+    color: #f1f1f1;
 }
+*/
 
-/* ------- */
-
-
-th, td {
-    border-collapse: collapse;
-    text-align: left;
-}
-
-.table_label{
-    color: #ffffff;
-    display: block;
-    margin: 0px 20px;
-}
-
-.table_checkbox{
-    height: 25px;
-}
-
-/* Define open and close sidebar buttons */
-label #open-sidebar-btn, label #close-sidebar-btn{
-    position: absolute;
-    cursor:pointer;
-    background: #262626;
-    height: 48px;
-    width: 48px;
-    text-align: center;
-    line-height: 50px;
-    vertical-align: middle;
-    color: white;
-    font-size: 18px;
-    border: 1px solid #262626;
+#left-open-btn, #right-open-btn, #home-btn, #track-btn, #go-to-btn{
+    width: 50px;
+    height: 50px;
     border-radius: 5px;
 
-    padding: 0;
-    margin: 0;
-    left: 20px;
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+
+    background: #262626;
+    color: #fff;
+
+    cursor: pointer;
+    position: fixed;
+
+    z-index: 2;
+    transition: 0.5s;
+}
+
+#left-open-btn {
     top: 20px;
-
-    transition: all .5s ease;
+    left: 20px;
 }
 
-label #close-sidebar-btn {
-    opacity: 0;
-    visibility: hidden;
+#right-open-btn {
+    bottom: 60px;
+    right: 20px;
 }
 
-/* The open sidebar button is pressed */
+/* Horizontally aligned after right-open-btn
+#go-to-btn {
+    bottom: 60px;
+    right: 90px;
+}
+*/
 
-/* The sidebar is extended */
- #sidebar-checkbox:checked ~ .sidebar{
-    left: 0;
+#go-to-btn {
+    bottom: 130px;
+    right: 20px;
 }
 
-/* The open button icon is moved to the end of the sidebar
- * and made invisible
- */
-#sidebar-checkbox:checked ~ label #open-sidebar-btn{
-    margin-left: 250px;
-    opacity: 0;
-    visibility: hidden;
+#home-btn {
+    top: 20px;
+    left: 90px; /* 20px (margin from open-btn) + 50px (width of open-btn) + 20px (gap) */
 }
 
-/* The close button icon is moved to the end of the sidebar
- * and made visible
- */
-#sidebar-checkbox:checked ~ label #close-sidebar-btn{
-    margin-left: 250px;
-    opacity: 1;
-    visibility: visible;
+#track-btn {
+    top: 20px;
+    left: 160px;
+}
+
+#left-open-btn.shifted {
+    left: 270px; /* 250px (opened sidebar) + 20px (gap) */
+}
+
+#right-open-btn.shifted {
+    right: 270px; /* 250px (opened sidebar) + 20px (gap) */
+}
+
+/* Horizontally aligned after right-open-btn
+#go-to-btn.shifted {
+    right: 340px;
+}
+*/
+
+#go-to-btn.shifted {
+    right: 270px;
+}
+
+#home-btn.shifted {
+    left: 340px; /* 250px (opened sidebar) + 20px (gap 1) + 50px (open-btn) + 20px (gap 2) */
+}
+
+#track-btn.shifted {
+    left: 410px;
+}
+
+#progress-container {
+    width: 80%;
+    margin: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#progress-bar {
+    width: 0px;
+    height: 30px;
+    background-color: #0069d9;
+    text-align: center;
+    line-height: 30px;
 }
