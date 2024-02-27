@@ -5,11 +5,12 @@ import numpy as np
 
 class Ellipse(Shape):
 
-    def __init__(self, x0, y0, a, b, phi):
+    def __init__(self, center, a, b, phi):
         super().__init__()
 
-        self.pose.x = x0
-        self.pose.y = y0
+        self.pose.x = center.x
+        self.pose.y = center.y
+        self.pose.theta = phi
         self.a = a  # Semimajor axis
         self.b = b  # Semiminor axis
         self.phi = phi  # Rotation angle of the major axis
@@ -37,10 +38,23 @@ class Ellipse(Shape):
         return {'x': x, 'y': y}
 
     def get_bounds(self):
-        # Approximate bounds by calculating points and finding min/max
-        xs = [point.x for point in self.points]
-        ys = [point.y for point in self.points]
-        return (min(xs), min(ys), max(xs), max(ys))
+
+        # Calculate the bounds without generating all points
+        cos_theta = np.cos(np.radians(self.phi))
+        sin_theta = np.sin(np.radians(self.phi))
+
+        # Calculate the extreme points on the ellipse
+        x1 = self.pose.x + self.a * cos_theta
+        x2 = self.pose.x - self.a * cos_theta
+        y1 = self.pose.y + self.a * sin_theta
+        y2 = self.pose.y - self.a * sin_theta
+
+        min_x = min(x1, x2)
+        max_x = max(x1, x2)
+        min_y = min(y1, y2)
+        max_y = max(y1, y2)
+
+        return min_x, min_y, max_x, max_y
 
     def is_inside(self, point):
         # Check if a point is inside the ellipse using the ellipse equation
@@ -51,6 +65,28 @@ class Ellipse(Shape):
         y_rot = sin_phi * (point.x - self.pose.x) + cos_phi * (point.y - self.pose.y)
         return (x_rot / self.a) ** 2 + (y_rot / self.b) ** 2 <= 1
 
+    @staticmethod
+    def from_path_points(focus1, focus2, major_axis_length):
+
+        # Calculate the distance between the two foci
+        distance_foci = focus1.distance(focus2)
+
+        # Calculate the semi-major axis
+        semi_major_axis = major_axis_length / 2
+
+        # Calculate the semi-minor axis using the ellipse equation: b = sqrt(a^2 - c^2)
+        semi_minor_axis = np.sqrt((semi_major_axis ** 2) - (distance_foci / 2) ** 2)
+
+        # Calculate the center of the ellipse
+        center = Point((focus1[0] + focus2[0]) / 2, (focus1[1] + focus2[1]) / 2)
+
+        # Calculate the angle of rotation (if any) of the ellipse
+        angle_rad = np.arctan2(focus2[1] - focus1[1], focus2[0] - focus1[0])
+
+        # Return the parameters of the ellipse
+        return Ellipse(center, semi_major_axis, semi_minor_axis, -angle_rad)
+
+    """
     @staticmethod
     def from_path_points(a1, b1, a2, b2, c):
         # Compute ellipse parameters
@@ -69,10 +105,7 @@ class Ellipse(Shape):
         phi = np.arctan2((b2 - b1), (a2 - a1))  # Angle betw major axis and x-axis
 
         return Ellipse(x0, y0, a, b, phi)
-
-    def rotate(self, theta):
-        self.phi += theta
-        self.points = [self.calculate_point(theta) for theta in np.linspace(0, 2 * np.pi, 24)]
+    """
 
     def to_dict(self):
         return {
@@ -90,4 +123,4 @@ class Ellipse(Shape):
         return self.__str__()
 
     def copy(self):
-        return Ellipse(self.pose.x, self.pose.y, self.a, self.b, self.phi)
+        return Ellipse(self.pose.as_point(), self.a, self.b, self.phi)

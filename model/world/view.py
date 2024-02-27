@@ -37,7 +37,7 @@ def _segment_dict(p1, p2, color, line_width):
     }
 
 
-def __ellipse_dict(ellipse, fill_color, border_color, line_width):
+def _ellipse_dict(ellipse, fill_color, border_color, line_width):
     return {
         "type": "ellipse",
         "center": [ellipse.pose.x, ellipse.pose.y],
@@ -96,5 +96,5 @@ def get_path_view_dict(path):
 
 
 def get_ellipse_view_dict(ellipse):
-    return __ellipse_dict(ellipse, 'transparent', ellipse_color, 0.5)
+    return _ellipse_dict(ellipse, 'transparent', ellipse_color, 2.0)
 

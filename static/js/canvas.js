@@ -341,11 +341,14 @@ window.onload = function () {
             ctx.stroke();
         }
 
-        function drawEllipse(centerX, centerY, a, b, phi, fillColor, borderColor, lineWidth) {
+        function drawEllipse(center, a, b, phi, fillColor, borderColor, lineWidth) {
+
+            console.log('Ellipse: x=', center[0], ' y=', center[1], ' a=', a, ' b=', b, ' fillColor:', fillColor, ' borderColor:', borderColor, ' lineWidth:', lineWidth);
+
             ctx.lineWidth = lineWidth;
 
             // Translate and rotate the context to draw the rotated ellipse
-            ctx.translate(pixelOrigin.x + centerX * scale, pixelOrigin.y - centerY * scale);
+            ctx.translate(pixelOrigin.x + center[0] * scale, pixelOrigin.y - center[1] * scale);
             ctx.rotate(phi);
 
             // Draw the ellipse
@@ -393,7 +396,8 @@ window.onload = function () {
                 } else if (type == "segment") {
                     drawSegment(element["p1"], element["p2"], element["color"], element["line_width"]);
                 } else if (type == "ellipse") {
-                    drawEllipse(element["f1"], element["f2"], element["c"], element["fill_color"], element["border_color", element["line_width"]]);
+                    console.log(element);
+                    drawEllipse(element["center"], element["a"], element["b"], element["phi"], element["fill_color"], element["border_color"], element["line_width"]);
                 }
             })
 

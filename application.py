@@ -49,6 +49,7 @@ from model.world.robot.URDF_parser import URDFParser
 # Controller and initial search algorithm
 from model.controllers.controller import Controller
 from model.controllers.sampling_based.RRTStar import RRTStar
+from model.controllers.search_based.DynamicAStar import DynamicAStar
 
 # ---------------------------------- config ---------------------------------- #
 
@@ -178,7 +179,8 @@ def handle_connect():
             # Controller(robot, RRT(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, AStar(world_map, robot.current_pose.as_point())) for robot in robots
             # Controller(robot, DynamicRRT(world_map, robot.current_pose.as_point())) for robot in robots
-            Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
+            # Controller(robot, RRTStar(world_map, robot.current_pose.as_point())) for robot in robots
+            Controller(robot, DynamicAStar(world_map, robot.current_pose.as_point())) for robot in robots
         ]
 
         for robot, controller in zip(robots, controllers):

@@ -28,6 +28,7 @@ class InformedRRTStar(SamplingBased):
         self.search_radius = search_radius
         self.goal_sample_rate = goal_sample_rate
         self.ellipse = None
+        self.need_for_path = True
 
     def heuristic(self, point):
         return 0
@@ -37,6 +38,7 @@ class InformedRRTStar(SamplingBased):
         self.nodes = [Node(self.start)]
         self.edges = []
         self.need_for_path = True
+        self.ellipse = None
 
     def step_search(self):
 
@@ -71,7 +73,6 @@ class InformedRRTStar(SamplingBased):
         node_near = self.nearest_neighbor(node_rand)
         node_new = self.new_state(node_near, node_rand)
 
-        print(self.check_collision(node_near.point, node_new.point))
         if node_new and not self.check_collision(node_near.point, node_new.point):
             neighbor_index = self.find_neighborhood(node_new)
 
@@ -91,17 +92,16 @@ class InformedRRTStar(SamplingBased):
     def generate_random_node_replanning(self):
         if self.path_nodes:
             if self.ellipse is None:
-                a1, b1 = self.path_nodes[0]
-                a2, b2 = self.world_map.goal.x, self.world_map.goal.y
-                c = Point(x=a1, y=b1).distance(Point(x=a2, y=b2))
-                self.ellipse = Ellipse.from_path_points(a1, b1, a2, b2, c)
+                focus1 = self.path_nodes[0]
+                focus2 = self.world_map.goal
+                self.ellipse = Ellipse.from_path_points(focus1, focus2, focus1.distance(focus2) + 2)
 
             random_node_inside_ellipse = Node(Point.from_dict(self.ellipse.generate_point_inside()))
             return random_node_inside_ellipse
 
     def post_search(self):
         if not self.need_for_path:
-            self.path = [node for node in self.path_nodes]
+            self.path = [point for point in self.path_nodes]
 
     def check_collision(self, point_start, point_end):
         if point_start == point_end:
@@ -147,7 +147,7 @@ class InformedRRTStar(SamplingBased):
 
     def extract_path(self, node_end):
         self.need_for_path = False
-        self.path_nodes = [Node(self.world_map.goal)]
+        self.path_nodes = [self.world_map.goal]
         node_now = node_end
 
         while node_now.parent is not None:

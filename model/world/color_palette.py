@@ -1,7 +1,7 @@
 path_color = '#8b000099'
 neighbor_color = '#8b000066'
 tile_color = '#ffbf0033'
-ellipse_color = '#1a78c2'
+ellipse_color = '#00916e77'
 
 sensor_color_alert_0 = '#FFBF0066'
 sensor_color_alert_1 = '#FFBF0066'

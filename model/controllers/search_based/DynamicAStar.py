@@ -155,8 +155,14 @@ class DynamicAStar(SearchBased):
         self.initialize_grid()
         self.start_node = self.get_from_grid(self.start)
 
+        # Approximate the goal node to the nearest cell
+        goal = self.world_map.goal
+        nearest_x = round(round(goal.x / self.discretization_step) * self.discretization_step, 2)
+        nearest_y = round(round(goal.y / self.discretization_step) * self.discretization_step, 2)
+        goal_nearest_point = Point(nearest_x, nearest_y)
+
         # Set goal node's h value to 0
-        self.goal_node = self.get_from_grid(self.world_map.goal)
+        self.goal_node = self.get_from_grid(goal_nearest_point)
         self.goal_node.h = 0
 
         # Insert goal node into open set
