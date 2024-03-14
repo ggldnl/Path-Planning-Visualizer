@@ -9,6 +9,16 @@
     $ conda env create -f environment.yml
     $ conda activate robot_simulator
 
+## How to run
+
+To run the application, from the main folder, simply do the following:
+
+```
+python application.py
+```
+
+This will launch a flask server; open the address on the console from a web browser to reach the web page.
+
 ## Algorithms
 
 ```
