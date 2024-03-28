@@ -23,14 +23,17 @@ This will launch a flask server; open the address on the console from a web brow
 
 ```
 Search-based Planning
+├── Best-First Searching
 ├── Breadth-First Searching (BFS)
 ├── Depth-First Searching (DFS)
-├── Best-First Searching
-└── A*
+├── A*
+└── Dynamic A*
+
 Sampling-based Planning
 ├── RRT
+├── RRT *
 ├── Dynamic-RRT
-└── RRT*
+└── Informed RRT*
 ```
 
 ## TODO
