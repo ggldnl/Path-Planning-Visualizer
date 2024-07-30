@@ -1,4 +1,4 @@
-### Path Planning Algorithms Visualizer
+### Path Planning Visualizer
 
 This project provides a platform to visualize the flow of path planning algorithms in dynamic environments, where obstacles can change during execution, that is simple, easily deployable and intuitive.
 
@@ -13,9 +13,12 @@ In the end, it was fun but this project took way too much effort to reach a stat
 
 ## Algorithms
 
-| ![BFS](media/bfs.gif) | ![A Star](media/a_star.gif) | ![Dynamic A Star](media/dynamic_a_star.gif) |
-|---------------------------|---------------------------|---------------------------|
-| ![RRT](media/rrt.gif) | ![RRT Star](media/rrt_star.gif) | ![Informed RRT Star](media/informed_rrt_star.gif) |
+| ![BFS](media/bfs.gif) | ![A Star](media/a_star.gif) |
+|-----------------------|-----------------------------|
+| ![Dynamic A Star](media/dynamic_a_star.gif) | ![RRT](media/rrt.gif) |
+|-----------------------|-----------------------------|
+| ![RRT Star](media/rrt_star.gif) | ![Informed RRT Star](media/informed_rrt_star.gif) |
+
 
 ## Installation
 
