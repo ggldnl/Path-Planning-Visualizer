@@ -1,8 +1,8 @@
 ### Path Planning Visualizer
 
-This project provides a platform to visualize the flow of path planning algorithms in dynamic environments, where obstacles can change during execution, that is simple, easily deployable and intuitive.
+![Preview](media/preview.gif)
 
-![Preview](media/preview.png)
+This project provides a platform to visualize the flow of path planning algorithms in dynamic environments, where obstacles can change during execution, that is simple, easily deployable and intuitive.
 
 ## Project history and current state
 
