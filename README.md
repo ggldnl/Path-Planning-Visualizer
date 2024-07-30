@@ -2,6 +2,8 @@
 
 This project provides a platform to visualize the flow of path planning algorithms in dynamic environments, where obstacles can change during execution, that is simple, easily deployable and intuitive.
 
+![Preview](media/preview.png)
+
 ## Project history and current state
 
 Initially, our idea was to design two separate protocol stacks: the first for implementing path planning algorithms that could be run on a separate machine to control an agent in a physical or in a simulated environment; the second to abstract a mobile robot (unicycle, holonomic, non-holonomic, etc.), allowing us to define its structure and behavior in response to commands (forward, backward, turn, etc.). This combination would've allowed the use of agents with low computational power, controlled remotely by a server. The second stack was intended to be used both in simulation and for controlling real hardware, by simply providing an implementation of the interfaces to control the actual hardware. The concept is similar to ROS, where you can define a robot in simulation and then use the same code to control the real one. A simulation loop would accept data from the robot (e.g. its accurate position if in simulation or its odometry if real), compute a path to the goal and send back instructions on how to reach it. 
@@ -65,6 +67,14 @@ Sampling-based Planning
 ├── Dynamic-RRT
 └── Informed RRT*
 ```
+
+## Algorithm stack
+
+TODO
+
+## Add an algorithm
+
+TODO
 
 ## TODO
 
