@@ -37,7 +37,15 @@ This will launch a Flask server; open the address on the console from a web brow
 
 ## Interface 
 
-TODO
+The interface is very simple so I won't bother explaining it. Many of the commands should be clear just by using it.
+
+The main screen displays a Cartesian plane with a robot, randomly generated obstacles, and a goal. We can pan and zoom in and out of the plane.
+
+The section contains buttons to start, stop, step through, and reset the simulation.
+
+The top left corner features buttons to recenter the view on the robot, reset the view to initial coordinates and access the left sidebar. The left sidebar allows adjustment of the robot's speed, loading different robot models (does not quite work yet), saving/loading a map and generate a new one, along with other settings.
+
+The bottom right corner includes a button to open the right sidebar and a button to quick start the agent. The right sidebar is used to select the path planning algorithm and monitor algorithm progress. Some algorithms can handle dynamic environments (obstacles change while the algorithm itself is running) and continuously update the solution they previously found to reach the goal; we could run them indefinitely but instead we set a threshold for the available number of iterations the algorithm can run. The button to quick start the agent saturates the remaining iterations when we are satisfied by the current solution, we don't want to further edit the map and we want the robot to go to the goal.
 
 ## Algorithms
 
