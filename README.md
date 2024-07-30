@@ -27,7 +27,7 @@ In the end, it was fun but this project took way too much effort to reach a stat
 
 ## How to run
 
-To run the application, from the main folder, simply do the following:
+To run the application, from the main folder, simply do the following (while the conda environment is active):
 
 ```
 python application.py
