@@ -11,13 +11,12 @@ Unfortunately, several parts of the project has been put on hold and what is lef
 
 In the end, it was fun but this project took way too much effort to reach a state in which it can be considered stable enough. Any contribution is welcome.
 
-## Algorithms
+## Examples
 
 | ![BFS](media/bfs.gif) | ![A Star](media/a_star.gif) |
 |-----------------------|-----------------------------|
 | ![Dynamic A Star](media/dynamic_a_star.gif) | ![RRT](media/rrt.gif) |
 | ![RRT Star](media/rrt_star.gif) | ![Informed RRT Star](media/informed_rrt_star.gif) |
-
 
 ## Installation
 
@@ -36,7 +35,13 @@ python application.py
 
 This will launch a Flask server; open the address on the console from a web browser to reach the web page.
 
+## Interface 
+
+TODO
+
 ## Algorithms
+
+Below are the algorithms implemented so far. Some of them do not work in dynamic environments but are the base cases and thus an implementation is also provided; editing the map is disabled when they are selected; some of them let you edit the map only when the goal has been reached at least once. You can set the goal by double clicking, remove an obstacle by clicking on it and add an obstacle by clicking on an empty region on the screen. 
 
 ```
 Search-based Planning
