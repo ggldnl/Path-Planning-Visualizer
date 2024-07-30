@@ -13,6 +13,7 @@ In the end, it was fun but this project took way too much effort to reach a stat
 
 ## Algorithms
 
+|-----------------------|-----------------------------|
 | ![BFS](media/bfs.gif) | ![A Star](media/a_star.gif) |
 | ![Dynamic A Star](media/dynamic_a_star.gif) | ![RRT](media/rrt.gif) |
 | ![RRT Star](media/rrt_star.gif) | ![Informed RRT Star](media/informed_rrt_star.gif) |
