@@ -1,4 +1,4 @@
-name: robot_simulator
+name: path_planning_visualizer
 channels:
   - conda-forge
   - defaults
