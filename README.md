@@ -2,7 +2,7 @@
 
 ![Preview](media/preview.gif)
 
-This project provides a platform to visualize the flow of path planning algorithms in dynamic environments that is simple, easily deployable and intuitive.
+This project provides a simple and easily deployable platform to visualize the flow of path planning algorithms in dynamic environments.
 
 ## Project history and current state
 
