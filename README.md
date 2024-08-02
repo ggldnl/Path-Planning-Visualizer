@@ -49,7 +49,7 @@ The top left corner features buttons to recenter the view on the robot, reset th
 
 The bottom right corner includes a button to open the right sidebar and a button to quick start the agent. The right sidebar is used to select the path planning algorithm and monitor algorithm progress. Some algorithms can handle dynamic environments (obstacles change while the algorithm itself is running) and continuously update the solution they previously found to reach the goal; we could run them indefinitely but instead we set a threshold for the available number of iterations the algorithm can run. The button to quick start the agent saturates the remaining iterations when we are satisfied by the current solution, we don't want to further edit the map and we want the robot to go to the goal.
 
-## Algorithms
+## Currently implemented algorithms
 
 Below are the algorithms implemented so far. Some of them do not work in dynamic environments but are the base cases and thus an implementation is also provided; editing the map is disabled when they are selected; some of them let you edit the map only when the goal has been reached at least once. You can set the goal by double clicking, remove an obstacle by clicking on it and add an obstacle by clicking on an empty region on the screen. 
 
