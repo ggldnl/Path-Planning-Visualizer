@@ -23,7 +23,7 @@ In the end, it was fun but this project took way too much effort to reach a stat
 ## Installation
 
     $ git clone https://github.com/ggldnl/Path-Planning-Visualizer
-    $ cd Path-Planning-Algorithms-Visualizer
+    $ cd Path-Planning-Visualizer
     $ conda env create -f environment.yml
     $ conda activate path_planning_visualizer
 
