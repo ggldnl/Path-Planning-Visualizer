@@ -70,11 +70,67 @@ Sampling-based Planning
 
 ## Algorithm stack
 
-TODO
+In order to uniform the algorithms and provide a common structure between them, we created a hierarchy. Almost all the code required to let the algorithm run is contained in the `SearchAlgorithm` base class. This interface represents all the search algorithms. Every algorithm has an initial phase in which data structures are set up, a search loop in which algorithm-specific logic is repeatedly executed to gather necessary information and a post loop phase in which the gathered information is processed in order to produce the path. Having this structure allowed us to reduce the complexity that would be required to write from scratch an algorithm, allowing the us to focus only on the aspects that differentiate one search algorithm from others.
 
-## Add an algorithm
+We further specialized the base class for two classes of algorithms:
+- Search based: Use the `SearchBased` subclass for grid-based algorithms (the search space is discretized into a grid). Examples include A* and Dijkstra’s algorithms.
+- Sampling based: Use the `SamplingBased` subclass for sampling-based algorithms (operating in a continuous space by randomly sampling points). Examples include RRT (Rapidly-exploring Random Tree).
 
-TODO
+## Add a new search algorithm
+
+### Define the class
+
+Extend either `SearchBased` or `SamplingBased` depending on your algorithm's nature. Implement the required methods to define how your algorithm initializes, performs the search, and processes results.
+
+```python
+class MyGridSearchAlgorithm(SearchBased):
+
+    def __init__(self, 
+                 world_map,                 # Reference to the map
+                 start=Point(0, 0),         # Starting point
+                 margin=0.2,                # Minimum margin between agent and obstacles
+                 iterations_per_step=1,     # Execution speed
+                 max_iterations=5000,       # Maximum allowed iterations
+                 discretization_step=0.2    # Size of each grid tile
+                 # Additional parameters here
+                 ):
+        
+        super().__init__(
+            world_map, 
+            start, 
+            margin=margin, 
+            iterations_per_step=iterations_per_step,
+            max_iterations=max_iterations,
+            dynamic=False,                  # If it can react to a dynamically changing environment
+                                            #   (at each iteration the obstacles can be different)
+            discretization_step=discretization_step
+        )
+        
+
+    def pre_search(self):
+        # Prepare for search, e.g., setup data structures
+        print('Custom pre-search setup')
+
+    def step_search(self):
+        # Implement the search logic specific to your algorithm
+        # (one iteration of the loop)
+        print('Performing search step')
+
+    def post_search(self):
+        # Finalize the search, process the result
+        print('Custom post-search processing')
+
+```
+
+### Implement the logic
+
+- `pre_search()`: Initialize any data structures or settings needed before the search begins (e.g. stack, queue, ...);
+- `step_search()`: Define a step of the core search logic; this step will be called until the termination condition are met (this part is handled by the `SearchAlgorithm` interface);
+- `post_search()`: Perform any final processing, such as path reconstruction (e.g. some search algorithms build the path backwards once they reach the goal and it needs to be reversed);
+
+Optionally, include any algorithm-specific parameters to the constructor.
+
+The interfaces provide a way to automatically handle max iteration overflow.
 
 ## TODO
 
