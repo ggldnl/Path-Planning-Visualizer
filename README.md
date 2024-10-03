@@ -15,10 +15,20 @@ In the end, it was fun but this project took way too much effort to reach a stat
 
 ## Examples
 
-| ![BFS](media/bfs.gif) | ![A Star](media/a_star.gif) |
-|-----------------------|-----------------------------|
-| ![Dynamic A Star](media/dynamic_a_star.gif) | ![RRT](media/rrt.gif) |
-| ![RRT Star](media/rrt_star.gif) | ![Informed RRT Star](media/informed_rrt_star.gif) |
+<table>
+  <tr>
+    <td><img src="media/bfs.gif" alt="BFS"></td>
+    <td><img src="media/a_star.gif" alt="A Star"></td>
+  </tr>
+  <tr>
+    <td><img src="media/dynamic_a_star.gif" alt="Dynamic A Star"></td>
+    <td><img src="media/rrt.gif" alt="RRT"></td>
+  </tr>
+  <tr>
+    <td><img src="media/rrt_star.gif" alt="RRT Star"></td>
+    <td><img src="media/informed_rrt_star.gif" alt="Informed RRT Star"></td>
+  </tr>
+</table>
 
 ## Installation
 
